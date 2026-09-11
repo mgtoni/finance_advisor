@@ -1,0 +1,10 @@
+supabase>=2.3.0
+pandas>=2.0.0
+pandas-ta>=0.3.14b0
+yfinance>=0.2.36
+duckduckgo-search>=4.4.1
+feedparser>=6.0.10
+edgartools>=2.15.2
+google-generativeai>=0.4.0
+python-dotenv>=1.0.0
+thefuzz>=0.20.0

@@ -1,0 +1,156 @@
+import os
+import json
+import requests
+import google.generativeai as genai
+from datetime import datetime
+
+class PortfolioManagerService:
+    def __init__(self, supabase_client=None):
+        self.supabase = supabase_client
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        # We use a pro model capable of deep reasoning and JSON schema output
+        self.model = genai.GenerativeModel('gemini-1.5-pro-latest') 
+        self.discord_webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+
+    def get_position_context(self, symbol):
+        """Fetches the current portfolio position context from Supabase."""
+        if not self.supabase:
+            # Mock data for local testing without Supabase
+            return {
+                'symbol': symbol,
+                'open_date': '2023-01-15',
+                'shares': 100,
+                'average_entry_price': 50.0,
+                'unrealized_pnl_pct': 25.5
+            }
+        
+        try:
+            response = self.supabase.table('tickers').select('*').eq('symbol', symbol).execute()
+            if response.data:
+                return response.data[0]
+        except Exception as e:
+            print(f"Error fetching position for {symbol}: {e}")
+            
+        return None
+
+    def synthesize_decision(self, symbol, position_context, alpha_data, news_data, tech_scores):
+        """Feeds all data into Gemini to generate a portfolio decision."""
+        
+        system_instruction = """
+        You are an expert quantitative financial developer and Portfolio Manager.
+        Your investment horizon is > 1 year. You do not trade short-term noise.
+        You are managing an existing portfolio. 
+        You MUST use position-aware logic based on 'open_date' and 'unrealized_pnl_pct'.
+        - If a position is up heavily (e.g., > 40%), suggest trailing stops or partial profit taking (SELL or HOLD) unless the quantitative and macro conviction is exceptionally high.
+        - If a position is recently opened, ignore short-term volatility and rely on long-term macro/technical structures.
+        - Analyze the confluence of the deduplicated news, technical score (-1.0 to 1.0, where 1.0 is highly bullish), macro regime (VIX, 10Y Yield), and insider buying.
+        
+        Output strictly as JSON matching this schema:
+        {
+            "action": "BUY_MORE" | "HOLD" | "SELL",
+            "conviction_score": <int between 1 and 10>,
+            "rationale": [
+                "bullet point 1 explaining the tech/macro confluence",
+                "bullet point 2 explaining the position-aware logic",
+                "bullet point 3 on news sentiment"
+            ]
+        }
+        """
+        
+        prompt = f"""
+        Analyze the following data for {symbol} and provide your portfolio decision.
+        
+        1. Position Context: {json.dumps(position_context)}
+        2. Quantitative Technical Scores: {json.dumps(tech_scores)}
+        3. Alpha Data (Macro, Insider, Drift): {json.dumps(alpha_data)}
+        4. Recent News Events: {json.dumps(news_data)}
+        """
+
+        try:
+            response = self.model.generate_content(
+                contents=[system_instruction, prompt],
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.2 # Low temperature for more deterministic analysis
+                )
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            print(f"Error generating LLM decision for {symbol}: {e}")
+            return None
+
+    def log_prediction(self, symbol, decision):
+        """Logs the decision to Supabase."""
+        if not self.supabase or not decision:
+            return
+            
+        try:
+            self.supabase.table('prediction_logs').insert({
+                'symbol': symbol,
+                'prediction_date': datetime.now().date().isoformat(),
+                'action': decision.get('action'),
+                'conviction_score': decision.get('conviction_score'),
+                'rationale': decision.get('rationale')
+            }).execute()
+        except Exception as e:
+            print(f"Error logging prediction to DB for {symbol}: {e}")
+
+    def send_notification(self, symbol, decision):
+        """Sends a notification to a Discord webhook."""
+        if not self.discord_webhook_url or not decision:
+            return
+            
+        color = 0x00FF00 if decision['action'] == 'BUY_MORE' else 0xFF0000 if decision['action'] == 'SELL' else 0xFFFF00
+        
+        embed = {
+            "title": f"Daily Quant Report: {symbol}",
+            "color": color,
+            "fields": [
+                {"name": "Action", "value": decision['action'], "inline": True},
+                {"name": "Conviction", "value": f"{decision['conviction_score']}/10", "inline": True},
+                {"name": "Rationale", "value": "\n".join([f"- {r}" for r in decision['rationale']])}
+            ],
+            "footer": {"text": f"Automated Portfolio Manager | {datetime.now().strftime('%Y-%m-%d')}"}
+        }
+        
+        try:
+            requests.post(self.discord_webhook_url, json={"embeds": [embed]})
+        except Exception as e:
+            print(f"Failed to send Discord notification: {e}")
+
+    def run_synthesis(self, aggregated_data):
+        """Main orchestrator for this microservice."""
+        print("Starting LLM Synthesis...")
+        results = {}
+        
+        for symbol in aggregated_data.keys():
+            context = self.get_position_context(symbol)
+            
+            # Extract data components passed from previous microservices
+            alpha = aggregated_data[symbol].get('alpha')
+            news = aggregated_data[symbol].get('news')
+            tech = aggregated_data[symbol].get('tech')
+            
+            decision = self.synthesize_decision(symbol, context, alpha, news, tech)
+            
+            if decision:
+                print(f"Decision for {symbol}: {decision['action']} (Conviction: {decision['conviction_score']})")
+                self.log_prediction(symbol, decision)
+                self.send_notification(symbol, decision)
+                results[symbol] = decision
+                
+        print("LLM Synthesis Complete.")
+        return results
+
+if __name__ == "__main__":
+    # Test execution (requires GEMINI_API_KEY to be set in env)
+    service = PortfolioManagerService()
+    # Provide mock aggregated data to test the LLM inference
+    mock_data = {
+        'MU': {
+            'alpha': {'macro': {'vix': 15.0, 'treasury_10y_yield': 4.1}, 'insider_tracking': {'insider_filings_count': 2}},
+            'news': [{'headline': 'Micron reports strong earnings beat on AI demand'}],
+            'tech': {'composite_score': 0.7, 'daily_score': 0.8, 'weekly_score': 0.6}
+        }
+    }
+    service.run_synthesis(mock_data)
