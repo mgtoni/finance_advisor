@@ -200,6 +200,7 @@ const Dashboard = () => {
               symbol={selectedTicker.symbol} 
               entryDate={selectedTicker.open_date}
               entryPrice={selectedTicker.average_entry_price}
+              currentPrice={selectedTicker.last_close_price}
             />
 
             {/* AI Synthesis Section */}

@@ -10,7 +10,7 @@ const TIMEFRAMES = {
   'ALL': 2000 // Just a large number for mock data
 };
 
-const StockChart = ({ symbol, entryDate, entryPrice }) => {
+const StockChart = ({ symbol, entryDate, entryPrice, currentPrice }) => {
   const chartContainerRef = useRef();
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
@@ -59,8 +59,6 @@ const StockChart = ({ symbol, entryDate, entryPrice }) => {
       window.addEventListener('resize', handleResize);
 
       // Cleanup resize listener on unmount
-      // Note: we do NOT destroy the chart here if we only want to update data on timeframe change,
-      // but since we want to clean up when the component unmounts:
       return () => {
         window.removeEventListener('resize', handleResize);
         if (chartRef.current) {
@@ -79,33 +77,38 @@ const StockChart = ({ symbol, entryDate, entryPrice }) => {
     
     const generateMockData = (numDays) => {
       let baseTime = Math.floor(Date.now() / 1000) - (numDays * 86400); 
-      let basePrice = symbol === 'MU' ? 100 : 60;
       
-      // If we have an entry date and it's within the window, try to make the price near entry price around that date
-      // This is just for mock visual effect.
+      const data = new Array(numDays);
+      // Start from the current real price, or fallback to a guess if not provided
+      let currentGenPrice = currentPrice || (symbol === 'MU' ? 100 : symbol === 'WDC' ? 447 : 60);
       
-      const data = [];
-      for (let i = 0; i < numDays; i++) {
+      // Generate backwards to ensure the final price is exactly the current price
+      for (let i = numDays - 1; i >= 0; i--) {
         const time = baseTime + (i * 86400);
-        const volatility = basePrice * 0.03;
+        const volatility = currentGenPrice * 0.03;
         
-        // Force the price to be near entryPrice on the entryDate (mocking)
-        let open, close, high, low;
+        let close, open, high, low;
         const currentDateStr = new Date(time * 1000).toISOString().split('T')[0];
         
-        if (entryDate && entryDate === currentDateStr && entryPrice) {
-           open = entryPrice;
-           close = open + (Math.random() - 0.5) * volatility;
+        if (i === numDays - 1) {
+          // Final day
+          close = currentGenPrice;
+          open = close + (Math.random() - 0.5) * volatility;
+        } else if (entryDate && entryDate === currentDateStr && entryPrice) {
+          // Mock entry day
+          close = entryPrice;
+          open = close + (Math.random() - 0.5) * volatility;
         } else {
-           open = basePrice + (Math.random() - 0.5) * volatility;
-           close = open + (Math.random() - 0.5) * volatility;
+          close = currentGenPrice;
+          open = close + (Math.random() - 0.5) * volatility;
         }
         
         high = Math.max(open, close) + Math.random() * (volatility / 2);
         low = Math.min(open, close) - Math.random() * (volatility / 2);
         
-        data.push({ time, open, high, low, close });
-        basePrice = close;
+        data[i] = { time, open, high, low, close };
+        // The next (previous) day's close will be near this day's open
+        currentGenPrice = open;
       }
       return data;
     };
