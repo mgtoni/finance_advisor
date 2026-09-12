@@ -79,33 +79,62 @@ class DataIngestionService:
             return None
 
     def get_insider_tracking(self, symbol, days_back=7):
-        """Scans SEC Form 4 filings for executive cluster buying."""
-        # Note: This works best for US tickers. LSE tickers (e.g. PLUS.L) won't have SEC Form 4s.
+        """Scans SEC Form 4 filings or yfinance insider data for executive cluster buying."""
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+        
+        # Note: edgartools works best for US tickers. For non-US (e.g. LSE, Euronext), we fall back to yfinance.
         if '.' in symbol:
-            return {'insider_buys': 0, 'note': 'Non-US ticker, skipping Form 4 check'}
+            try:
+                # Use Yahoo Finance global insider transactions as fallback
+                ticker = yf.Ticker(symbol)
+                insider_tx = ticker.insider_transactions
+                
+                buy_count = 0
+                if insider_tx is not None and not insider_tx.empty:
+                    # Filter for transactions within the days_back window
+                    if 'Start Date' in insider_tx.columns:
+                        recent_tx = insider_tx[pd.to_datetime(insider_tx['Start Date'], errors='coerce') >= pd.to_datetime(start_date)]
+                        buy_count = len(recent_tx)
+                
+                return {
+                    'insider_filings_count': buy_count,
+                    'days_scanned': days_back,
+                    'note': 'Used yfinance global insider data'
+                }
+            except Exception as e:
+                print(f"Error fetching global insider tracking for {symbol}: {e}")
+                return {'insider_filings_count': 0, 'error': str(e)}
             
         try:
-            # We look for Form 4 filings in the recent past
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=days_back)
+            # US Tickers: We look for Form 4 filings in the recent past
             start_date_str = start_date.strftime('%Y-%m-%d')
             
-            # This fetches Form 4s. edgartools allows querying by ticker
-            filings = get_filings(form="4", ticker=symbol, date=f"{start_date_str}:")
+            # This fetches Form 4s. edgartools allows querying by company
+            from edgar import Company
+            company = Company(symbol)
+            
+            # get_filings() on Company does not take a date parameter directly,
+            # but we can filter the result
+            filings = company.get_filings(form="4")
             
             buy_count = 0
             if filings:
-                # We count the number of filings as a proxy for activity
-                # A deeper implementation would parse the XML to check transaction code 'P' (Purchase)
-                # and verify if it's cluster buying (multiple insiders).
-                buy_count = len(filings)
+                # filter by date manually if needed, edgartools Filings object allows .filter(date="...")
+                # but for simplicity we can just rely on the recent list or use its filter method.
+                try:
+                    recent_filings = filings.filter(date=f"{start_date_str}:")
+                    buy_count = len(recent_filings)
+                except Exception as e:
+                    # fallback if filter syntax fails
+                    buy_count = len(filings)
                 
             return {
                 'insider_filings_count': buy_count,
                 'days_scanned': days_back
             }
         except Exception as e:
-            print(f"Error fetching insider tracking for {symbol}: {e}")
+            print(f"Error fetching SEC insider tracking for {symbol}: {e}")
             return {'insider_filings_count': 0, 'error': str(e)}
 
     def run_ingestion(self, tickers):

@@ -25,7 +25,7 @@ class PortfolioManagerService:
             }
         
         try:
-            response = self.supabase.table('tickers').select('*').eq('symbol', symbol).execute()
+            response = self.supabase.table('portfolio_summary').select('*').eq('symbol', symbol).execute()
             if response.data:
                 return response.data[0]
         except Exception as e:
