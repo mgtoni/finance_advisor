@@ -22,7 +22,21 @@ def main():
     
     # 1. Initialization
     supabase = get_supabase_client()
-    test_universe = ['MU', 'WDC']
+    
+    # Fetch universe dynamically from Supabase
+    test_universe = []
+    if supabase:
+        try:
+            response = supabase.table('tickers').select('symbol').execute()
+            if response.data:
+                test_universe = [row['symbol'] for row in response.data]
+        except Exception as e:
+            print(f"Error fetching tickers from Supabase: {e}")
+            
+    if not test_universe:
+        print("No tickers found in DB or DB connection failed. Using fallback universe.")
+        test_universe = ['MU', 'WDC']
+
     
     # Initialize microservices
     ingestion_svc = DataIngestionService(supabase_client=supabase)
