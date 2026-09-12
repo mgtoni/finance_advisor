@@ -202,25 +202,32 @@ const Dashboard = () => {
               entryPrice={selectedTicker.average_entry_price}
             />
 
-            {selectedPrediction && (
-              <div className="ai-summary glass-panel" style={{ marginTop: '2rem', background: 'rgba(59, 130, 246, 0.05)' }}>
-                <h3>AI Synthesis & Rationale</h3>
-                <ul className="rationale-list">
-                  {selectedPrediction.rationale.map((r, i) => (
-                    <li key={i}>{r}</li>
-                  ))}
-                </ul>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem', textAlign: 'right' }}>
-                  Last updated: {new Date(selectedPrediction.created_at).toLocaleString()}
-                </div>
-              </div>
-            )}
+            {/* AI Synthesis Section */}
+            <div className="ai-summary glass-panel" style={{ marginTop: '2rem', background: 'rgba(59, 130, 246, 0.05)' }}>
+              <h3>AI Synthesis & Rationale</h3>
+              {selectedPrediction ? (
+                <>
+                  <ul className="rationale-list">
+                    {Array.isArray(selectedPrediction.rationale) 
+                      ? selectedPrediction.rationale.map((r, i) => <li key={i}>{r}</li>)
+                      : <li>{typeof selectedPrediction.rationale === 'string' ? selectedPrediction.rationale : 'No detailed rationale provided.'}</li>
+                    }
+                  </ul>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem', textAlign: 'right' }}>
+                    Last updated: {new Date(selectedPrediction.created_at).toLocaleString()}
+                  </div>
+                </>
+              ) : (
+                <p style={{ color: 'var(--text-secondary)' }}>AI Synthesis is pending for this asset. Check back later after the next analysis run.</p>
+              )}
+            </div>
 
-            {news.length > 0 && (
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                  <BookOpen size={18} /> Recent News Flow
-                </h3>
+            {/* News Section */}
+            <div style={{ marginTop: '2rem' }}>
+              <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                <BookOpen size={18} /> Recent News Flow
+              </h3>
+              {news && news.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {news.map(n => (
                     <a 
@@ -240,8 +247,12 @@ const Dashboard = () => {
                     </a>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                  No recent news found for {selectedTicker.symbol}.
+                </p>
+              )}
+            </div>
           </div>
         )}
       </Modal>
