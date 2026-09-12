@@ -9,6 +9,7 @@ const Dashboard = () => {
   const [prediction, setPrediction] = useState(null);
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     fetchTickers();
@@ -36,6 +37,7 @@ const Dashboard = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching tickers:', error);
+      setFetchError(error.message);
       setLoading(false);
     }
   };
@@ -70,6 +72,16 @@ const Dashboard = () => {
   };
 
   if (loading) return <div className="spinner"></div>;
+  if (fetchError) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--accent-red)' }}>Error loading dashboard: {fetchError}</div>;
+  if (tickers.length === 0) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+        <h2>Welcome to Quant Advisor</h2>
+        <p style={{ marginTop: '1rem' }}>Your portfolio is currently empty.</p>
+        <p>Please go to the <strong>Manage</strong> tab to add your first holding and run the AI analysis.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-grid">
