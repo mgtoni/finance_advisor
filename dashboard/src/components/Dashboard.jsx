@@ -1,73 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import StockChart from './StockChart';
-import { Activity, TrendingUp, TrendingDown, BookOpen } from 'lucide-react';
+import Modal from './Modal';
+import { Activity, BookOpen, TrendingUp, TrendingDown } from 'lucide-react';
 
 const Dashboard = () => {
   const [tickers, setTickers] = useState([]);
+  const [predictions, setPredictions] = useState({});
   const [selectedTicker, setSelectedTicker] = useState(null);
-  const [prediction, setPrediction] = useState(null);
+  const [selectedPrediction, setSelectedPrediction] = useState(null);
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchTickers();
+    fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    if (selectedTicker) {
-      fetchTickerData(selectedTicker.symbol);
-    }
-  }, [selectedTicker]);
-
-  const fetchTickers = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const { data, error } = await supabase
+      // 1. Fetch Tickers (Portfolio)
+      const { data: tickerData, error: tickerError } = await supabase
         .from('portfolio_summary')
         .select('*')
         .order('symbol');
       
-      if (error) throw error;
-      
-      setTickers(data || []);
-      if (data && data.length > 0 && !selectedTicker) {
-        setSelectedTicker(data[0]);
+      if (tickerError) throw tickerError;
+      setTickers(tickerData || []);
+
+      // 2. Fetch Latest Predictions for all tickers to populate the table column
+      if (tickerData && tickerData.length > 0) {
+        const symbols = tickerData.map(t => t.symbol);
+        
+        // Since we want the *latest* for each, we can fetch all recent and group,
+        // or just fetch them individually if the list isn't huge.
+        // For simplicity and to ensure we get the latest, we will fetch for each symbol.
+        const preds = {};
+        for (const sym of symbols) {
+          const { data: predData } = await supabase
+            .from('prediction_logs')
+            .select('*')
+            .eq('symbol', sym)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          
+          if (predData && predData.length > 0) {
+            preds[sym] = predData[0];
+          }
+        }
+        setPredictions(preds);
       }
+
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching tickers:', error);
+      console.error('Error fetching dashboard data:', error);
       setFetchError(error.message);
       setLoading(false);
     }
   };
 
-  const fetchTickerData = async (symbol) => {
+  const handleRowClick = async (ticker) => {
+    setSelectedTicker(ticker);
+    setSelectedPrediction(predictions[ticker.symbol] || null);
+    setIsModalOpen(true);
+    
+    // Fetch recent news for the selected ticker
     try {
-      // Fetch latest prediction
-      const { data: predData, error: predError } = await supabase
-        .from('prediction_logs')
-        .select('*')
-        .eq('symbol', symbol)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (predError) throw predError;
-      setPrediction(predData && predData.length > 0 ? predData[0] : null);
-
-      // Fetch recent news
       const { data: newsData, error: newsError } = await supabase
         .from('news_events')
         .select('*')
-        .eq('symbol', symbol)
+        .eq('symbol', ticker.symbol)
         .order('published_at', { ascending: false })
         .limit(5);
 
-      if (newsError) throw newsError;
-      setNews(newsData || []);
-
-    } catch (error) {
-      console.error('Error fetching ticker details:', error);
+      if (!newsError) {
+        setNews(newsData || []);
+      }
+    } catch (err) {
+      console.error('Error fetching news:', err);
     }
   };
 
@@ -84,78 +95,123 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard-grid">
-      {/* Sidebar: Portfolio Overview */}
-      <aside className="glass-panel">
-        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <div className="dashboard-container">
+      <div className="glass-panel" style={{ padding: '1rem' }}>
+        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '1rem' }}>
           <Activity size={20} color="var(--accent-blue)" /> 
-          Portfolio
+          Portfolio Performance
         </h2>
         
-        <div className="ticker-list">
-          {tickers.map(t => {
-            const isActive = selectedTicker?.symbol === t.symbol;
-            const isPositive = t.total_unrealized_pnl_pct >= 0;
-            
-            return (
-              <div 
-                key={t.symbol}
-                className={`glass-panel ticker-card ${isActive ? 'active' : ''}`}
-                onClick={() => setSelectedTicker(t)}
-                style={{ padding: '1rem' }}
-              >
-                <div>
-                  <div className="ticker-symbol">{t.symbol}</div>
-                  <div className="ticker-shares">{t.total_shares} Shares</div>
-                </div>
-                <div className="pnl-value">
-                  <div style={{ fontSize: '1.1rem' }}>${t.last_close_price?.toFixed(2) || '---'}</div>
-                  <div className={isPositive ? 'pnl-positive' : 'pnl-negative'}>
-                    {isPositive ? '+' : ''}{t.total_unrealized_pnl_pct?.toFixed(2) || '0.00'}%
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="table-responsive">
+          <table className="portfolio-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Price</th>
+                <th>Units</th>
+                <th>Avg. Open</th>
+                <th>P/L</th>
+                <th>P/L(%)</th>
+                <th>Net Value</th>
+                <th>Recommendation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickers.map(t => {
+                const isPositive = t.total_unrealized_pnl_pct >= 0;
+                const pnlValue = t.total_unrealized_pnl_value || 0;
+                const netValue = (t.total_shares * t.last_close_price) || 0;
+                const pred = predictions[t.symbol];
+                
+                return (
+                  <tr key={t.symbol} onClick={() => handleRowClick(t)}>
+                    <td>
+                      <div className="asset-info">
+                        <div className="asset-icon">{t.symbol.charAt(0)}</div>
+                        <div>
+                          <div className="ticker-symbol">{t.symbol}</div>
+                          {/* Note: company_name might not exist in summary view, using symbol for now */}
+                          <div className="ticker-name">{t.company_name || 'Company Name'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="price-value">${t.last_close_price?.toFixed(2) || '---'}</div>
+                      <div className={isPositive ? 'pnl-positive small' : 'pnl-negative small'}>
+                        {isPositive ? <TrendingUp size={12}/> : <TrendingDown size={12}/>} 
+                        {/* We don't have daily change %, so just showing overall % trend icon */}
+                      </div>
+                    </td>
+                    <td>
+                      <div>{t.total_shares}</div>
+                      <div className="text-muted small">Long</div>
+                    </td>
+                    <td>{t.average_entry_price?.toFixed(4) || '---'}</td>
+                    <td className={isPositive ? 'pnl-positive' : 'pnl-negative'}>
+                      {isPositive ? '+' : ''}${pnlValue.toFixed(2)}
+                    </td>
+                    <td className={isPositive ? 'pnl-positive' : 'pnl-negative'}>
+                      {isPositive ? '+' : ''}{t.total_unrealized_pnl_pct?.toFixed(2) || '0.00'}%
+                    </td>
+                    <td>${netValue.toFixed(2)}</td>
+                    <td>
+                      {pred ? (
+                        <span className={`badge badge-${pred.action.toLowerCase().replace('_more', '')}`}>
+                          {pred.action.replace('_', ' ')}
+                        </span>
+                      ) : (
+                        <span className="text-muted small">Pending...</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content: Deep Dive */}
-      <section className="main-content">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         {selectedTicker && (
-          <div className="glass-panel">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div className="modal-inner">
+            <div className="modal-header-info">
               <div>
-                <h2>{selectedTicker.symbol} Overview</h2>
-                <p style={{ color: 'var(--text-secondary)' }}>
+                <h2>{selectedTicker.symbol} Deep Dive</h2>
+                <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Avg Entry: ${selectedTicker.average_entry_price?.toFixed(2)} | 
-                  Total Shares: {selectedTicker.total_shares}
+                  Total Shares: {selectedTicker.total_shares} |
+                  Open Date: {selectedTicker.open_date || 'N/A'}
                 </p>
               </div>
-              {prediction && (
+              {selectedPrediction && (
                 <div style={{ textAlign: 'right' }}>
-                  <span className={`badge badge-${prediction.action.toLowerCase().replace('_more', '')}`}>
-                    {prediction.action.replace('_', ' ')}
+                  <span className={`badge badge-${selectedPrediction.action.toLowerCase().replace('_more', '')}`}>
+                    {selectedPrediction.action.replace('_', ' ')}
                   </span>
                   <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                    Conviction: {prediction.conviction_score}/10
+                    Conviction: {selectedPrediction.conviction_score}/10
                   </div>
                 </div>
               )}
             </div>
 
-            <StockChart symbol={selectedTicker.symbol} />
+            {/* Entry date passing to StockChart for markers */}
+            <StockChart 
+              symbol={selectedTicker.symbol} 
+              entryDate={selectedTicker.open_date}
+              entryPrice={selectedTicker.average_entry_price}
+            />
 
-            {prediction && (
-              <div className="ai-summary glass-panel" style={{ marginTop: '2rem', background: 'rgba(59, 130, 246, 0.03)' }}>
+            {selectedPrediction && (
+              <div className="ai-summary glass-panel" style={{ marginTop: '2rem', background: 'rgba(59, 130, 246, 0.05)' }}>
                 <h3>AI Synthesis & Rationale</h3>
                 <ul className="rationale-list">
-                  {prediction.rationale.map((r, i) => (
+                  {selectedPrediction.rationale.map((r, i) => (
                     <li key={i}>{r}</li>
                   ))}
                 </ul>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem', textAlign: 'right' }}>
-                  Last updated: {new Date(prediction.created_at).toLocaleString()}
+                  Last updated: {new Date(selectedPrediction.created_at).toLocaleString()}
                 </div>
               </div>
             )}
@@ -174,9 +230,9 @@ const Dashboard = () => {
                       rel="noopener noreferrer"
                       style={{ color: 'inherit', textDecoration: 'none' }}
                     >
-                      <div className="glass-panel" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <div className="glass-panel news-card">
                         <h4 style={{ fontSize: '1rem', fontWeight: 500 }}>{n.headline}</h4>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
                           <span>{n.source}</span>
                           <span>{new Date(n.published_at).toLocaleDateString()}</span>
                         </div>
@@ -188,7 +244,7 @@ const Dashboard = () => {
             )}
           </div>
         )}
-      </section>
+      </Modal>
     </div>
   );
 };
