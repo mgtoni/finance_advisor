@@ -8,7 +8,14 @@ app = Flask(__name__)
 # Allow CORS for the dashboard frontend (running on Vite's default port or Vercel)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-@app.route('/api/run-analysis', methods=['POST'])
+@app.after_request
+def add_pna_header(response):
+    # Fix for "Permission was denied for this request to access the loopback address space"
+    # when fetching from a public vercel URL to local loopback
+    response.headers['Access-Control-Allow-Private-Network'] = 'true'
+    return response
+
+@app.route('/api/run-analysis', methods=['POST', 'OPTIONS'])
 def trigger_analysis():
     try:
         print("Triggering analysis from API...")
