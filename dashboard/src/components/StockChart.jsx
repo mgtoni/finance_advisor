@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, CandlestickSeries } from 'lightweight-charts';
+import { createChart, CandlestickSeries, createSeriesMarkers } from 'lightweight-charts';
 
 const TIMEFRAMES = {
   '1M': 30,
@@ -14,6 +14,7 @@ const StockChart = ({ symbol, entryDate, entryPrice }) => {
   const chartContainerRef = useRef();
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
+  const markersPrimitiveRef = useRef(null);
   const [timeframe, setTimeframe] = useState('3M');
 
   useEffect(() => {
@@ -113,12 +114,13 @@ const StockChart = ({ symbol, entryDate, entryPrice }) => {
     candlestickSeriesRef.current.setData(data);
 
     // Set Markers for Entry Point
+    let markers = [];
     if (entryDate && entryPrice) {
       const entryTimestamp = Math.floor(new Date(entryDate).getTime() / 1000);
       
       // Only show marker if it's within the generated data range
       if (data.length > 0 && entryTimestamp >= data[0].time && entryTimestamp <= data[data.length - 1].time) {
-        candlestickSeriesRef.current.setMarkers([
+        markers = [
           {
             time: entryTimestamp,
             position: 'belowBar',
@@ -126,12 +128,14 @@ const StockChart = ({ symbol, entryDate, entryPrice }) => {
             shape: 'arrowUp',
             text: `Entry: $${entryPrice.toFixed(2)}`,
           }
-        ]);
-      } else {
-        candlestickSeriesRef.current.setMarkers([]);
+        ];
       }
+    }
+    
+    if (!markersPrimitiveRef.current) {
+      markersPrimitiveRef.current = createSeriesMarkers(candlestickSeriesRef.current, markers);
     } else {
-       candlestickSeriesRef.current.setMarkers([]);
+      markersPrimitiveRef.current.setMarkers(markers);
     }
 
     chartRef.current.timeScale().fitContent();
