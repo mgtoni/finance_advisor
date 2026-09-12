@@ -23,7 +23,7 @@ const Dashboard = () => {
   const fetchTickers = async () => {
     try {
       const { data, error } = await supabase
-        .from('tickers')
+        .from('portfolio_summary')
         .select('*')
         .order('symbol');
       
@@ -83,7 +83,7 @@ const Dashboard = () => {
         <div className="ticker-list">
           {tickers.map(t => {
             const isActive = selectedTicker?.symbol === t.symbol;
-            const isPositive = t.unrealized_pnl_pct >= 0;
+            const isPositive = t.total_unrealized_pnl_pct >= 0;
             
             return (
               <div 
@@ -94,12 +94,12 @@ const Dashboard = () => {
               >
                 <div>
                   <div className="ticker-symbol">{t.symbol}</div>
-                  <div className="ticker-shares">{t.shares} Shares</div>
+                  <div className="ticker-shares">{t.total_shares} Shares</div>
                 </div>
                 <div className="pnl-value">
                   <div style={{ fontSize: '1.1rem' }}>${t.last_close_price?.toFixed(2) || '---'}</div>
                   <div className={isPositive ? 'pnl-positive' : 'pnl-negative'}>
-                    {isPositive ? '+' : ''}{t.unrealized_pnl_pct?.toFixed(2) || '0.00'}%
+                    {isPositive ? '+' : ''}{t.total_unrealized_pnl_pct?.toFixed(2) || '0.00'}%
                   </div>
                 </div>
               </div>
@@ -117,7 +117,7 @@ const Dashboard = () => {
                 <h2>{selectedTicker.symbol} Overview</h2>
                 <p style={{ color: 'var(--text-secondary)' }}>
                   Avg Entry: ${selectedTicker.average_entry_price?.toFixed(2)} | 
-                  Opened: {new Date(selectedTicker.open_date).toLocaleDateString()}
+                  Total Shares: {selectedTicker.total_shares}
                 </p>
               </div>
               {prediction && (

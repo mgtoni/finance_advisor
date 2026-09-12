@@ -17,20 +17,30 @@ const PortfolioManager = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      const tickerData = {
-        symbol: symbol.toUpperCase().trim(),
+      const symbolUpper = symbol.toUpperCase().trim();
+
+      // 1. Ensure ticker exists in master list
+      const { error: tickerError } = await supabase
+        .from('tickers')
+        .upsert({ symbol: symbolUpper }, { onConflict: 'symbol' });
+
+      if (tickerError) throw tickerError;
+
+      // 2. Insert the position
+      const positionData = {
+        symbol: symbolUpper,
         open_date: openDate,
         shares: parseFloat(shares),
-        average_entry_price: parseFloat(entryPrice)
+        entry_price: parseFloat(entryPrice)
       };
 
-      const { error } = await supabase
-        .from('tickers')
-        .upsert(tickerData, { onConflict: 'symbol' });
+      const { error: positionError } = await supabase
+        .from('positions')
+        .insert(positionData);
 
-      if (error) throw error;
+      if (positionError) throw positionError;
 
-      setStatus({ type: 'success', message: `Successfully saved ${tickerData.symbol}!` });
+      setStatus({ type: 'success', message: `Successfully saved ${symbolUpper}!` });
       // Clear form
       setSymbol('');
       setShares('');

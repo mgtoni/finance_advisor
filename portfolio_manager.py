@@ -18,10 +18,9 @@ class PortfolioManagerService:
             # Mock data for local testing without Supabase
             return {
                 'symbol': symbol,
-                'open_date': '2023-01-15',
-                'shares': 100,
+                'total_shares': 100,
                 'average_entry_price': 50.0,
-                'unrealized_pnl_pct': 25.5
+                'total_unrealized_pnl_pct': 25.5
             }
         
         try:
@@ -40,9 +39,9 @@ class PortfolioManagerService:
         You are an expert quantitative financial developer and Portfolio Manager.
         Your investment horizon is > 1 year. You do not trade short-term noise.
         You are managing an existing portfolio. 
-        You MUST use position-aware logic based on 'open_date' and 'unrealized_pnl_pct'.
+        You MUST use position-aware logic based on 'total_unrealized_pnl_pct'.
         - If a position is up heavily (e.g., > 40%), suggest trailing stops or partial profit taking (SELL or HOLD) unless the quantitative and macro conviction is exceptionally high.
-        - If a position is recently opened, ignore short-term volatility and rely on long-term macro/technical structures.
+        - Ignore short-term volatility and rely on long-term macro/technical structures.
         - Analyze the confluence of the deduplicated news, technical score (-1.0 to 1.0, where 1.0 is highly bullish), macro regime (VIX, 10Y Yield), and insider buying.
         
         Output strictly as JSON matching this schema:
