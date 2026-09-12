@@ -71,78 +71,59 @@ const StockChart = ({ symbol, entryDate, entryPrice, currentPrice }) => {
 
   // Update data and markers when timeframe, symbol, or entry changes
   useEffect(() => {
-    if (!chartRef.current || !candlestickSeriesRef.current) return;
+    if (!chartRef.current || !candlestickSeriesRef.current || !symbol) return;
 
-    const days = TIMEFRAMES[timeframe];
-    
-    const generateMockData = (numDays) => {
-      let baseTime = Math.floor(Date.now() / 1000) - (numDays * 86400); 
-      
-      const data = new Array(numDays);
-      // Start from the current real price, or fallback to a guess if not provided
-      let currentGenPrice = currentPrice || (symbol === 'MU' ? 100 : symbol === 'WDC' ? 447 : 60);
-      
-      // Generate backwards to ensure the final price is exactly the current price
-      for (let i = numDays - 1; i >= 0; i--) {
-        const time = baseTime + (i * 86400);
-        const volatility = currentGenPrice * 0.03;
+    let isMounted = true;
+
+    const fetchHistory = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${apiUrl}/api/history/${symbol}?timeframe=${timeframe}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
         
-        let close, open, high, low;
-        const currentDateStr = new Date(time * 1000).toISOString().split('T')[0];
+        if (!isMounted) return;
         
-        if (i === numDays - 1) {
-          // Final day
-          close = currentGenPrice;
-          open = close + (Math.random() - 0.5) * volatility;
-        } else if (entryDate && entryDate === currentDateStr && entryPrice) {
-          // Mock entry day
-          close = entryPrice;
-          open = close + (Math.random() - 0.5) * volatility;
-        } else {
-          close = currentGenPrice;
-          open = close + (Math.random() - 0.5) * volatility;
+        if (data.length > 0) {
+            // Remove duplicate timestamps if any, and ensure strictly increasing
+            const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.time === v.time)) === i).sort((a,b) => a.time - b.time);
+            
+            candlestickSeriesRef.current.setData(uniqueData);
+            
+            // Set Markers for Entry Point
+            let markers = [];
+            if (entryDate && entryPrice) {
+              const entryTimestamp = Math.floor(new Date(entryDate).getTime() / 1000);
+              
+              if (entryTimestamp >= uniqueData[0].time && entryTimestamp <= uniqueData[uniqueData.length - 1].time) {
+                markers = [
+                  {
+                    time: entryTimestamp,
+                    position: 'belowBar',
+                    color: '#3b82f6',
+                    shape: 'arrowUp',
+                    text: `Entry: $${entryPrice.toFixed(2)}`,
+                  }
+                ];
+              }
+            }
+            
+            if (!markersPrimitiveRef.current) {
+              markersPrimitiveRef.current = createSeriesMarkers(candlestickSeriesRef.current, markers);
+            } else {
+              markersPrimitiveRef.current.setMarkers(markers);
+            }
+
+            chartRef.current.timeScale().fitContent();
         }
-        
-        high = Math.max(open, close) + Math.random() * (volatility / 2);
-        low = Math.min(open, close) - Math.random() * (volatility / 2);
-        
-        data[i] = { time, open, high, low, close };
-        // The next (previous) day's close will be near this day's open
-        currentGenPrice = open;
+      } catch (err) {
+        console.error("Failed to fetch historical data:", err);
       }
-      return data;
     };
-
-    const data = generateMockData(days);
-    candlestickSeriesRef.current.setData(data);
-
-    // Set Markers for Entry Point
-    let markers = [];
-    if (entryDate && entryPrice) {
-      const entryTimestamp = Math.floor(new Date(entryDate).getTime() / 1000);
-      
-      // Only show marker if it's within the generated data range
-      if (data.length > 0 && entryTimestamp >= data[0].time && entryTimestamp <= data[data.length - 1].time) {
-        markers = [
-          {
-            time: entryTimestamp,
-            position: 'belowBar',
-            color: '#3b82f6',
-            shape: 'arrowUp',
-            text: `Entry: $${entryPrice.toFixed(2)}`,
-          }
-        ];
-      }
-    }
     
-    if (!markersPrimitiveRef.current) {
-      markersPrimitiveRef.current = createSeriesMarkers(candlestickSeriesRef.current, markers);
-    } else {
-      markersPrimitiveRef.current.setMarkers(markers);
-    }
+    fetchHistory();
 
-    chartRef.current.timeScale().fitContent();
-
+    return () => { isMounted = false; };
   }, [symbol, timeframe, entryDate, entryPrice]);
 
   return (

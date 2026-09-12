@@ -76,7 +76,14 @@ class PortfolioManagerService:
             return json.loads(response.text)
         except Exception as e:
             print(f"Error generating LLM decision for {symbol}: {e}")
-            return None
+            return {
+                "action": "HOLD",
+                "conviction_score": 1,
+                "rationale": [
+                    "AI Analysis failed. Is your GEMINI_API_KEY set correctly?",
+                    f"System Error: {str(e)}"
+                ]
+            }
 
     def log_prediction(self, symbol, decision):
         """Logs the decision to Supabase."""

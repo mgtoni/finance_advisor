@@ -1,6 +1,7 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+import yfinance as yf
 from main import main as run_pipeline
 
 app = Flask(__name__)
@@ -18,6 +19,42 @@ def trigger_analysis():
         return jsonify({"status": "success", "message": "Analysis completed successfully."}), 200
     except Exception as e:
         print(f"Error running pipeline: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/history/<symbol>', methods=['GET'])
+def get_history(symbol):
+    try:
+        timeframe = request.args.get('timeframe', '1Y')
+        # Map frontend timeframes to yfinance periods
+        tf_map = {
+            '1M': '1mo',
+            '3M': '3mo',
+            '6M': '6mo',
+            '1Y': '1y',
+            '3Y': '3y',
+            'ALL': 'max'
+        }
+        period = tf_map.get(timeframe, '1y')
+        
+        ticker = yf.Ticker(symbol)
+        hist = ticker.history(period=period)
+        
+        if hist.empty:
+            return jsonify([])
+
+        data = []
+        for date, row in hist.iterrows():
+            data.append({
+                "time": int(date.timestamp()),
+                "open": float(row["Open"]),
+                "high": float(row["High"]),
+                "low": float(row["Low"]),
+                "close": float(row["Close"])
+            })
+            
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error fetching history for {symbol}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':

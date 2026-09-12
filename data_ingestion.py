@@ -23,9 +23,18 @@ class DataIngestionService:
                 history = ticker.history(period="1d")
                 if not history.empty:
                     last_close = float(history['Close'].iloc[-1])
+                    info = ticker.info
+                    company_name = info.get('longName', '') or info.get('shortName', '')
                     if self.supabase:
-                        self.supabase.table('tickers').update({'last_close_price': last_close}).eq('symbol', symbol).execute()
-                    updates.append({'symbol': symbol, 'last_close': last_close})
+                        try:
+                            self.supabase.table('tickers').update({
+                                'last_close_price': last_close,
+                                'company_name': company_name
+                            }).eq('symbol', symbol).execute()
+                        except Exception as db_err:
+                            print(f"Error updating DB with company_name for {symbol}. (Did you add the company_name column?). Falling back to just price. Error: {db_err}")
+                            self.supabase.table('tickers').update({'last_close_price': last_close}).eq('symbol', symbol).execute()
+                    updates.append({'symbol': symbol, 'last_close': last_close, 'company_name': company_name})
                     print(f"Updated {symbol} with close price {last_close}")
                 else:
                     print(f"No price data found for {symbol}")
