@@ -82,6 +82,35 @@ const Dashboard = () => {
     }
   };
 
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState({ type: '', message: '' });
+
+  const handleRunAnalysis = async () => {
+    setAnalysisLoading(true);
+    setAnalysisStatus({ type: '', message: '' });
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/run-analysis`, {
+        method: 'POST'
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Analysis failed');
+      
+      setAnalysisStatus({ type: 'success', message: 'Analysis complete! Refreshing data...' });
+      await fetchDashboardData();
+      
+      // Auto-hide success message
+      setTimeout(() => setAnalysisStatus({ type: '', message: '' }), 3000);
+    } catch (err) {
+      console.error(err);
+      setAnalysisStatus({ type: 'error', message: err.message || 'Failed to trigger backend.' });
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
   if (loading) return <div className="spinner"></div>;
   if (fetchError) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--accent-red)' }}>Error loading dashboard: {fetchError}</div>;
   if (tickers.length === 0) {
@@ -176,7 +205,21 @@ const Dashboard = () => {
           <div className="modal-inner">
             <div className="modal-header-info">
               <div>
-                <h2>{selectedTicker.symbol} Deep Dive</h2>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  {selectedTicker.symbol} Deep Dive
+                  <button 
+                    onClick={handleRunAnalysis}
+                    disabled={analysisLoading}
+                    style={{
+                      padding: '0.4rem 0.75rem', borderRadius: '4px', fontSize: '0.875rem',
+                      background: 'transparent', color: 'white', border: '1px solid var(--accent-green)',
+                      cursor: analysisLoading ? 'not-allowed' : 'pointer', fontWeight: 500,
+                      opacity: analysisLoading ? 0.7 : 1
+                    }}
+                  >
+                    {analysisLoading ? 'Analyzing...' : 'Run Analysis Now'}
+                  </button>
+                </h2>
                 <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                   Avg Entry: ${selectedTicker.average_entry_price?.toFixed(2)} | 
                   Total Shares: {selectedTicker.total_shares} |
@@ -194,6 +237,17 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
+
+            {analysisStatus.message && (
+              <div style={{ 
+                marginBottom: '1.5rem', padding: '0.75rem', borderRadius: '6px', fontSize: '0.875rem',
+                background: analysisStatus.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                color: analysisStatus.type === 'success' ? 'var(--accent-green)' : 'var(--accent-red)',
+                border: `1px solid ${analysisStatus.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
+              }}>
+                {analysisStatus.message}
+              </div>
+            )}
 
             {/* Entry date passing to StockChart for markers */}
             <StockChart 
