@@ -84,4 +84,20 @@ jobs:
           EDGAR_IDENTITY: ${{ secrets.EDGAR_IDENTITY }}
         run: python main.py
 ```
-*Note: Make sure to add your `.env` variables into your GitHub Repository Secrets.*
+## Vercel Deployment (Web Dashboard)
+
+The frontend application (`/dashboard`) is a Vite React SPA and is pre-configured for Vercel deployment.
+
+**Vercel Project Settings:**
+1. Import your GitHub repository into Vercel.
+2. **Root Directory**: Set this to `dashboard` (Important: Vercel needs to know the app isn't in the root of the repo).
+3. **Framework Preset**: Vercel should auto-detect **Vite**.
+4. **Build Command**: `npm run build`
+5. **Output Directory**: `dist`
+6. **Install Command**: `npm install`
+
+**Environment Variables (Add these in the Vercel Settings -> Environment Variables):**
+*   `VITE_SUPABASE_URL`: Your Supabase Project URL (e.g., `https://tlqucihtxossompdcsfv.supabase.co`)
+*   `VITE_SUPABASE_ANON_KEY`: Your Supabase Publishable Key (e.g., `sb_publishable_...`)
+
+Once deployed, the dashboard will be live and protected by your Supabase Authentication!
