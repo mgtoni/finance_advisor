@@ -6,9 +6,9 @@ from main import main as run_pipeline
 
 app = Flask(__name__)
 # allow_private_network=True is required to fix the Chrome loopback restriction
-CORS(app, resources={r"/api/*": {"origins": "*"}}, allow_private_network=True)
+CORS(app, allow_private_network=True)
 
-@app.route('/api/run-analysis', methods=['POST', 'OPTIONS'])
+@app.route('/api/run-analysis', methods=['POST'])
 def trigger_analysis():
     try:
         print("Triggering analysis from API...")
