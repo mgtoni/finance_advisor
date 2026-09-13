@@ -5,15 +5,8 @@ import yfinance as yf
 from main import main as run_pipeline
 
 app = Flask(__name__)
-# Allow CORS for the dashboard frontend (running on Vite's default port or Vercel)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
-
-@app.after_request
-def add_pna_header(response):
-    # Fix for "Permission was denied for this request to access the loopback address space"
-    # when fetching from a public vercel URL to local loopback
-    response.headers['Access-Control-Allow-Private-Network'] = 'true'
-    return response
+# allow_private_network=True is required to fix the Chrome loopback restriction
+CORS(app, resources={r"/api/*": {"origins": "*"}}, allow_private_network=True)
 
 @app.route('/api/run-analysis', methods=['POST', 'OPTIONS'])
 def trigger_analysis():
