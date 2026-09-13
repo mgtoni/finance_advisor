@@ -1,0 +1,8 @@
+# Ignore Python backend files for Vercel deployment
+/api
+/*.py
+/requirements.txt
+/Dockerfile
+/docker-compose.yml
+/__pycache__
+/.env
