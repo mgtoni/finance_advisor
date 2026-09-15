@@ -27,7 +27,22 @@ const Dashboard = () => {
         .order('symbol');
       
       if (tickerError) throw tickerError;
-      setTickers(tickerData || []);
+
+      // 1.5 Fetch company names from tickers table
+      const { data: tickersInfo } = await supabase.from('tickers').select('symbol, company_name');
+      const companyNamesMap = {};
+      if (tickersInfo) {
+        tickersInfo.forEach(t => {
+          companyNamesMap[t.symbol] = t.company_name;
+        });
+      }
+
+      const enhancedTickerData = tickerData ? tickerData.map(t => ({
+        ...t,
+        company_name: companyNamesMap[t.symbol] || ''
+      })) : [];
+
+      setTickers(enhancedTickerData);
 
       // 2. Fetch Latest Predictions for all tickers to populate the table column
       if (tickerData && tickerData.length > 0) {
@@ -139,6 +154,7 @@ const Dashboard = () => {
                 <th>Price</th>
                 <th>Units</th>
                 <th>Avg. Open</th>
+                <th>Total Invested</th>
                 <th>P/L</th>
                 <th>P/L(%)</th>
                 <th>Net Value</th>
@@ -148,8 +164,9 @@ const Dashboard = () => {
             <tbody>
               {tickers.map(t => {
                 const isPositive = t.total_unrealized_pnl_pct >= 0;
-                const pnlValue = t.total_unrealized_pnl_value || 0;
+                const pnlValue = t.total_unrealized_pnl_fiat || 0;
                 const netValue = (t.total_shares * t.last_close_price) || 0;
+                const totalInvested = (t.total_shares * t.average_entry_price) || 0;
                 const pred = predictions[t.symbol];
                 
                 return (
@@ -175,9 +192,10 @@ const Dashboard = () => {
                       <div>{t.total_shares}</div>
                       <div className="text-muted small">Long</div>
                     </td>
-                    <td>{t.average_entry_price?.toFixed(4) || '---'}</td>
+                    <td>${t.average_entry_price?.toFixed(4) || '---'}</td>
+                    <td>${totalInvested.toFixed(2)}</td>
                     <td className={isPositive ? 'pnl-positive' : 'pnl-negative'}>
-                      {isPositive ? '+' : ''}${pnlValue.toFixed(2)}
+                      {isPositive ? '+' : '-'}${Math.abs(pnlValue).toFixed(2)}
                     </td>
                     <td className={isPositive ? 'pnl-positive' : 'pnl-negative'}>
                       {isPositive ? '+' : ''}{t.total_unrealized_pnl_pct?.toFixed(2) || '0.00'}%
