@@ -68,6 +68,10 @@ def add_position():
         
         converted_entry_price = entry_price
 
+        # We treat GBp (pence) as GBP (pounds) for FX since user inputs entry_price in pounds.
+        if currency == 'GBp':
+            currency = 'GBP'
+            
         if currency != 'USD':
             fx_ticker = f"{currency}USD=X"
             fx = yf.Ticker(fx_ticker)
@@ -209,14 +213,18 @@ def get_history(symbol):
         if hist.empty:
             return jsonify([])
 
+        currency = ticker.info.get('currency', 'USD')
+        is_gbp = currency == 'GBp'
+
         data = []
         for date, row in hist.iterrows():
+            factor = 100.0 if is_gbp else 1.0
             data.append({
                 "time": int(date.timestamp()),
-                "open": float(row["Open"]),
-                "high": float(row["High"]),
-                "low": float(row["Low"]),
-                "close": float(row["Close"])
+                "open": float(row["Open"]) / factor,
+                "high": float(row["High"]) / factor,
+                "low": float(row["Low"]) / factor,
+                "close": float(row["Close"]) / factor
             })
             
         return jsonify(data)

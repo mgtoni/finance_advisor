@@ -29,6 +29,10 @@ class DataIngestionService:
                     company_name = info.get('longName', '') or info.get('shortName', '')
                     currency = info.get('currency', 'USD')
                     
+                    if currency == 'GBp':
+                        last_close = last_close / 100.0
+                        currency = 'GBP'
+                        
                     if currency != 'USD':
                         fx_ticker = f"{currency}USD=X"
                         try:
