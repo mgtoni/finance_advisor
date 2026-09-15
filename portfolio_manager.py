@@ -9,8 +9,8 @@ class PortfolioManagerService:
         self.supabase = supabase_client
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         # We use a pro model capable of deep reasoning and JSON schema output
-        # Use gemini-1.5-flash as requested
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        # Use gemini-3.8-flash as requested
+        self.model = genai.GenerativeModel('gemini-3.8-flash')
         self.discord_webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
 
     def get_position_context(self, symbol):
