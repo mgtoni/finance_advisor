@@ -153,6 +153,40 @@ def close_position():
         print(f"Error closing position: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/edit-position', methods=['PUT'])
+def edit_position():
+    try:
+        data = request.json
+        position_id = data.get('position_id')
+        open_date = data.get('open_date')
+        shares = data.get('shares')
+        entry_price = data.get('entry_price')
+
+        if not position_id or not open_date or shares is None or entry_price is None:
+            return jsonify({"status": "error", "message": "Missing required fields."}), 400
+
+        shares = float(shares)
+        entry_price = float(entry_price)
+
+        if shares <= 0 or entry_price < 0:
+            return jsonify({"status": "error", "message": "Invalid shares or entry price."}), 400
+
+        if not supabase:
+            return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
+
+        # Update the position
+        supabase.table('positions').update({
+            'open_date': open_date,
+            'shares': shares,
+            'entry_price': entry_price
+        }).eq('id', position_id).execute()
+
+        return jsonify({"status": "success", "message": "Position updated successfully."}), 200
+
+    except Exception as e:
+        print(f"Error editing position: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/api/history/<symbol>', methods=['GET'])
 def get_history(symbol):
     try:

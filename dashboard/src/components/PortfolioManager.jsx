@@ -15,6 +15,10 @@ const PortfolioManager = () => {
   const [closeInputs, setCloseInputs] = useState({});
   const [closeLoading, setCloseLoading] = useState(false);
 
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ open_date: '', shares: '', entry_price: '' });
+  const [editLoading, setEditLoading] = useState(false);
+
   useEffect(() => {
     fetchPositions();
   }, []);
@@ -135,6 +139,52 @@ const PortfolioManager = () => {
       setStatus({ type: 'error', message: err.message || 'Failed to close position.' });
     } finally {
       setCloseLoading(false);
+    }
+  };
+
+  const handleEditClick = (pos) => {
+    setEditingId(pos.id);
+    setEditForm({
+      open_date: pos.open_date,
+      shares: pos.shares,
+      entry_price: pos.entry_price
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const handleSaveEdit = async () => {
+    setEditLoading(true);
+    setStatus({ type: '', message: '' });
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/edit-position`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          position_id: editingId,
+          open_date: editForm.open_date,
+          shares: editForm.shares,
+          entry_price: editForm.entry_price
+        })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to edit position');
+      
+      setStatus({ type: 'success', message: data.message });
+      setEditingId(null);
+      await fetchPositions();
+      
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.message || 'Failed to edit position.' });
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -279,37 +329,115 @@ const PortfolioManager = () => {
                 </tr>
               </thead>
               <tbody>
-                {positions.map(pos => (
-                  <tr key={pos.id}>
-                    <td style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>{pos.symbol}</td>
-                    <td>{pos.open_date}</td>
-                    <td>${Number(pos.entry_price).toFixed(2)}</td>
-                    <td>{pos.shares}</td>
-                    <td>
-                      <input 
-                        type="number"
-                        step="any"
-                        max={pos.shares}
-                        min="0"
-                        value={closeInputs[pos.id] || ''}
-                        onChange={(e) => setCloseInputs({ ...closeInputs, [pos.id]: e.target.value })}
-                        style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
-                      />
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        onClick={() => handleClosePosition(pos.id)}
-                        disabled={closeLoading}
-                        style={{
-                          padding: '0.25rem 0.5rem', background: 'var(--accent-red)', color: 'white', border: 'none', borderRadius: '4px', cursor: closeLoading ? 'not-allowed' : 'pointer', opacity: closeLoading ? 0.7 : 1
-                        }}
-                      >
-                        Close
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {positions.map(pos => {
+                  const isEditing = editingId === pos.id;
+                  return (
+                    <tr key={pos.id}>
+                      <td style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>{pos.symbol}</td>
+                      
+                      <td>
+                        {isEditing ? (
+                          <input 
+                            type="date"
+                            value={editForm.open_date}
+                            onChange={(e) => setEditForm({ ...editForm, open_date: e.target.value })}
+                            style={{ width: '130px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          pos.open_date
+                        )}
+                      </td>
+
+                      <td>
+                        {isEditing ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            $
+                            <input 
+                              type="number"
+                              step="any"
+                              value={editForm.entry_price}
+                              onChange={(e) => setEditForm({ ...editForm, entry_price: e.target.value })}
+                              style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
+                            />
+                          </div>
+                        ) : (
+                          `$${Number(pos.entry_price).toFixed(2)}`
+                        )}
+                      </td>
+
+                      <td>
+                        {isEditing ? (
+                          <input 
+                            type="number"
+                            step="any"
+                            value={editForm.shares}
+                            onChange={(e) => setEditForm({ ...editForm, shares: e.target.value })}
+                            style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          pos.shares
+                        )}
+                      </td>
+
+                      <td>
+                        {!isEditing && (
+                          <input 
+                            type="number"
+                            step="any"
+                            max={pos.shares}
+                            min="0"
+                            value={closeInputs[pos.id] || ''}
+                            onChange={(e) => setCloseInputs({ ...closeInputs, [pos.id]: e.target.value })}
+                            style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
+                          />
+                        )}
+                      </td>
+
+                      <td>
+                        {isEditing ? (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              type="button"
+                              onClick={handleSaveEdit}
+                              disabled={editLoading}
+                              style={{ padding: '0.25rem 0.5rem', background: 'var(--accent-green)', color: 'white', border: 'none', borderRadius: '4px', cursor: editLoading ? 'not-allowed' : 'pointer' }}
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              disabled={editLoading}
+                              style={{ padding: '0.25rem 0.5rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', cursor: editLoading ? 'not-allowed' : 'pointer' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleEditClick(pos)}
+                              style={{ padding: '0.25rem 0.5rem', background: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleClosePosition(pos.id)}
+                              disabled={closeLoading}
+                              style={{
+                                padding: '0.25rem 0.5rem', background: 'var(--accent-red)', color: 'white', border: 'none', borderRadius: '4px', cursor: closeLoading ? 'not-allowed' : 'pointer', opacity: closeLoading ? 0.7 : 1
+                              }}
+                            >
+                              Close
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
