@@ -14,6 +14,11 @@ const Dashboard = () => {
   const [fetchError, setFetchError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // New state for individual positions fractional closing
+  const [individualPositions, setIndividualPositions] = useState([]);
+  const [closeInputs, setCloseInputs] = useState({});
+  const [closeLoading, setCloseLoading] = useState(false);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -95,10 +100,78 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Error fetching news:', err);
     }
+
+    // Fetch individual positions (tax lots)
+    try {
+      const { data: positionsData, error: positionsError } = await supabase
+        .from('positions')
+        .select('*')
+        .eq('symbol', ticker.symbol)
+        .order('open_date', { ascending: false });
+        
+      if (!positionsError) {
+        setIndividualPositions(positionsData || []);
+        // Initialize close inputs with max shares
+        const initialInputs = {};
+        (positionsData || []).forEach(p => {
+          initialInputs[p.id] = p.shares;
+        });
+        setCloseInputs(initialInputs);
+      }
+    } catch (err) {
+      console.error('Error fetching individual positions:', err);
+    }
   };
 
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState({ type: '', message: '' });
+
+  const handleClosePosition = async (positionId) => {
+    const sharesToClose = parseFloat(closeInputs[positionId]);
+    if (isNaN(sharesToClose) || sharesToClose <= 0) return;
+    
+    setCloseLoading(true);
+    setAnalysisStatus({ type: '', message: '' });
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/close-position`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position_id: positionId, shares_to_close: sharesToClose })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to close position');
+      
+      setAnalysisStatus({ type: 'success', message: data.message });
+      
+      // Refresh dashboard data
+      await fetchDashboardData();
+      
+      // Re-fetch individual positions
+      const { data: positionsData } = await supabase
+        .from('positions')
+        .select('*')
+        .eq('symbol', selectedTicker.symbol)
+        .order('open_date', { ascending: false });
+      
+      setIndividualPositions(positionsData || []);
+      const newInputs = {};
+      (positionsData || []).forEach(p => {
+        newInputs[p.id] = p.shares; // reset to new max
+      });
+      setCloseInputs(newInputs);
+      
+      // Auto-hide success message
+      setTimeout(() => setAnalysisStatus({ type: '', message: '' }), 3000);
+    } catch (err) {
+      console.error(err);
+      setAnalysisStatus({ type: 'error', message: err.message || 'Failed to close position.' });
+    } finally {
+      setCloseLoading(false);
+    }
+  };
 
   const handleRunAnalysis = async () => {
     setAnalysisLoading(true);
@@ -274,6 +347,61 @@ const Dashboard = () => {
               entryPrice={selectedTicker.average_entry_price}
               currentPrice={selectedTicker.last_close_price}
             />
+
+            {/* Individual Lots Section */}
+            <div style={{ marginTop: '2rem' }}>
+              <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                <Activity size={18} /> Individual Tax Lots
+              </h3>
+              {individualPositions && individualPositions.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="portfolio-table" style={{ fontSize: '0.875rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Open Date</th>
+                        <th>Entry Price</th>
+                        <th>Current Shares</th>
+                        <th>Close Amount</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {individualPositions.map(pos => (
+                        <tr key={pos.id}>
+                          <td>{pos.open_date}</td>
+                          <td>${Number(pos.entry_price).toFixed(2)}</td>
+                          <td>{pos.shares}</td>
+                          <td>
+                            <input 
+                              type="number"
+                              step="any"
+                              max={pos.shares}
+                              min="0"
+                              value={closeInputs[pos.id] || ''}
+                              onChange={(e) => setCloseInputs({ ...closeInputs, [pos.id]: e.target.value })}
+                              style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
+                            />
+                          </td>
+                          <td>
+                            <button
+                              onClick={() => handleClosePosition(pos.id)}
+                              disabled={closeLoading}
+                              style={{
+                                padding: '0.25rem 0.5rem', background: 'var(--accent-red)', color: 'white', border: 'none', borderRadius: '4px', cursor: closeLoading ? 'not-allowed' : 'pointer', opacity: closeLoading ? 0.7 : 1
+                              }}
+                            >
+                              Close
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-secondary)' }}>No open positions found.</p>
+              )}
+            </div>
 
             {/* AI Synthesis Section */}
             <div className="ai-summary glass-panel" style={{ marginTop: '2rem', background: 'rgba(59, 130, 246, 0.05)' }}>

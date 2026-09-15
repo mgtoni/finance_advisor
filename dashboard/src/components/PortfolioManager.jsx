@@ -19,28 +19,25 @@ const PortfolioManager = () => {
     try {
       const symbolUpper = symbol.toUpperCase().trim();
 
-      // 1. Ensure ticker exists in master list
-      const { error: tickerError } = await supabase
-        .from('tickers')
-        .upsert({ symbol: symbolUpper }, { onConflict: 'symbol' });
+      // Send position to backend to handle FX conversion and DB insertion
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/add-position`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          symbol: symbolUpper,
+          open_date: openDate,
+          shares: parseFloat(shares),
+          entry_price: parseFloat(entryPrice)
+        })
+      });
 
-      if (tickerError) throw tickerError;
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to save holding');
 
-      // 2. Insert the position
-      const positionData = {
-        symbol: symbolUpper,
-        open_date: openDate,
-        shares: parseFloat(shares),
-        entry_price: parseFloat(entryPrice)
-      };
-
-      const { error: positionError } = await supabase
-        .from('positions')
-        .insert(positionData);
-
-      if (positionError) throw positionError;
-
-      setStatus({ type: 'success', message: `Successfully saved ${symbolUpper}!` });
+      setStatus({ type: 'success', message: `Successfully saved ${symbolUpper}! ${data.currency !== 'USD' ? `Converted ${data.original_price} ${data.currency} to ${data.converted_price.toFixed(2)} USD.` : ''}` });
       // Clear form
       setSymbol('');
       setShares('');

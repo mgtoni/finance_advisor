@@ -25,6 +25,19 @@ class DataIngestionService:
                     last_close = float(history['Close'].iloc[-1])
                     info = ticker.info
                     company_name = info.get('longName', '') or info.get('shortName', '')
+                    currency = info.get('currency', 'USD')
+                    
+                    if currency != 'USD':
+                        fx_ticker = f"{currency}USD=X"
+                        try:
+                            fx_data = yf.Ticker(fx_ticker).history(period="1d")
+                            if not fx_data.empty:
+                                fx_rate = float(fx_data['Close'].iloc[-1])
+                                last_close = last_close * fx_rate
+                                print(f"Converted current price for {symbol} from {currency} to USD using rate {fx_rate}")
+                        except Exception as fx_err:
+                            print(f"Error fetching current FX for {fx_ticker}: {fx_err}")
+
                     if self.supabase:
                         try:
                             self.supabase.table('tickers').update({
@@ -35,7 +48,7 @@ class DataIngestionService:
                             print(f"Error updating DB with company_name for {symbol}. (Did you add the company_name column?). Falling back to just price. Error: {db_err}")
                             self.supabase.table('tickers').update({'last_close_price': last_close}).eq('symbol', symbol).execute()
                     updates.append({'symbol': symbol, 'last_close': last_close, 'company_name': company_name})
-                    print(f"Updated {symbol} with close price {last_close}")
+                    print(f"Updated {symbol} with close price {last_close} USD")
                 else:
                     print(f"No price data found for {symbol}")
             except Exception as e:
