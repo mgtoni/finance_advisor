@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { PlusCircle, Save } from 'lucide-react';
 
@@ -10,6 +10,35 @@ const PortfolioManager = () => {
   
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
+
+  const [positions, setPositions] = useState([]);
+  const [closeInputs, setCloseInputs] = useState({});
+  const [closeLoading, setCloseLoading] = useState(false);
+
+  useEffect(() => {
+    fetchPositions();
+  }, []);
+
+  const fetchPositions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('positions')
+        .select('*')
+        .order('symbol')
+        .order('open_date', { ascending: false });
+        
+      if (!error) {
+        setPositions(data || []);
+        const initialInputs = {};
+        (data || []).forEach(p => {
+          initialInputs[p.id] = p.shares;
+        });
+        setCloseInputs(initialInputs);
+      }
+    } catch (err) {
+      console.error('Error fetching positions:', err);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +72,9 @@ const PortfolioManager = () => {
       setShares('');
       setEntryPrice('');
       
+      // Refresh positions table
+      await fetchPositions();
+      
     } catch (err) {
       console.error(err);
       setStatus({ type: 'error', message: err.message || 'Failed to save holding.' });
@@ -73,6 +105,36 @@ const PortfolioManager = () => {
       setStatus({ type: 'error', message: err.message || 'Failed to trigger backend. Ensure the Python API server is running.' });
     } finally {
       setAnalysisLoading(false);
+    }
+  };
+
+  const handleClosePosition = async (positionId) => {
+    const sharesToClose = parseFloat(closeInputs[positionId]);
+    if (isNaN(sharesToClose) || sharesToClose <= 0) return;
+    
+    setCloseLoading(true);
+    setStatus({ type: '', message: '' });
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/close-position`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position_id: positionId, shares_to_close: sharesToClose })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to close position');
+      
+      setStatus({ type: 'success', message: data.message });
+      await fetchPositions();
+      
+      setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.message || 'Failed to close position.' });
+    } finally {
+      setCloseLoading(false);
     }
   };
 
@@ -198,6 +260,62 @@ const PortfolioManager = () => {
             </div>
           )}
         </form>
+      </div>
+
+      {/* Existing Positions Section */}
+      <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '2rem auto 0', width: '100%', padding: '1.5rem' }}>
+        <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Existing Open Positions (Tax Lots)</h3>
+        {positions && positions.length > 0 ? (
+          <div className="table-responsive">
+            <table className="portfolio-table" style={{ fontSize: '0.875rem' }}>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Open Date</th>
+                  <th>Entry Price</th>
+                  <th>Current Shares</th>
+                  <th>Close Amount</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {positions.map(pos => (
+                  <tr key={pos.id}>
+                    <td style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>{pos.symbol}</td>
+                    <td>{pos.open_date}</td>
+                    <td>${Number(pos.entry_price).toFixed(2)}</td>
+                    <td>{pos.shares}</td>
+                    <td>
+                      <input 
+                        type="number"
+                        step="any"
+                        max={pos.shares}
+                        min="0"
+                        value={closeInputs[pos.id] || ''}
+                        onChange={(e) => setCloseInputs({ ...closeInputs, [pos.id]: e.target.value })}
+                        style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
+                      />
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() => handleClosePosition(pos.id)}
+                        disabled={closeLoading}
+                        style={{
+                          padding: '0.25rem 0.5rem', background: 'var(--accent-red)', color: 'white', border: 'none', borderRadius: '4px', cursor: closeLoading ? 'not-allowed' : 'pointer', opacity: closeLoading ? 0.7 : 1
+                        }}
+                      >
+                        Close
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p style={{ color: 'var(--text-secondary)' }}>No open positions found.</p>
+        )}
       </div>
     </div>
   );
