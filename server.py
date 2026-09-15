@@ -2,14 +2,28 @@ import os
 import warnings
 # Suppress package deprecation warnings (e.g., google.generativeai and duckduckgo_search)
 warnings.filterwarnings("ignore")
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask import Flask, jsonify, request, make_response
 import yfinance as yf
 from main import main as run_pipeline
 
 app = Flask(__name__)
-# allow_private_network=True is required to fix the Chrome loopback restriction
-CORS(app, allow_private_network=True)
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Access-Control-Allow-Private-Network'
+    response.headers['Access-Control-Allow-Private-Network'] = 'true'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
+
+@app.route('/api/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    return make_response('', 200)
+
+@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+def handle_root_options(path):
+    return make_response('', 200)
 
 @app.route('/api/run-analysis', methods=['POST'])
 def trigger_analysis():
