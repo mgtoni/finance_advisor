@@ -57,23 +57,24 @@ def add_position():
         shares = float(data.get('shares', 0))
         entry_price = float(data.get('entry_price', 0))
 
+        input_currency = data.get('currency', 'USD').strip()
+
         if not all([symbol, open_date, shares, entry_price]):
             return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
-        # Check currency and get historical FX if needed
+        # Fetch ticker just to confirm it's valid if needed, but rely on input_currency for FX
         yf_symbol = get_yf_ticker(symbol)
         ticker = yf.Ticker(yf_symbol)
         info = ticker.info
-        currency = info.get('currency', 'USD')
         
         converted_entry_price = entry_price
+        
+        if input_currency == 'GBp':
+            input_currency = 'GBP'
+            converted_entry_price = entry_price / 100.0
 
-        # We treat GBp (pence) as GBP (pounds) for FX since user inputs entry_price in pounds.
-        if currency == 'GBp':
-            currency = 'GBP'
-            
-        if currency != 'USD':
-            fx_ticker = f"{currency}USD=X"
+        if input_currency != 'USD':
+            fx_ticker = f"{input_currency}USD=X"
             fx = yf.Ticker(fx_ticker)
             # Try to get the FX rate on the open date
             # We fetch a window around open_date to ensure we get a trading day
@@ -85,8 +86,8 @@ def add_position():
                 fx_hist = fx.history(start=start_date, end=end_date)
                 if not fx_hist.empty:
                     fx_rate = fx_hist['Close'].iloc[0]
-                    converted_entry_price = entry_price * float(fx_rate)
-                    print(f"Converted {entry_price} {currency} to {converted_entry_price} USD using FX rate {fx_rate}")
+                    converted_entry_price = converted_entry_price * float(fx_rate)
+                    print(f"Converted {entry_price} input currency to {converted_entry_price} USD using FX rate {fx_rate}")
                 else:
                     print(f"Warning: Could not find historical FX rate for {fx_ticker} around {start_date}. Using 1:1.")
             except Exception as fx_err:
@@ -111,7 +112,7 @@ def add_position():
         return jsonify({
             "status": "success", 
             "message": f"Successfully saved {symbol}!",
-            "currency": currency,
+            "currency": input_currency,
             "original_price": entry_price,
             "converted_price": converted_entry_price
         }), 200

@@ -7,6 +7,7 @@ const PortfolioManager = () => {
   const [openDate, setOpenDate] = useState(new Date().toISOString().split('T')[0]);
   const [shares, setShares] = useState('');
   const [entryPrice, setEntryPrice] = useState('');
+  const [currency, setCurrency] = useState('USD');
   
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -63,18 +64,20 @@ const PortfolioManager = () => {
           symbol: symbolUpper,
           open_date: openDate,
           shares: parseFloat(shares),
-          entry_price: parseFloat(entryPrice)
+          entry_price: parseFloat(entryPrice),
+          currency: currency
         })
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to save holding');
 
-      setStatus({ type: 'success', message: `Successfully saved ${symbolUpper}! ${data.currency !== 'USD' ? `Converted ${data.original_price} ${data.currency} to ${data.converted_price.toFixed(2)} USD.` : ''}` });
+      setStatus({ type: 'success', message: `Successfully saved ${symbolUpper}! ${data.currency !== 'USD' ? `Converted ${data.original_price} ${currency} to ${data.converted_price.toFixed(2)} USD.` : ''}` });
       // Clear form
       setSymbol('');
       setShares('');
       setEntryPrice('');
+      setCurrency('USD');
       
       // Refresh positions table
       await fetchPositions();
@@ -232,7 +235,7 @@ const PortfolioManager = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Quantity (Shares)</label>
               <input 
@@ -250,7 +253,24 @@ const PortfolioManager = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Avg Entry Price ($)</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Currency</label>
+              <select 
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                style={{
+                  width: '100%', padding: '0.75rem', borderRadius: '8px',
+                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--panel-border)',
+                  color: 'white', outline: 'none', appearance: 'menulist'
+                }}
+              >
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBp">GBp (Pence)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Avg Entry Price</label>
               <input 
                 type="number" 
                 step="any"
