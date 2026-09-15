@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import pandas_ta as ta
+from utils import get_yf_ticker
 
 class QuantEngineService:
     def __init__(self):
@@ -9,7 +10,8 @@ class QuantEngineService:
     def fetch_data(self, symbol, interval="1d", period="2y"):
         """Fetches historical OHLCV data."""
         try:
-            ticker = yf.Ticker(symbol)
+            yf_symbol = get_yf_ticker(symbol)
+            ticker = yf.Ticker(yf_symbol)
             df = ticker.history(period=period, interval=interval)
             if df.empty:
                 return None
@@ -82,7 +84,11 @@ class QuantEngineService:
         weekly_df = self.fetch_data(symbol, interval="1wk", period="2y")
         
         if daily_df is None or weekly_df is None:
-            return 0.0
+            return {
+                'composite_score': 0.0,
+                'daily_score': 0.0,
+                'weekly_score': 0.0
+            }
             
         daily_score = self.analyze_timeframe(daily_df)
         weekly_score = self.analyze_timeframe(weekly_df)

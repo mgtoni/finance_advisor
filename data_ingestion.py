@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from edgar import set_identity, get_filings
 from dotenv import load_dotenv
+from utils import get_yf_ticker
 
 load_dotenv()
 
@@ -19,7 +20,8 @@ class DataIngestionService:
         updates = []
         for symbol in tickers:
             try:
-                ticker = yf.Ticker(symbol)
+                yf_symbol = get_yf_ticker(symbol)
+                ticker = yf.Ticker(yf_symbol)
                 history = ticker.history(period="1d")
                 if not history.empty:
                     last_close = float(history['Close'].iloc[-1])
@@ -76,7 +78,8 @@ class DataIngestionService:
     def get_earnings_drift(self, symbol):
         """Attempts to detect earnings drift via yfinance."""
         try:
-            ticker = yf.Ticker(symbol)
+            yf_symbol = get_yf_ticker(symbol)
+            ticker = yf.Ticker(yf_symbol)
             # yfinance sometimes exposes eps trend data
             eps_trend = ticker.eps_trend
             if eps_trend is not None and not eps_trend.empty:
@@ -109,7 +112,8 @@ class DataIngestionService:
         if '.' in symbol:
             try:
                 # Use Yahoo Finance global insider transactions as fallback
-                ticker = yf.Ticker(symbol)
+                yf_symbol = get_yf_ticker(symbol)
+                ticker = yf.Ticker(yf_symbol)
                 insider_tx = ticker.insider_transactions
                 
                 buy_count = 0

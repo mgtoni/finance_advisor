@@ -83,6 +83,7 @@ CREATE POLICY "Allow public update for tickers" ON tickers FOR UPDATE USING (tru
 
 CREATE POLICY "Allow public insert for positions" ON positions FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for positions" ON positions FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete for positions" ON positions FOR DELETE USING (true);
 
 CREATE POLICY "Allow public insert for news_events" ON news_events FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for news_events" ON news_events FOR UPDATE USING (true);

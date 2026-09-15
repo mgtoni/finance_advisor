@@ -9,6 +9,7 @@ from main import main as run_pipeline
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from utils import get_yf_ticker
 
 load_dotenv()
 supabase_url = os.getenv("SUPABASE_URL")
@@ -60,7 +61,8 @@ def add_position():
             return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
         # Check currency and get historical FX if needed
-        ticker = yf.Ticker(symbol)
+        yf_symbol = get_yf_ticker(symbol)
+        ticker = yf.Ticker(yf_symbol)
         info = ticker.info
         currency = info.get('currency', 'USD')
         
@@ -166,7 +168,8 @@ def get_history(symbol):
         }
         period = tf_map.get(timeframe, '1y')
         
-        ticker = yf.Ticker(symbol)
+        yf_symbol = get_yf_ticker(symbol)
+        ticker = yf.Ticker(yf_symbol)
         hist = ticker.history(period=period)
         
         if hist.empty:
