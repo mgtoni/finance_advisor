@@ -1,4 +1,7 @@
 import os
+import warnings
+# Suppress package deprecation warnings (e.g., google.generativeai and duckduckgo_search)
+warnings.filterwarnings("ignore")
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import yfinance as yf
