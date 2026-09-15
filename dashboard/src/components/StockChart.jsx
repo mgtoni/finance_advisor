@@ -77,7 +77,7 @@ const StockChart = ({ symbol, entryDate, entryPrice, currentPrice }) => {
 
     const fetchHistory = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://localhost:5000';
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         const response = await fetch(`${apiUrl}/api/history/${symbol}?timeframe=${timeframe}`);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();

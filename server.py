@@ -75,5 +75,5 @@ def get_history(symbol):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    # Run on port 5000 with adhoc SSL context to bypass HTTPS mixed content restrictions
-    app.run(host='127.0.0.1', port=5000, ssl_context='adhoc')
+    # Run on port 5000
+    app.run(host='127.0.0.1', port=5000)

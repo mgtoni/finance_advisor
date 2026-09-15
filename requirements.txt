@@ -11,4 +11,4 @@ thefuzz>=0.20.0
 flask>=3.0.0
 flask-cors>=4.0.0
 
-pyopenssl>=23.0.0
+
