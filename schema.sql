@@ -49,8 +49,10 @@ CREATE TABLE IF NOT EXISTS news_events (
     headline TEXT NOT NULL,
     url TEXT UNIQUE NOT NULL,
     source VARCHAR(50),
+    source_tier VARCHAR(15),
     published_at TIMESTAMP WITH TIME ZONE,
     sentiment_score NUMERIC(4, 2),
+    impact_summary TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -65,17 +67,31 @@ CREATE TABLE IF NOT EXISTS prediction_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- 5.b. Portfolio Analysis Logs Table
+CREATE TABLE IF NOT EXISTS portfolio_analysis_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    analysis_date DATE DEFAULT CURRENT_DATE,
+    risk_level VARCHAR(15),
+    action VARCHAR(15),
+    rationale JSONB NOT NULL,
+    sector_breakdown JSONB,
+    country_breakdown JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
 -- 6. Row Level Security (RLS)
 ALTER TABLE tickers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE positions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prediction_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE portfolio_analysis_logs ENABLE ROW LEVEL SECURITY;
 
 -- Allow read access for anon role
 CREATE POLICY "Allow public read access for tickers" ON tickers FOR SELECT USING (true);
 CREATE POLICY "Allow public read access for positions" ON positions FOR SELECT USING (true);
 CREATE POLICY "Allow public read access for news_events" ON news_events FOR SELECT USING (true);
 CREATE POLICY "Allow public read access for prediction_logs" ON prediction_logs FOR SELECT USING (true);
+CREATE POLICY "Allow public read access for portfolio_analysis_logs" ON portfolio_analysis_logs FOR SELECT USING (true);
 
 -- Allow insert/update access for anon role (for the Python backend)
 CREATE POLICY "Allow public insert for tickers" ON tickers FOR INSERT WITH CHECK (true);
@@ -90,3 +106,6 @@ CREATE POLICY "Allow public update for news_events" ON news_events FOR UPDATE US
 
 CREATE POLICY "Allow public insert for prediction_logs" ON prediction_logs FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for prediction_logs" ON prediction_logs FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public insert for portfolio_analysis_logs" ON portfolio_analysis_logs FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update for portfolio_analysis_logs" ON portfolio_analysis_logs FOR UPDATE USING (true);

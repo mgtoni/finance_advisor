@@ -10,6 +10,11 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from utils import get_yf_ticker
+from portfolio_manager import PortfolioManagerService
+from apscheduler.schedulers.background import BackgroundScheduler
+import pytz
+import pandas as pd
+import numpy as np
 
 load_dotenv()
 supabase_url = os.getenv("SUPABASE_URL")
@@ -231,6 +236,107 @@ def get_history(symbol):
         return jsonify(data)
     except Exception as e:
         print(f"Error fetching history for {symbol}: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/portfolio-analysis', methods=['GET'])
+def get_portfolio_analysis():
+    try:
+        if not supabase:
+            return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
+        
+        pm = PortfolioManagerService(supabase_client=supabase)
+        analysis = pm.synthesize_portfolio()
+        
+        if analysis:
+            return jsonify({"status": "success", "data": analysis})
+        else:
+            return jsonify({"status": "error", "message": "Failed to synthesize portfolio"}), 500
+    except Exception as e:
+        print(f"Error fetching portfolio analysis: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+def scheduled_news_run():
+    print("Running scheduled intraday news aggregation...")
+    try:
+        from news_aggregator import NewsAggregatorService
+        if not supabase: return
+        res = supabase.table('positions').select('symbol').execute()
+        if not res.data: return
+        tickers = list(set([r['symbol'] for r in res.data]))
+        service = NewsAggregatorService(supabase_client=supabase)
+        service.run_aggregation(tickers)
+    except Exception as e:
+        print(f"Error in scheduled news run: {e}")
+
+# Initialize APScheduler for intraday news
+scheduler = BackgroundScheduler(timezone=pytz.timezone('US/Eastern'))
+scheduler.add_job(scheduled_news_run, 'cron', day_of_week='mon-fri', hour=9, minute=30)
+scheduler.add_job(scheduled_news_run, 'cron', day_of_week='mon-fri', hour=16, minute=0)
+scheduler.start()
+
+@app.route('/api/portfolio-metrics', methods=['GET'])
+def get_portfolio_metrics():
+    try:
+        if not supabase:
+            return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
+        
+        # Get all symbols
+        res = supabase.table('positions').select('symbol, shares, entry_price').execute()
+        if not res.data:
+            return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
+        
+        symbols = list(set([r['symbol'] for r in res.data]))
+        if len(symbols) < 1:
+            return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
+            
+        data = yf.download(symbols, period="1y")
+        if 'Close' in data:
+            data = data['Close']
+            
+        if isinstance(data, pd.Series): 
+            # Only 1 symbol
+            return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
+            
+        returns = data.pct_change().dropna()
+        corr_matrix = returns.corr().to_dict()
+        
+        mean_daily_return = returns.mean(axis=1).mean()
+        std_daily_return = returns.mean(axis=1).std()
+        risk_free_rate = 0.04 / 252 
+        
+        if std_daily_return > 0:
+            sharpe_ratio = ((mean_daily_return - risk_free_rate) / std_daily_return) * np.sqrt(252)
+        else:
+            sharpe_ratio = 0
+            
+        return jsonify({
+            "status": "success", 
+            "data": {
+                "correlation": corr_matrix,
+                "sharpe_ratio": sharpe_ratio
+            }
+        })
+    except Exception as e:
+        print(f"Error fetching portfolio metrics: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/fundamentals/<symbol>', methods=['GET'])
+def get_fundamentals(symbol):
+    try:
+        yf_symbol = get_yf_ticker(symbol)
+        ticker = yf.Ticker(yf_symbol)
+        info = ticker.info
+        fundamentals = {
+            'market_cap': info.get('marketCap'),
+            'trailing_pe': info.get('trailingPE'),
+            'forward_pe': info.get('forwardPE'),
+            'price_to_book': info.get('priceToBook'),
+            'debt_to_equity': info.get('debtToEquity'),
+            'return_on_equity': info.get('returnOnEquity')
+        }
+        return jsonify({"status": "success", "data": fundamentals})
+    except Exception as e:
+        print(f"Error fetching fundamentals for {symbol}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':

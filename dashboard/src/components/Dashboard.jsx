@@ -2,19 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import StockChart from './StockChart';
 import Modal from './Modal';
-import { Activity, BookOpen, TrendingUp, TrendingDown } from 'lucide-react';
+import { Activity, BookOpen, TrendingUp, TrendingDown, PieChart as PieChartIcon } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const Dashboard = () => {
   const [tickers, setTickers] = useState([]);
   const [predictions, setPredictions] = useState({});
   const [selectedTicker, setSelectedTicker] = useState(null);
   const [selectedPrediction, setSelectedPrediction] = useState(null);
+  const [selectedFundamentals, setSelectedFundamentals] = useState(null);
   const [news, setNews] = useState([]);
+  const [portfolioMetrics, setPortfolioMetrics] = useState(null);
+  const [activeTab, setActiveTab] = useState('Overview');
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'symbol', direction: 'asc' });
+  const [portfolioAnalysis, setPortfolioAnalysis] = useState(null);
 
   // New state for individual positions fractional closing
   const [individualPositions, setIndividualPositions] = useState([]);
@@ -74,6 +81,34 @@ const Dashboard = () => {
         setPredictions(preds);
       }
 
+      // 3. Fetch Portfolio Analysis
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/portfolio-analysis`);
+        if (response.ok) {
+           const analysisRes = await response.json();
+           if (analysisRes.status === 'success') {
+               setPortfolioAnalysis(analysisRes.data);
+           }
+        }
+      } catch (err) {
+        console.error("Error fetching portfolio analysis", err);
+      }
+
+      // 4. Fetch Portfolio Metrics (Sharpe, Correlation)
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const metricsRes = await fetch(`${apiUrl}/api/portfolio-metrics`);
+        if (metricsRes.ok) {
+           const metricsData = await metricsRes.json();
+           if (metricsData.status === 'success') {
+               setPortfolioMetrics(metricsData.data);
+           }
+        }
+      } catch (err) {
+        console.error("Error fetching portfolio metrics", err);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -123,6 +158,22 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Error fetching individual positions:', err);
     }
+
+    // Fetch fundamentals
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/fundamentals/${ticker.symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'success') {
+          setSelectedFundamentals(data.data);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching fundamentals:', err);
+    }
+    
+    setActiveTab('Overview');
   };
 
   const [analysisLoading, setAnalysisLoading] = useState(false);
@@ -277,6 +328,87 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {portfolioAnalysis && (
+        <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 300px' }}>
+             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <PieChartIcon size={20} color="var(--accent-blue)" /> 
+                Portfolio Analysis (AI)
+             </h3>
+             <div style={{ marginBottom: '1rem' }}>
+                <span className={`badge badge-${portfolioAnalysis.action?.toLowerCase() || 'hold'}`}>
+                  {portfolioAnalysis.action || 'HOLD'}
+                </span>
+                <span style={{ marginLeft: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  Risk Level: <strong>{portfolioAnalysis.risk_level || 'UNKNOWN'}</strong>
+                </span>
+             </div>
+             {portfolioMetrics && (
+                <div style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  Sharpe Ratio (1Y): <strong style={{ color: portfolioMetrics.sharpe_ratio > 1 ? 'var(--accent-green)' : 'white' }}>
+                    {portfolioMetrics.sharpe_ratio?.toFixed(2) || '0.00'}
+                  </strong>
+                </div>
+             )}
+             <ul className="rationale-list" style={{ fontSize: '0.9rem' }}>
+                {(portfolioAnalysis.rationale || []).map((r, i) => <li key={i}>{r}</li>)}
+             </ul>
+          </div>
+          <div style={{ flex: '1 1 300px', height: '250px' }}>
+            <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Sector Breakdown</h4>
+            {portfolioAnalysis.sector_breakdown ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={Object.entries(portfolioAnalysis.sector_breakdown).map(([name, value]) => ({ name, value }))}
+                    cx="50%" cy="50%" innerRadius={40} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value"
+                  >
+                    {Object.entries(portfolioAnalysis.sector_breakdown).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--panel-border)' }} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <p className="text-muted" style={{ textAlign: 'center' }}>No sector data.</p>}
+          </div>
+          <div style={{ flex: '1 1 300px' }}>
+            <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>1Y Correlation Matrix</h4>
+            {portfolioMetrics && portfolioMetrics.correlation && Object.keys(portfolioMetrics.correlation).length > 0 ? (
+               <div className="table-responsive" style={{ maxHeight: '220px', overflow: 'auto' }}>
+                 <table className="portfolio-table" style={{ fontSize: '0.75rem', width: '100%' }}>
+                   <thead>
+                     <tr>
+                       <th style={{ position: 'sticky', left: 0, background: 'var(--bg-card)' }}></th>
+                       {Object.keys(portfolioMetrics.correlation).map(sym => <th key={sym}>{sym}</th>)}
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {Object.keys(portfolioMetrics.correlation).map(symRow => (
+                       <tr key={symRow}>
+                         <td style={{ fontWeight: 'bold', position: 'sticky', left: 0, background: 'var(--bg-card)' }}>{symRow}</td>
+                         {Object.keys(portfolioMetrics.correlation).map(symCol => {
+                           const val = portfolioMetrics.correlation[symRow][symCol];
+                           let bgColor = 'transparent';
+                           if (val > 0.8 && symRow !== symCol) bgColor = 'rgba(239, 68, 68, 0.2)'; // High correlation
+                           if (val < 0.2) bgColor = 'rgba(16, 185, 129, 0.2)'; // Low/Negative correlation
+                           return (
+                             <td key={symCol} style={{ background: bgColor, textAlign: 'center' }}>
+                               {val !== null ? val.toFixed(2) : '-'}
+                             </td>
+                           )
+                         })}
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+            ) : <p className="text-muted" style={{ textAlign: 'center' }}>No correlation data.</p>}
+          </div>
+        </div>
+      )}
+
       <div className="glass-panel" style={{ padding: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
@@ -425,18 +557,37 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Entry positions passing to StockChart for markers */}
-            <StockChart 
-              symbol={selectedTicker.symbol} 
-              positions={individualPositions}
-              currentPrice={selectedTicker.last_close_price}
-            />
+            {/* Tabs Header */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--panel-border)', marginBottom: '1.5rem', marginTop: '1rem', overflowX: 'auto' }}>
+               {['Overview', 'Fundamentals', 'News', 'Learn'].map(tab => (
+                  <button 
+                    key={tab} 
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      padding: '0.75rem 1.5rem', background: 'transparent', border: 'none',
+                      color: activeTab === tab ? 'var(--accent-blue)' : 'var(--text-secondary)',
+                      borderBottom: activeTab === tab ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                      cursor: 'pointer', fontWeight: activeTab === tab ? 600 : 400,
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {tab}
+                  </button>
+               ))}
+            </div>
 
-            {/* Individual Lots Section */}
-            <div style={{ marginTop: '2rem' }}>
-              <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                <Activity size={18} /> Individual Tax Lots
-              </h3>
+            {activeTab === 'Overview' && (
+              <>
+                <StockChart 
+                  symbol={selectedTicker.symbol} 
+                  positions={individualPositions}
+                  currentPrice={selectedTicker.last_close_price}
+                />
+
+                <div style={{ marginTop: '2rem' }}>
+                  <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                    <Activity size={18} /> Individual Tax Lots
+                  </h3>
               {individualPositions && individualPositions.length > 0 ? (
                 <div className="table-responsive">
                   <table className="portfolio-table" style={{ fontSize: '0.875rem' }}>
@@ -476,60 +627,126 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <p style={{ color: 'var(--text-secondary)' }}>No open positions found.</p>
-              )}
-            </div>
+            {/* End Overview Tab Content */}
+              </>
+            )}
 
-            {/* AI Synthesis Section */}
-            <div className="ai-summary glass-panel" style={{ marginTop: '2rem', background: 'rgba(59, 130, 246, 0.05)' }}>
-              <h3>AI Synthesis & Rationale</h3>
-              {selectedPrediction ? (
-                <>
-                  <ul className="rationale-list">
-                    {Array.isArray(selectedPrediction.rationale) 
-                      ? selectedPrediction.rationale.map((r, i) => <li key={i}>{r}</li>)
-                      : <li>{typeof selectedPrediction.rationale === 'string' ? selectedPrediction.rationale : 'No detailed rationale provided.'}</li>
-                    }
-                  </ul>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem', textAlign: 'right' }}>
-                    Last updated: {new Date(selectedPrediction.created_at).toLocaleString()}
-                  </div>
-                </>
-              ) : (
-                <p style={{ color: 'var(--text-secondary)' }}>AI Synthesis is pending for this asset. Check back later after the next analysis run.</p>
-              )}
-            </div>
-
-            {/* News Section */}
-            <div style={{ marginTop: '2rem' }}>
-              <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                <BookOpen size={18} /> Recent News Flow
-              </h3>
-              {news && news.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {news.map(n => (
-                    <a 
-                      key={n.id} 
-                      href={n.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      style={{ color: 'inherit', textDecoration: 'none' }}
-                    >
-                      <div className="glass-panel news-card">
-                        <h4 style={{ fontSize: '1rem', fontWeight: 500 }}>{n.headline}</h4>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                          <span>{n.source}</span>
-                          <span>{new Date(n.published_at).toLocaleDateString()}</span>
+            {activeTab === 'Fundamentals' && (
+              <div style={{ marginTop: '1rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                 <div className="glass-panel" style={{ flex: '1 1 100%', background: 'rgba(255, 255, 255, 0.02)' }}>
+                    <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Fundamental Analysis</h3>
+                    {selectedFundamentals ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.95rem' }}>
+                        <div>
+                           <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>P/E Ratio</div>
+                           <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{selectedFundamentals.trailing_pe?.toFixed(2) || 'N/A'}</div>
+                        </div>
+                        <div>
+                           <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Forward P/E</div>
+                           <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{selectedFundamentals.forward_pe?.toFixed(2) || 'N/A'}</div>
+                        </div>
+                        <div>
+                           <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>P/B Ratio</div>
+                           <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{selectedFundamentals.price_to_book?.toFixed(2) || 'N/A'}</div>
+                        </div>
+                        <div>
+                           <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Debt/Equity</div>
+                           <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{selectedFundamentals.debt_to_equity?.toFixed(2) || 'N/A'}</div>
+                        </div>
+                        <div>
+                           <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>ROE</div>
+                           <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{(selectedFundamentals.return_on_equity * 100)?.toFixed(2) || 'N/A'}%</div>
                         </div>
                       </div>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                  No recent news found for {selectedTicker.symbol}.
+                    ) : <p className="text-muted small">Loading fundamentals...</p>}
+                 </div>
+              </div>
+            )}
+
+            {activeTab === 'News' && (
+              <div style={{ marginTop: '1rem' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                  <BookOpen size={18} /> Recent News Flow & Impact
+                </h3>
+                <p className="small text-muted" style={{ marginBottom: '1rem' }}>
+                   Sources are tiered by reliability. Sentiment scores range from -1.0 (Negative) to 1.0 (Positive).
                 </p>
-              )}
-            </div>
+                {news && news.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {news.map(n => {
+                      const sentimentColor = n.sentiment_score > 0.2 ? 'var(--accent-green)' : n.sentiment_score < -0.2 ? 'var(--accent-red)' : 'var(--text-secondary)';
+                      return (
+                        <a 
+                          key={n.id} 
+                          href={n.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: 'inherit', textDecoration: 'none' }}
+                        >
+                          <div className="glass-panel news-card">
+                            <h4 style={{ fontSize: '1rem', fontWeight: 500 }}>{n.headline}</h4>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                              <span>
+                                 {n.source} 
+                                 <span style={{ marginLeft: '0.5rem', padding: '0.1rem 0.4rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>Tier {n.source_tier || 3}</span>
+                              </span>
+                              <span>{new Date(n.published_at).toLocaleString()}</span>
+                            </div>
+                            {n.impact_summary && (
+                              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-primary)', borderLeft: `3px solid ${sentimentColor}`, paddingLeft: '0.5rem' }}>
+                                <strong>AI Impact Analysis:</strong> {n.impact_summary}
+                              </div>
+                            )}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                    No recent news found for {selectedTicker.symbol}.
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {activeTab === 'Learn' && (
+              <div style={{ marginTop: '1rem' }}>
+                 <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Financial Glossary & Education</h3>
+                 <div className="glass-panel" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+                    <ul style={{ lineHeight: '1.8', listStyleType: 'none', padding: 0, margin: 0 }}>
+                      <li style={{ marginBottom: '1rem' }}>
+                        <strong style={{ color: 'var(--accent-blue)' }}>Sharpe Ratio:</strong> 
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Measures risk-adjusted return. A ratio above 1.0 is generally considered good, as it means you are earning excess return for the volatility endured.</p>
+                      </li>
+                      <li style={{ marginBottom: '1rem' }}>
+                        <strong style={{ color: 'var(--accent-blue)' }}>Correlation Matrix:</strong> 
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Shows how assets move relative to each other (1 = perfectly together, -1 = perfectly opposite). Lower correlation (e.g. &lt; 0.2) means better diversification, reducing portfolio risk.</p>
+                      </li>
+                      <li style={{ marginBottom: '1rem' }}>
+                        <strong style={{ color: 'var(--accent-blue)' }}>P/E Ratio (Price-to-Earnings):</strong> 
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Compares a company's share price to its earnings per share. High P/E might mean it's overvalued or investors expect high growth. Low P/E can indicate a value stock.</p>
+                      </li>
+                      <li style={{ marginBottom: '1rem' }}>
+                        <strong style={{ color: 'var(--accent-blue)' }}>P/B Ratio (Price-to-Book):</strong> 
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Compares market capitalization to book value. Under 1.0 can indicate the stock is undervalued.</p>
+                      </li>
+                      <li style={{ marginBottom: '1rem' }}>
+                        <strong style={{ color: 'var(--accent-blue)' }}>Debt-to-Equity:</strong> 
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Indicates how much debt a company uses to finance assets relative to shareholders' equity. High values mean higher financial risk.</p>
+                      </li>
+                      <li style={{ marginBottom: '1rem' }}>
+                        <strong style={{ color: 'var(--accent-blue)' }}>ROE (Return on Equity):</strong> 
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Measures profitability by revealing how much profit a company generates with the money shareholders have invested. Higher is generally better.</p>
+                      </li>
+                      <li>
+                        <strong style={{ color: 'var(--accent-blue)' }}>AI Conviction Score:</strong> 
+                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>The AI's confidence level (1-10) in its recommendation, based on the confluence of macro factors, fundamentals, news sentiment, and technical analysis.</p>
+                      </li>
+                    </ul>
+                 </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>

@@ -5,10 +5,66 @@ from duckduckgo_search import DDGS
 from thefuzz import fuzz
 from datetime import datetime
 import urllib.parse
+import os
+import json
+import google.generativeai as genai
 
 class NewsAggregatorService:
     def __init__(self, supabase_client=None):
         self.supabase = supabase_client
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        self.model = genai.GenerativeModel('gemini-3.8-flash')
+        
+        self.SOURCE_TIERS = {
+            'Financial Times': 1, 'Bloomberg': 1, 'Wall Street Journal': 1, 'Reuters': 1,
+            'Yahoo Finance': 2, 'CNBC': 2, 'MarketWatch': 2, 'Barron\'s': 2,
+            'Seeking Alpha': 3, 'Motley Fool': 3, 'Zacks': 3
+        }
+
+    def assign_tier(self, source):
+        for key, tier in self.SOURCE_TIERS.items():
+            if key.lower() in source.lower():
+                return tier
+        return 3
+
+    def analyze_sentiment(self, symbol, articles):
+        """Uses Gemini to assign a sentiment score and impact summary for each article."""
+        if not articles:
+            return articles
+            
+        system_instruction = '''
+        You are a quantitative financial analyst. 
+        Given a list of news articles for a stock symbol, analyze each article's headline and source.
+        IMPORTANT: Sources are categorized by Trust Tiers (1 to 3). You MUST heavily weight Tier 1 sources (Traditional Financial Media like FT, WSJ, Bloomberg) and discount Tier 3 sources (Blogs, random websites).
+        Return a JSON array of objects, one for each article in the exact same order.
+        Each object must have:
+        - "sentiment_score": a float between -1.0 (highly negative) and 1.0 (highly positive).
+        - "impact_summary": a 1-sentence summary of how this news might impact the stock price today.
+        '''
+        
+        prompt = f"Symbol: {symbol}\nArticles:\n"
+        for i, article in enumerate(articles):
+            prompt += f"{i+1}. Headline: {article['headline']} (Source: {article['source']}, Tier: {article.get('source_tier', 3)})\n"
+            
+        try:
+            response = self.model.generate_content(
+                contents=[system_instruction, prompt],
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1
+                )
+            )
+            analysis = json.loads(response.text)
+            
+            for i, article in enumerate(articles):
+                if i < len(analysis):
+                    article['sentiment_score'] = analysis[i].get('sentiment_score', 0)
+                    article['impact_summary'] = analysis[i].get('impact_summary', '')
+                    
+        except Exception as e:
+            print(f"Error generating sentiment for {symbol}: {e}")
+            
+        return articles
 
     def fetch_yahoo_news(self, symbol):
         """Fetches news from Yahoo Finance backdoor."""
@@ -100,6 +156,7 @@ class NewsAggregatorService:
                     break
             
             if not is_duplicate:
+                article['source_tier'] = self.assign_tier(article['source'])
                 deduped.append(article)
                 seen_urls.add(article['url'])
                 
@@ -110,6 +167,7 @@ class NewsAggregatorService:
         results = {}
         for symbol in tickers:
             articles = self.aggregate_and_deduplicate(symbol)
+            articles = self.analyze_sentiment(symbol, articles)
             results[symbol] = articles
             
             # Optionally insert into Supabase here

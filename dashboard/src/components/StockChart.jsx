@@ -10,12 +10,88 @@ const TIMEFRAMES = {
   'ALL': 2000 // Just a large number for mock data
 };
 
+const calculateSMA = (data, count) => {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < count - 1) continue;
+    let sum = 0;
+    for (let j = 0; j < count; j++) {
+      sum += data[i - j].close;
+    }
+    result.push({ time: data[i].time, value: sum / count });
+  }
+  return result;
+};
+
+const calculateRSI = (data, period = 14) => {
+  if (data.length <= period) return [];
+  const result = [];
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const change = data[i].close - data[i-1].close;
+    if (change > 0) gains += change;
+    else losses -= change;
+  }
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+
+  for (let i = period; i < data.length; i++) {
+    if (i > period) {
+      const change = data[i].close - data[i-1].close;
+      avgGain = (avgGain * (period - 1) + (change > 0 ? change : 0)) / period;
+      avgLoss = (avgLoss * (period - 1) + (change < 0 ? -change : 0)) / period;
+    }
+    let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+    let rsi = avgLoss === 0 ? 100 : 100 - (100 / (1 + rs));
+    result.push({ time: data[i].time, value: rsi });
+  }
+  return result;
+};
+
+const calculateEMA = (data, period) => {
+  const k = 2 / (period + 1);
+  const result = [];
+  let ema = data[0].close;
+  for (let i = 0; i < data.length; i++) {
+    ema = (data[i].close - ema) * k + ema;
+    result.push(ema);
+  }
+  return result;
+};
+
+const calculateMACD = (data) => {
+  if (data.length < 26) return [];
+  const ema12 = calculateEMA(data, 12);
+  const ema26 = calculateEMA(data, 26);
+  const macdLine = [];
+  for (let i = 0; i < data.length; i++) {
+    macdLine.push({ time: data[i].time, close: ema12[i] - ema26[i] }); 
+  }
+  const signalLine = calculateEMA(macdLine, 9);
+  
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    result.push({ 
+      time: data[i].time, 
+      value: macdLine[i].close - signalLine[i],
+      color: (macdLine[i].close - signalLine[i]) >= 0 ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'
+    });
+  }
+  return result;
+};
+
 const StockChart = ({ symbol, positions, currentPrice }) => {
   const chartContainerRef = useRef();
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
+  const smaSeriesRef = useRef(null);
+  const rsiSeriesRef = useRef(null);
+  const macdSeriesRef = useRef(null);
   const markersPrimitiveRef = useRef(null);
   const [timeframe, setTimeframe] = useState('1Y');
+  const [showSMA, setShowSMA] = useState(false);
+  const [showRSI, setShowRSI] = useState(false);
+  const [showMACD, setShowMACD] = useState(false);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -47,8 +123,27 @@ const StockChart = ({ symbol, positions, currentPrice }) => {
         wickDownColor: '#ef4444',
       });
 
+      const smaSeries = chart.addLineSeries({
+        color: 'rgba(59, 130, 246, 0.8)',
+        lineWidth: 2,
+        crosshairMarkerVisible: false,
+      });
+      
+      const rsiSeries = chart.addLineSeries({
+        color: '#8b5cf6',
+        lineWidth: 2,
+        priceScaleId: 'left',
+      });
+      
+      const macdSeries = chart.addHistogramSeries({
+        priceScaleId: 'left',
+      });
+
       chartRef.current = chart;
       candlestickSeriesRef.current = candlestickSeries;
+      smaSeriesRef.current = smaSeries;
+      rsiSeriesRef.current = rsiSeries;
+      macdSeriesRef.current = macdSeries;
 
       const handleResize = () => {
         if (chartContainerRef.current && chartRef.current) {
@@ -130,6 +225,27 @@ const StockChart = ({ symbol, positions, currentPrice }) => {
               markersPrimitiveRef.current.setMarkers(markers);
             }
 
+            if (showSMA) {
+              const smaData = calculateSMA(uniqueData, 20);
+              smaSeriesRef.current.setData(smaData);
+            } else {
+              smaSeriesRef.current.setData([]);
+            }
+            
+            if (showRSI) {
+              const rsiData = calculateRSI(uniqueData);
+              rsiSeriesRef.current.setData(rsiData);
+            } else {
+              rsiSeriesRef.current.setData([]);
+            }
+            
+            if (showMACD) {
+              const macdData = calculateMACD(uniqueData);
+              macdSeriesRef.current.setData(macdData);
+            } else {
+              macdSeriesRef.current.setData([]);
+            }
+
             chartRef.current.timeScale().fitContent();
         }
       } catch (err) {
@@ -140,21 +256,61 @@ const StockChart = ({ symbol, positions, currentPrice }) => {
     fetchHistory();
 
     return () => { isMounted = false; };
-  }, [symbol, timeframe, positions]);
+  }, [symbol, timeframe, positions, showSMA, showRSI, showMACD]);
 
   return (
     <div>
-      <div className="chart-controls" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        {Object.keys(TIMEFRAMES).map(tf => (
-          <button
-            key={tf}
-            onClick={() => setTimeframe(tf)}
-            className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`}
+      <div className="chart-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {Object.keys(TIMEFRAMES).map(tf => (
+            <button
+              key={tf}
+              onClick={() => setTimeframe(tf)}
+              className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`}
+            >
+              {tf}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => setShowSMA(!showSMA)}
+            className={`timeframe-btn ${showSMA ? 'active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--accent-blue)' }}
           >
-            {tf}
+            SMA (20)
           </button>
-        ))}
+          <button 
+            onClick={() => setShowRSI(!showRSI)}
+            className={`timeframe-btn ${showRSI ? 'active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #8b5cf6' }}
+          >
+            RSI (14)
+          </button>
+          <button 
+            onClick={() => setShowMACD(!showMACD)}
+            className={`timeframe-btn ${showMACD ? 'active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #ec4899' }}
+          >
+            MACD Histogram
+          </button>
+        </div>
       </div>
+      {showSMA && (
+        <div style={{ marginBottom: '0.5rem', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '6px', fontSize: '0.85rem' }}>
+          <strong>SMA (Simple Moving Average):</strong> Smooths out short-term fluctuations to reveal the underlying trend.
+        </div>
+      )}
+      {showRSI && (
+        <div style={{ marginBottom: '0.5rem', padding: '0.75rem', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '6px', fontSize: '0.85rem' }}>
+          <strong>RSI (Relative Strength Index):</strong> Measures momentum. Over 70 indicates the asset may be overbought, under 30 indicates it may be oversold.
+        </div>
+      )}
+      {showMACD && (
+        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.2)', borderRadius: '6px', fontSize: '0.85rem' }}>
+          <strong>MACD Histogram:</strong> Shows the difference between the MACD line and the signal line. Green bars indicate bullish momentum, red indicates bearish.
+        </div>
+      )}
       <div ref={chartContainerRef} className="chart-container" />
     </div>
   );

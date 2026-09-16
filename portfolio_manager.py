@@ -3,6 +3,7 @@ import json
 import requests
 import google.generativeai as genai
 from datetime import datetime
+import yfinance as yf
 
 class PortfolioManagerService:
     def __init__(self, supabase_client=None):
@@ -33,7 +34,24 @@ class PortfolioManagerService:
             
         return None
 
-    def synthesize_decision(self, symbol, position_context, alpha_data, news_data, tech_scores):
+    def get_fundamental_data(self, symbol):
+        """Fetches fundamental data using yfinance."""
+        try:
+            ticker = yf.Ticker(symbol)
+            info = ticker.info
+            return {
+                'market_cap': info.get('marketCap'),
+                'trailing_pe': info.get('trailingPE'),
+                'forward_pe': info.get('forwardPE'),
+                'price_to_book': info.get('priceToBook'),
+                'debt_to_equity': info.get('debtToEquity'),
+                'return_on_equity': info.get('returnOnEquity')
+            }
+        except Exception as e:
+            print(f"Error fetching fundamentals for {symbol}: {e}")
+            return {}
+
+    def synthesize_decision(self, symbol, position_context, alpha_data, news_data, tech_scores, fundamentals):
         """Feeds all data into Gemini to generate a portfolio decision."""
         
         system_instruction = """
@@ -62,8 +80,9 @@ class PortfolioManagerService:
         
         1. Position Context: {json.dumps(position_context)}
         2. Quantitative Technical Scores: {json.dumps(tech_scores)}
-        3. Alpha Data (Macro, Insider, Drift): {json.dumps(alpha_data)}
-        4. Recent News Events: {json.dumps(news_data)}
+        3. Fundamental Data: {json.dumps(fundamentals)}
+        4. Alpha Data (Macro, Insider, Drift): {json.dumps(alpha_data)}
+        5. Recent News Events: {json.dumps(news_data)}
         """
 
         try:
@@ -138,7 +157,8 @@ class PortfolioManagerService:
             news = aggregated_data[symbol].get('news')
             tech = aggregated_data[symbol].get('tech')
             
-            decision = self.synthesize_decision(symbol, context, alpha, news, tech)
+            fundamentals = self.get_fundamental_data(symbol)
+            decision = self.synthesize_decision(symbol, context, alpha, news, tech, fundamentals)
             
             if decision:
                 print(f"Decision for {symbol}: {decision['action']} (Conviction: {decision['conviction_score']})")
@@ -148,6 +168,59 @@ class PortfolioManagerService:
                 
         print("LLM Synthesis Complete.")
         return results
+
+    def synthesize_portfolio(self):
+        """Analyzes the entire portfolio based on summary data."""
+        if not self.supabase:
+            return None
+            
+        try:
+            # Fetch all portfolio summary data
+            response = self.supabase.table('portfolio_summary').select('*').execute()
+            portfolio = response.data
+            
+            if not portfolio:
+                return None
+                
+            system_instruction = '''
+            You are a Chief Investment Officer managing a portfolio.
+            Given the user's current portfolio holdings, calculate or estimate the sector and country breakdown.
+            Provide a high-level risk assessment and actionable insights.
+            Output as JSON:
+            {
+                "risk_level": "LOW" | "MEDIUM" | "HIGH",
+                "action": "REBALANCE" | "HOLD" | "DE-RISK",
+                "sector_breakdown": {"Technology": 40, "Healthcare": 20, ...},
+                "country_breakdown": {"US": 80, "China": 20, ...},
+                "rationale": ["bullet 1", "bullet 2"]
+            }
+            '''
+            
+            prompt = f"Portfolio Holdings:\n{json.dumps(portfolio)}"
+            
+            res = self.model.generate_content(
+                contents=[system_instruction, prompt],
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.2
+                )
+            )
+            analysis = json.loads(res.text)
+            
+            # Log to DB
+            self.supabase.table('portfolio_analysis_logs').insert({
+                'risk_level': analysis.get('risk_level'),
+                'action': analysis.get('action'),
+                'rationale': analysis.get('rationale'),
+                'sector_breakdown': analysis.get('sector_breakdown'),
+                'country_breakdown': analysis.get('country_breakdown')
+            }).execute()
+            
+            return analysis
+            
+        except Exception as e:
+            print(f"Error in portfolio synthesis: {e}")
+            return None
 
 if __name__ == "__main__":
     # Test execution (requires GEMINI_API_KEY to be set in env)
