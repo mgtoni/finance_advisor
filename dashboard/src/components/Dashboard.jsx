@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [fetchError, setFetchError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'symbol', direction: 'asc' });
 
   // New state for individual positions fractional closing
   const [individualPositions, setIndividualPositions] = useState([]);
@@ -236,6 +237,44 @@ const Dashboard = () => {
     );
   });
 
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getValueForSort = (t, key) => {
+    const pred = predictions[t.symbol];
+    if (key === 'symbol') return t.symbol;
+    if (key === 'last_close_price') return t.last_close_price || 0;
+    if (key === 'total_shares') return t.total_shares || 0;
+    if (key === 'average_entry_price') return t.average_entry_price || 0;
+    if (key === 'totalInvested') return (t.total_shares * t.average_entry_price) || 0;
+    if (key === 'total_unrealized_pnl_fiat') return t.total_unrealized_pnl_fiat || 0;
+    if (key === 'total_unrealized_pnl_pct') return t.total_unrealized_pnl_pct || 0;
+    if (key === 'netValue') return (t.total_shares * t.last_close_price) || 0;
+    if (key === 'conviction') return pred?.conviction_score || 0;
+    if (key === 'recommendation') return pred?.action || '';
+    return 0;
+  };
+
+  const sortedTickers = [...filteredTickers].sort((a, b) => {
+    const valA = getValueForSort(a, sortConfig.key);
+    const valB = getValueForSort(b, sortConfig.key);
+    if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIndicator = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+    }
+    return '';
+  };
+
   return (
     <div className="dashboard-container">
       <div className="glass-panel" style={{ padding: '1rem' }}>
@@ -261,20 +300,20 @@ const Dashboard = () => {
           <table className="portfolio-table">
             <thead>
               <tr>
-                <th>Asset</th>
-                <th>Price</th>
-                <th>Units</th>
-                <th>Avg. Open</th>
-                <th>Total Invested</th>
-                <th>P/L</th>
-                <th>P/L(%)</th>
-                <th>Net Value</th>
-                <th>Conviction</th>
-                <th>Recommendation</th>
+                <th onClick={() => handleSort('symbol')} style={{cursor: 'pointer'}}>Asset{getSortIndicator('symbol')}</th>
+                <th onClick={() => handleSort('last_close_price')} style={{cursor: 'pointer'}}>Price{getSortIndicator('last_close_price')}</th>
+                <th onClick={() => handleSort('total_shares')} style={{cursor: 'pointer'}}>Units{getSortIndicator('total_shares')}</th>
+                <th onClick={() => handleSort('average_entry_price')} style={{cursor: 'pointer'}}>Avg. Open{getSortIndicator('average_entry_price')}</th>
+                <th onClick={() => handleSort('totalInvested')} style={{cursor: 'pointer'}}>Total Invested{getSortIndicator('totalInvested')}</th>
+                <th onClick={() => handleSort('total_unrealized_pnl_fiat')} style={{cursor: 'pointer'}}>P/L{getSortIndicator('total_unrealized_pnl_fiat')}</th>
+                <th onClick={() => handleSort('total_unrealized_pnl_pct')} style={{cursor: 'pointer'}}>P/L(%){getSortIndicator('total_unrealized_pnl_pct')}</th>
+                <th onClick={() => handleSort('netValue')} style={{cursor: 'pointer'}}>Net Value{getSortIndicator('netValue')}</th>
+                <th onClick={() => handleSort('conviction')} style={{cursor: 'pointer'}}>Conviction{getSortIndicator('conviction')}</th>
+                <th onClick={() => handleSort('recommendation')} style={{cursor: 'pointer'}}>Recommendation{getSortIndicator('recommendation')}</th>
               </tr>
             </thead>
             <tbody>
-              {filteredTickers.map(t => {
+              {sortedTickers.map(t => {
                 const isPositive = t.total_unrealized_pnl_pct >= 0;
                 const pnlValue = t.total_unrealized_pnl_fiat || 0;
                 const netValue = (t.total_shares * t.last_close_price) || 0;
