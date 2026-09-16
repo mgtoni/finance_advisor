@@ -109,3 +109,15 @@ CREATE POLICY "Allow public update for prediction_logs" ON prediction_logs FOR U
 
 CREATE POLICY "Allow public insert for portfolio_analysis_logs" ON portfolio_analysis_logs FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for portfolio_analysis_logs" ON portfolio_analysis_logs FOR UPDATE USING (true);
+
+-- 7. Financials Cache Table
+CREATE TABLE IF NOT EXISTS financials_cache (
+    symbol VARCHAR(15) PRIMARY KEY,
+    quarterly_data JSONB NOT NULL,
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE financials_cache ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access for financials_cache" ON financials_cache FOR SELECT USING (true);
+CREATE POLICY "Allow public insert for financials_cache" ON financials_cache FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update for financials_cache" ON financials_cache FOR UPDATE USING (true);

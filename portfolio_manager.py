@@ -52,7 +52,20 @@ class PortfolioManagerService:
             return {}
 
     def get_quarterly_financials(self, symbol):
-        """Fetches quarterly financial statements from yfinance."""
+        """Fetches quarterly financial statements from yfinance, using Supabase cache."""
+        if self.supabase:
+            try:
+                # Check cache first
+                res = self.supabase.table('financials_cache').select('*').eq('symbol', symbol).execute()
+                if res.data and len(res.data) > 0:
+                    cache_entry = res.data[0]
+                    # Check if cache is older than 24 hours
+                    last_updated = datetime.fromisoformat(cache_entry['last_updated'])
+                    if (datetime.now(last_updated.tzinfo) - last_updated).total_seconds() < 86400:
+                        return cache_entry['quarterly_data']
+            except Exception as e:
+                print(f"Cache read error for {symbol}: {e}")
+
         try:
             ticker = yf.Ticker(symbol)
             financials = ticker.quarterly_financials
@@ -60,13 +73,25 @@ class PortfolioManagerService:
                 return []
             
             result = []
-            for date_col in financials.columns[:4]: 
+            # Up to 12 quarters
+            for date_col in financials.columns[:12]: 
                 q_data = {"date": date_col.strftime('%Y-%m-%d')}
                 for idx in financials.index:
                     val = financials.at[idx, date_col]
                     if not pd.isna(val):
                         q_data[idx] = val
                 result.append(q_data)
+                
+            if self.supabase and result:
+                try:
+                    self.supabase.table('financials_cache').upsert({
+                        'symbol': symbol,
+                        'quarterly_data': result,
+                        'last_updated': datetime.now().astimezone().isoformat()
+                    }).execute()
+                except Exception as e:
+                    print(f"Cache write error for {symbol}: {e}")
+                    
             return result
         except Exception as e:
             print(f"Error fetching quarterly financials for {symbol}: {e}")
@@ -234,8 +259,7 @@ class PortfolioManagerService:
             You are a Chief Investment Officer managing a portfolio.
             Given the user's current portfolio holdings, calculate or estimate the sector and country breakdown.
             Provide a high-level risk assessment and actionable insights.
-            CRITICAL RULE: Your portfolio-level action recommendations MUST perfectly square with the individual asset predictions provided. 
-            Do NOT recommend selling an asset in the portfolio analysis if its individual rating is HOLD or BUY.
+            CRITICAL RULE: Consider the individual asset predictions provided in the prompt holistically. Weigh them against macroeconomic risks and provide honest, objective, and realistic portfolio-level advice. Your recommendations should optimize for the best possible outcome given the overall portfolio risk exposure.
             Output as JSON:
             {
                 "risk_level": "LOW" | "MEDIUM" | "HIGH",

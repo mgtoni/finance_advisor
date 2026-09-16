@@ -311,7 +311,8 @@ def get_portfolio_metrics():
             # Only 1 symbol
             return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
             
-        returns = data.pct_change()
+        # Drop assets that have no valid historical data at all
+        returns = data.pct_change().dropna(axis=1, how='all')
         # Convert NaN to 0 for JSON serialization
         corr_matrix = returns.corr().fillna(0).to_dict()
         

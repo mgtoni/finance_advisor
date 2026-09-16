@@ -400,7 +400,9 @@ const Dashboard = () => {
           </div>
 
           <div style={{ flex: '1 1 400px' }}>
-            <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>1Y Correlation Matrix</h4>
+            <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }} title="Shows how assets move relative to each other (1 = perfectly together, -1 = perfectly opposite). Assets missing data are excluded. Lower correlation means better diversification.">
+               1Y Correlation Matrix ⓘ
+            </h4>
             {portfolioMetrics && portfolioMetrics.correlation && Object.keys(portfolioMetrics.correlation).length > 0 ? (
                <div className="table-responsive" style={{ height: '300px', overflow: 'auto', resize: 'vertical' }}>
                  <table className="portfolio-table" style={{ fontSize: '0.75rem', width: '100%' }}>
