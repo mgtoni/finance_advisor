@@ -59,10 +59,23 @@ class PortfolioManagerService:
                 res = self.supabase.table('financials_cache').select('*').eq('symbol', symbol).execute()
                 if res.data and len(res.data) > 0:
                     cache_entry = res.data[0]
-                    # Check if cache is older than 24 hours
+                    cached_data = cache_entry['quarterly_data']
                     last_updated = datetime.fromisoformat(cache_entry['last_updated'])
-                    if (datetime.now(last_updated.tzinfo) - last_updated).total_seconds() < 86400:
-                        return cache_entry['quarterly_data']
+                    
+                    # Smart caching: Check the date of the most recent quarter in the cache
+                    if cached_data and len(cached_data) > 0:
+                        latest_quarter_str = cached_data[0].get('date')
+                        if latest_quarter_str:
+                            latest_quarter_date = datetime.strptime(latest_quarter_str, '%Y-%m-%d').astimezone()
+                            days_since_quarter = (datetime.now().astimezone() - latest_quarter_date).days
+                            days_since_check = (datetime.now().astimezone() - last_updated).days
+                            
+                            # If the last reported quarter is less than 90 days ago, no new quarter can possibly exist yet.
+                            if days_since_quarter < 90:
+                                return cached_data
+                            # If it's been > 90 days, new data might be out. Check at most once every 7 days to avoid spamming yfinance.
+                            elif days_since_check < 7:
+                                return cached_data
             except Exception as e:
                 print(f"Cache read error for {symbol}: {e}")
 
