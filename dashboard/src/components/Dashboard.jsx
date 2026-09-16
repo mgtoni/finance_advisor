@@ -627,6 +627,8 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <p style={{ color: 'var(--text-secondary)' }}>No open positions found.</p>
+              )}
+            </div>
             {/* End Overview Tab Content */}
               </>
             )}
