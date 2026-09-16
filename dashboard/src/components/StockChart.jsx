@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, CandlestickSeries, createSeriesMarkers } from 'lightweight-charts';
+import { createChart, CandlestickSeries, LineSeries, HistogramSeries, createSeriesMarkers } from 'lightweight-charts';
 
 const TIMEFRAMES = {
   '1M': 30,
@@ -123,19 +123,19 @@ const StockChart = ({ symbol, positions, currentPrice }) => {
         wickDownColor: '#ef4444',
       });
 
-      const smaSeries = chart.addLineSeries({
+      const smaSeries = chart.addSeries(LineSeries, {
         color: 'rgba(59, 130, 246, 0.8)',
         lineWidth: 2,
         crosshairMarkerVisible: false,
       });
       
-      const rsiSeries = chart.addLineSeries({
+      const rsiSeries = chart.addSeries(LineSeries, {
         color: '#8b5cf6',
         lineWidth: 2,
         priceScaleId: 'left',
       });
       
-      const macdSeries = chart.addHistogramSeries({
+      const macdSeries = chart.addSeries(HistogramSeries, {
         priceScaleId: 'left',
       });
 
