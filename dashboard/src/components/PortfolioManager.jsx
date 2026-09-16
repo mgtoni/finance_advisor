@@ -344,16 +344,19 @@ const PortfolioManager = () => {
                   <th>Open Date</th>
                   <th>Entry Price</th>
                   <th>Current Shares</th>
-                  <th>Close Amount</th>
+                  <th>Invested Amount</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {positions.map(pos => {
+                {positions.map((pos, index) => {
                   const isEditing = editingId === pos.id;
+                  const isFirstOfSymbol = index === 0 || pos.symbol !== positions[index - 1].symbol;
                   return (
-                    <tr key={pos.id}>
-                      <td style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>{pos.symbol}</td>
+                    <tr key={pos.id} style={{ borderTop: isFirstOfSymbol && index !== 0 ? '1px solid rgba(255, 255, 255, 0.15)' : undefined }}>
+                      <td style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>
+                        {isFirstOfSymbol ? pos.symbol : ''}
+                      </td>
                       
                       <td>
                         {isEditing ? (
@@ -401,15 +404,7 @@ const PortfolioManager = () => {
 
                       <td>
                         {!isEditing && (
-                          <input 
-                            type="number"
-                            step="any"
-                            max={pos.shares}
-                            min="0"
-                            value={closeInputs[pos.id] || ''}
-                            onChange={(e) => setCloseInputs({ ...closeInputs, [pos.id]: e.target.value })}
-                            style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
-                          />
+                          `$${(pos.shares * pos.entry_price).toFixed(2)}`
                         )}
                       </td>
 

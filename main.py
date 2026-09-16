@@ -17,7 +17,7 @@ def get_supabase_client() -> Client:
     print("Warning: SUPABASE_URL or SUPABASE_KEY not found. Running in local/mock mode.")
     return None
 
-def main():
+def main(symbol_filter=None):
     print("=== Starting Quantitative Financial Pipeline ===")
     
     # 1. Initialization
@@ -25,7 +25,10 @@ def main():
     
     # Fetch universe dynamically from Supabase
     test_universe = []
-    if supabase:
+    
+    if symbol_filter:
+        test_universe = [symbol_filter]
+    elif supabase:
         try:
             response = supabase.table('tickers').select('symbol').execute()
             if response.data:

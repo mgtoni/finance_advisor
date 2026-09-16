@@ -180,7 +180,9 @@ const Dashboard = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${apiUrl}/api/run-analysis`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: selectedTicker.symbol })
       });
       
       const data = await response.json();
@@ -361,7 +363,7 @@ const Dashboard = () => {
                         <th>Open Date</th>
                         <th>Entry Price</th>
                         <th>Current Shares</th>
-                        <th>Close Amount</th>
+                        <th>Invested Amount</th>
                         <th>Action</th>
                       </tr>
                     </thead>
@@ -372,15 +374,7 @@ const Dashboard = () => {
                           <td>${Number(pos.entry_price).toFixed(2)}</td>
                           <td>{pos.shares}</td>
                           <td>
-                            <input 
-                              type="number"
-                              step="any"
-                              max={pos.shares}
-                              min="0"
-                              value={closeInputs[pos.id] || ''}
-                              onChange={(e) => setCloseInputs({ ...closeInputs, [pos.id]: e.target.value })}
-                              style={{ width: '80px', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', borderRadius: '4px' }}
-                            />
+                            ${(pos.shares * pos.entry_price).toFixed(2)}
                           </td>
                           <td>
                             <button

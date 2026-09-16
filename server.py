@@ -36,14 +36,14 @@ def handle_root_options(path):
     return make_response('', 200)
 
 @app.route('/api/run-analysis', methods=['POST'])
-def trigger_analysis():
+def run_analysis():
     try:
-        print("Triggering analysis from API...")
-        # Note: running this synchronously may take a minute or two. 
-        # In a production VPS setting with long tasks, you'd use Celery/Redis or a background thread.
-        # For this MVP dashboard integration, a synchronous run is fine.
-        run_pipeline()
-        return jsonify({"status": "success", "message": "Analysis completed successfully."}), 200
+        data = request.json if request.is_json else {}
+        symbol_filter = data.get('symbol')
+        
+        # Run pipeline in a blocking way for now
+        run_pipeline(symbol_filter=symbol_filter)
+        return jsonify({"status": "success", "message": "Pipeline executed successfully"})
     except Exception as e:
         print(f"Error running pipeline: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
