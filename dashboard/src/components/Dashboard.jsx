@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filterText, setFilterText] = useState('');
 
   // New state for individual positions fractional closing
   const [individualPositions, setIndividualPositions] = useState([]);
@@ -213,13 +214,48 @@ const Dashboard = () => {
     );
   }
 
+  const filteredTickers = tickers.filter(t => {
+    if (!filterText) return true;
+    const term = filterText.toLowerCase();
+    const pred = predictions[t.symbol];
+    const totalInvested = (t.total_shares * t.average_entry_price) || 0;
+    const netValue = (t.total_shares * t.last_close_price) || 0;
+    
+    return (
+      t.symbol.toLowerCase().includes(term) ||
+      (t.company_name && t.company_name.toLowerCase().includes(term)) ||
+      t.last_close_price?.toString().includes(term) ||
+      t.total_shares?.toString().includes(term) ||
+      t.average_entry_price?.toString().includes(term) ||
+      totalInvested.toFixed(2).includes(term) ||
+      t.total_unrealized_pnl_fiat?.toString().includes(term) ||
+      t.total_unrealized_pnl_pct?.toString().includes(term) ||
+      netValue.toFixed(2).includes(term) ||
+      (pred && pred.action.toLowerCase().includes(term)) ||
+      (pred && pred.conviction_score?.toString().includes(term))
+    );
+  });
+
   return (
     <div className="dashboard-container">
       <div className="glass-panel" style={{ padding: '1rem' }}>
-        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '1rem' }}>
-          <Activity size={20} color="var(--accent-blue)" /> 
-          Portfolio Performance
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+            <Activity size={20} color="var(--accent-blue)" /> 
+            Portfolio Performance
+          </h2>
+          <input 
+            type="text" 
+            placeholder="Filter all columns..." 
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            style={{
+              padding: '0.5rem 1rem', borderRadius: '8px',
+              background: 'rgba(0,0,0,0.2)', border: '1px solid var(--panel-border)',
+              color: 'white', outline: 'none', width: '250px'
+            }}
+          />
+        </div>
         
         <div className="table-responsive">
           <table className="portfolio-table">
@@ -233,11 +269,12 @@ const Dashboard = () => {
                 <th>P/L</th>
                 <th>P/L(%)</th>
                 <th>Net Value</th>
+                <th>Conviction</th>
                 <th>Recommendation</th>
               </tr>
             </thead>
             <tbody>
-              {tickers.map(t => {
+              {filteredTickers.map(t => {
                 const isPositive = t.total_unrealized_pnl_pct >= 0;
                 const pnlValue = t.total_unrealized_pnl_fiat || 0;
                 const netValue = (t.total_shares * t.last_close_price) || 0;
@@ -276,6 +313,13 @@ const Dashboard = () => {
                       {isPositive ? '+' : ''}{t.total_unrealized_pnl_pct?.toFixed(2) || '0.00'}%
                     </td>
                     <td>${netValue.toFixed(2)}</td>
+                    <td>
+                      {pred ? (
+                        <div style={{ fontWeight: 600 }}>{pred.conviction_score}/10</div>
+                      ) : (
+                        <span className="text-muted small">---</span>
+                      )}
+                    </td>
                     <td>
                       {pred ? (
                         <span className={`badge badge-${pred.action.toLowerCase().replace('_more', '')}`}>
