@@ -208,19 +208,22 @@ class PortfolioManagerService:
             analysis = json.loads(res.text)
             
             # Log to DB
-            self.supabase.table('portfolio_analysis_logs').insert({
-                'risk_level': analysis.get('risk_level'),
-                'action': analysis.get('action'),
-                'rationale': analysis.get('rationale'),
-                'sector_breakdown': analysis.get('sector_breakdown'),
-                'country_breakdown': analysis.get('country_breakdown')
-            }).execute()
+            try:
+                self.supabase.table('portfolio_analysis_logs').insert({
+                    'risk_level': analysis.get('risk_level'),
+                    'action': analysis.get('action'),
+                    'rationale': analysis.get('rationale'),
+                    'sector_breakdown': analysis.get('sector_breakdown'),
+                    'country_breakdown': analysis.get('country_breakdown')
+                }).execute()
+            except Exception as db_err:
+                print(f"Warning: Failed to log portfolio analysis to DB: {db_err}")
             
             return analysis
             
         except Exception as e:
             print(f"Error in portfolio synthesis: {e}")
-            return None
+            return {"error": str(e)}
 
 if __name__ == "__main__":
     # Test execution (requires GEMINI_API_KEY to be set in env)

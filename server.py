@@ -248,10 +248,11 @@ def get_portfolio_analysis():
         pm = PortfolioManagerService(supabase_client=supabase)
         analysis = pm.synthesize_portfolio()
         
-        if analysis:
+        if analysis and "error" not in analysis:
             return jsonify({"status": "success", "data": analysis})
         else:
-            return jsonify({"status": "error", "message": "Failed to synthesize portfolio"}), 500
+            err = analysis.get("error", "Failed to synthesize portfolio") if analysis else "No data returned"
+            return jsonify({"status": "error", "message": err}), 500
     except Exception as e:
         print(f"Error fetching portfolio analysis: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -311,15 +312,19 @@ def get_portfolio_metrics():
             return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
             
         returns = data.pct_change().dropna()
-        corr_matrix = returns.corr().to_dict()
+        # Convert NaN to 0 for JSON serialization
+        corr_matrix = returns.corr().fillna(0).to_dict()
         
         mean_daily_return = returns.mean(axis=1).mean()
         std_daily_return = returns.mean(axis=1).std()
         risk_free_rate = 0.04 / 252 
         
-        if std_daily_return > 0:
-            sharpe_ratio = ((mean_daily_return - risk_free_rate) / std_daily_return) * np.sqrt(252)
+        if pd.isna(std_daily_return) or std_daily_return <= 0:
+            sharpe_ratio = 0
         else:
+            sharpe_ratio = ((mean_daily_return - risk_free_rate) / std_daily_return) * np.sqrt(252)
+            
+        if pd.isna(sharpe_ratio) or np.isnan(sharpe_ratio) or np.isinf(sharpe_ratio):
             sharpe_ratio = 0
             
         return jsonify({
