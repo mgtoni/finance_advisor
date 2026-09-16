@@ -184,7 +184,11 @@ const Dashboard = () => {
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'success') {
-          setSelectedFundamentals(data.data);
+          setSelectedFundamentals({
+            ...data.data,
+            quarterly: data.quarterly,
+            macro_analysis: data.macro_analysis
+          });
         }
       }
     } catch (err) {
