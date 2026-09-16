@@ -333,7 +333,7 @@ const Dashboard = () => {
     <div className="dashboard-container">
       {portfolioAnalysis && (
         <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 300px' }}>
+          <div style={{ flex: '2 1 500px' }}>
              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                 <PieChartIcon size={20} color="var(--accent-blue)" /> 
                 Portfolio Analysis (AI)
@@ -357,8 +357,8 @@ const Dashboard = () => {
                 {(portfolioAnalysis.rationale || []).map((r, i) => <li key={i}><SmartText text={r} /></li>)}
              </ul>
           </div>
-          <div style={{ display: 'flex', flex: '2 1 500px', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 220px', height: '300px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 250px', gap: '1.5rem' }}>
+            <div style={{ height: '300px' }}>
               <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Sector Breakdown</h4>
               {portfolioAnalysis.sector_breakdown ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -378,7 +378,7 @@ const Dashboard = () => {
               ) : <p className="text-muted" style={{ textAlign: 'center' }}>No sector data.</p>}
             </div>
             
-            <div style={{ flex: '1 1 220px', height: '300px' }}>
+            <div style={{ height: '300px' }}>
               <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Country Breakdown</h4>
               {portfolioAnalysis.country_breakdown ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -399,7 +399,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div style={{ flex: '1 1 400px' }}>
+          <div style={{ flex: '1 1 100%', marginTop: '1rem' }}>
             <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }} title="Shows how assets move relative to each other (1 = perfectly together, -1 = perfectly opposite). Assets missing data are excluded. Lower correlation means better diversification.">
                1Y Correlation Matrix ⓘ
             </h4>

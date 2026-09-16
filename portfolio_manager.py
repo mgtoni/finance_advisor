@@ -273,13 +273,14 @@ class PortfolioManagerService:
             Given the user's current portfolio holdings, calculate or estimate the sector and country breakdown.
             Provide a high-level risk assessment and actionable insights.
             CRITICAL RULE: Consider the individual asset predictions provided in the prompt holistically. Weigh them against macroeconomic risks and provide honest, objective, and realistic portfolio-level advice. Your recommendations should optimize for the best possible outcome given the overall portfolio risk exposure.
+            Provide at least 6-8 detailed insights in the rationale list covering macro, fundamentals, and specific asset synergies or risks.
             Output as JSON:
             {
                 "risk_level": "LOW" | "MEDIUM" | "HIGH",
                 "action": "REBALANCE" | "HOLD" | "DE-RISK",
                 "sector_breakdown": {"Technology": 40, "Healthcare": 20, ...},
                 "country_breakdown": {"US": 80, "China": 20, ...},
-                "rationale": ["bullet 1", "bullet 2"]
+                "rationale": ["insight 1", "insight 2", "insight 3", "insight 4", "insight 5", "insight 6"]
             }
             '''
             
