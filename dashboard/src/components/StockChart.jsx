@@ -10,12 +10,12 @@ const TIMEFRAMES = {
   'ALL': 2000 // Just a large number for mock data
 };
 
-const StockChart = ({ symbol, entryDate, entryPrice, currentPrice }) => {
+const StockChart = ({ symbol, positions, currentPrice }) => {
   const chartContainerRef = useRef();
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
   const markersPrimitiveRef = useRef(null);
-  const [timeframe, setTimeframe] = useState('3M');
+  const [timeframe, setTimeframe] = useState('1Y');
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -90,22 +90,38 @@ const StockChart = ({ symbol, entryDate, entryPrice, currentPrice }) => {
             
             candlestickSeriesRef.current.setData(uniqueData);
             
-            // Set Markers for Entry Point
+            // Set Markers for Entry Points
             let markers = [];
-            if (entryDate && entryPrice) {
-              const entryTimestamp = Math.floor(new Date(entryDate).getTime() / 1000);
-              
-              if (entryTimestamp >= uniqueData[0].time && entryTimestamp <= uniqueData[uniqueData.length - 1].time) {
-                markers = [
-                  {
-                    time: entryTimestamp,
-                    position: 'belowBar',
-                    color: '#3b82f6',
-                    shape: 'arrowUp',
-                    text: `Entry: $${entryPrice.toFixed(2)}`,
+            if (positions && positions.length > 0) {
+              const markersByTime = {};
+              positions.forEach(pos => {
+                if (pos.open_date && pos.entry_price) {
+                  const entryTimestamp = Math.floor(new Date(pos.open_date).getTime() / 1000);
+                  if (entryTimestamp >= uniqueData[0].time && entryTimestamp <= uniqueData[uniqueData.length - 1].time) {
+                    if (!markersByTime[entryTimestamp]) {
+                      markersByTime[entryTimestamp] = [];
+                    }
+                    markersByTime[entryTimestamp].push(Number(pos.entry_price));
                   }
-                ];
-              }
+                }
+              });
+
+              Object.keys(markersByTime).forEach(timeStr => {
+                const time = parseInt(timeStr);
+                const prices = markersByTime[timeStr];
+                const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+                const text = prices.length > 1 ? `Entries (~$${avgPrice.toFixed(2)})` : `Entry: $${prices[0].toFixed(2)}`;
+                markers.push({
+                  time: time,
+                  position: 'belowBar',
+                  color: '#3b82f6',
+                  shape: 'arrowUp',
+                  text: text,
+                });
+              });
+              
+              // Sort markers by time as required by lightweight-charts
+              markers.sort((a, b) => a.time - b.time);
             }
             
             if (!markersPrimitiveRef.current) {
@@ -124,7 +140,7 @@ const StockChart = ({ symbol, entryDate, entryPrice, currentPrice }) => {
     fetchHistory();
 
     return () => { isMounted = false; };
-  }, [symbol, timeframe, entryDate, entryPrice]);
+  }, [symbol, timeframe, positions]);
 
   return (
     <div>

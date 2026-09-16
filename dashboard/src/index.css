@@ -304,7 +304,7 @@ body {
 
 .modal-content {
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;

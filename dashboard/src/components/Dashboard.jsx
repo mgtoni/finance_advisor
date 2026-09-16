@@ -425,11 +425,10 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Entry date passing to StockChart for markers */}
+            {/* Entry positions passing to StockChart for markers */}
             <StockChart 
               symbol={selectedTicker.symbol} 
-              entryDate={selectedTicker.open_date}
-              entryPrice={selectedTicker.average_entry_price}
+              positions={individualPositions}
               currentPrice={selectedTicker.last_close_price}
             />
 
