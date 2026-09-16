@@ -51,6 +51,27 @@ class PortfolioManagerService:
             print(f"Error fetching fundamentals for {symbol}: {e}")
             return {}
 
+    def get_quarterly_financials(self, symbol):
+        """Fetches quarterly financial statements from yfinance."""
+        try:
+            ticker = yf.Ticker(symbol)
+            financials = ticker.quarterly_financials
+            if financials.empty:
+                return []
+            
+            result = []
+            for date_col in financials.columns[:4]: 
+                q_data = {"date": date_col.strftime('%Y-%m-%d')}
+                for idx in financials.index:
+                    val = financials.at[idx, date_col]
+                    if not pd.isna(val):
+                        q_data[idx] = val
+                result.append(q_data)
+            return result
+        except Exception as e:
+            print(f"Error fetching quarterly financials for {symbol}: {e}")
+            return []
+
     def synthesize_decision(self, symbol, position_context, alpha_data, news_data, tech_scores, fundamentals):
         """Feeds all data into Gemini to generate a portfolio decision."""
         
@@ -104,6 +125,33 @@ class PortfolioManagerService:
                     f"System Error: {str(e)}"
                 ]
             }
+
+    def synthesize_macro_analysis(self, symbol, fundamentals):
+        """Generates a dedicated Macro & Fundamental analysis for a single stock."""
+        system_instruction = """
+        You are a seasoned Macroeconomist and Fundamental Analyst.
+        Provide a concise but insightful analysis of the stock's macro environment, sector tailwinds, and country-specific risks.
+        Evaluate the provided fundamental metrics (e.g. P/E, P/B, Debt/Equity).
+        Output strictly as JSON matching this schema:
+        {
+            "macro_environment": "paragraph about interest rates, inflation, etc. impacting this stock",
+            "sector_analysis": "paragraph about the specific sector tailwinds or headwinds",
+            "fundamental_health": "paragraph interpreting the P/E, Debt/Equity, etc."
+        }
+        """
+        prompt = f"Analyze {symbol} given these fundamentals: {json.dumps(fundamentals)}"
+        try:
+            response = self.model.generate_content(
+                contents=[system_instruction, prompt],
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.3
+                )
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            print(f"Error generating Macro Analysis for {symbol}: {e}")
+            return None
 
     def log_prediction(self, symbol, decision):
         """Logs the decision to Supabase."""
@@ -186,6 +234,8 @@ class PortfolioManagerService:
             You are a Chief Investment Officer managing a portfolio.
             Given the user's current portfolio holdings, calculate or estimate the sector and country breakdown.
             Provide a high-level risk assessment and actionable insights.
+            CRITICAL RULE: Your portfolio-level action recommendations MUST perfectly square with the individual asset predictions provided. 
+            Do NOT recommend selling an asset in the portfolio analysis if its individual rating is HOLD or BUY.
             Output as JSON:
             {
                 "risk_level": "LOW" | "MEDIUM" | "HIGH",
@@ -196,7 +246,25 @@ class PortfolioManagerService:
             }
             '''
             
-            prompt = f"Portfolio Holdings:\n{json.dumps(portfolio)}"
+            # Fetch latest predictions and country data
+            predictions_res = self.supabase.table('prediction_logs').select('*').order('created_at', desc=True).execute()
+            latest_preds = {}
+            if predictions_res.data:
+                for p in predictions_res.data:
+                    if p['symbol'] not in latest_preds:
+                        latest_preds[p['symbol']] = p['action']
+                        
+            # Calculate country and sector breakdown locally to feed AI
+            for item in portfolio:
+                try:
+                    info = yf.Ticker(item['symbol']).info
+                    item['country'] = info.get('country', 'Unknown')
+                    item['sector'] = info.get('sector', 'Unknown')
+                except Exception:
+                    item['country'] = 'Unknown'
+                    item['sector'] = 'Unknown'
+            
+            prompt = f"Portfolio Holdings (with sectors and countries):\n{json.dumps(portfolio)}\n\nIndividual Asset Predictions (DO NOT contradict these actions):\n{json.dumps(latest_preds)}"
             
             res = self.model.generate_content(
                 contents=[system_instruction, prompt],

@@ -311,7 +311,7 @@ def get_portfolio_metrics():
             # Only 1 symbol
             return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
             
-        returns = data.pct_change().dropna()
+        returns = data.pct_change()
         # Convert NaN to 0 for JSON serialization
         corr_matrix = returns.corr().fillna(0).to_dict()
         
@@ -344,15 +344,17 @@ def get_fundamentals(symbol):
         yf_symbol = get_yf_ticker(symbol)
         ticker = yf.Ticker(yf_symbol)
         info = ticker.info
-        fundamentals = {
-            'market_cap': info.get('marketCap'),
-            'trailing_pe': info.get('trailingPE'),
-            'forward_pe': info.get('forwardPE'),
-            'price_to_book': info.get('priceToBook'),
-            'debt_to_equity': info.get('debtToEquity'),
-            'return_on_equity': info.get('returnOnEquity')
-        }
-        return jsonify({"status": "success", "data": fundamentals})
+        service = PortfolioManagerService()
+        fundamentals = service.get_fundamental_data(symbol)
+        quarterly = service.get_quarterly_financials(symbol)
+        macro_analysis = service.synthesize_macro_analysis(symbol, fundamentals)
+        
+        return jsonify({
+            "status": "success", 
+            "data": fundamentals,
+            "quarterly": quarterly,
+            "macro_analysis": macro_analysis
+        })
     except Exception as e:
         print(f"Error fetching fundamentals for {symbol}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500

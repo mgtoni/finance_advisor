@@ -1,0 +1,20 @@
+export const glossary = {
+  "Sharpe Ratio": "Measures risk-adjusted return. A ratio above 1.0 is generally considered good, as it means you are earning excess return for the volatility endured.",
+  "Correlation Matrix": "Shows how assets move relative to each other (1 = perfectly together, -1 = perfectly opposite). Lower correlation (e.g. < 0.2) means better diversification, reducing portfolio risk.",
+  "P/E Ratio": "Price-to-Earnings Ratio. Compares a company's share price to its earnings per share. High P/E might mean it's overvalued or investors expect high growth. Low P/E can indicate a value stock.",
+  "P/B Ratio": "Price-to-Book Ratio. Compares market capitalization to book value. Under 1.0 can indicate the stock is undervalued.",
+  "Debt-to-Equity": "Indicates how much debt a company uses to finance assets relative to shareholders' equity. High values mean higher financial risk.",
+  "ROE": "Return on Equity. Measures profitability by revealing how much profit a company generates with the money shareholders have invested. Higher is generally better.",
+  "AI Conviction Score": "The AI's confidence level (1-10) in its recommendation, based on the confluence of macro factors, fundamentals, news sentiment, and technical analysis.",
+  "VIX": "Volatility Index. Often called the 'fear index', it represents market expectations for near-term volatility. Higher values generally indicate higher risk/fear.",
+  "Yield Curve": "A line that plots yields of bonds having equal credit quality but differing maturity dates. An inverted yield curve is often seen as an indicator of an impending economic recession.",
+  "MACD": "Moving Average Convergence Divergence. A trend-following momentum indicator that shows the relationship between two moving averages of a security's price.",
+  "RSI": "Relative Strength Index. A momentum oscillator that measures the speed and change of price movements. Typically, >= 70 indicates overbought conditions, and <= 30 indicates oversold.",
+  "SMA": "Simple Moving Average. The average price over a specific period. Used to smooth out price data and identify trends.",
+  "Alpha": "A measure of performance on a risk-adjusted basis. Alpha takes the volatility (price risk) of a mutual fund and compares its risk-adjusted performance to a benchmark index.",
+  "Beta": "A measure of the volatility, or systematic risk, of a security or a portfolio in comparison to the market as a whole.",
+  "Free Cash Flow": "The cash a company produces through its operations, less the cost of expenditures on assets. It's the cash left over after a company pays for its operating expenses and capital expenditures.",
+  "EBITDA": "Earnings Before Interest, Taxes, Depreciation, and Amortization. A widely used measure of corporate profitability.",
+  "Macro Environment": "The condition that exists in the economy as a whole, rather than in a particular sector or region. Includes inflation, interest rates, GDP, etc.",
+  "Sector Tailwinds": "Positive conditions or trends that are specific to a particular industry or sector, propelling growth."
+};

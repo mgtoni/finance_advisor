@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import StockChart from './StockChart';
 import Modal from './Modal';
-import { Activity, BookOpen, TrendingUp, TrendingDown, PieChart as PieChartIcon } from 'lucide-react';
+import { Activity, BookOpen, TrendingUp, TrendingDown, PieChart as PieChartIcon, Target } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import SmartText from './SmartText';
+import { glossary } from '../data/glossary';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -22,6 +24,7 @@ const Dashboard = () => {
   const [filterText, setFilterText] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'symbol', direction: 'asc' });
   const [portfolioAnalysis, setPortfolioAnalysis] = useState(null);
+  const [newsTierFilter, setNewsTierFilter] = useState('All');
 
   // New state for individual positions fractional closing
   const [individualPositions, setIndividualPositions] = useState([]);
@@ -351,7 +354,7 @@ const Dashboard = () => {
                 </div>
              )}
              <ul className="rationale-list" style={{ fontSize: '0.9rem' }}>
-                {(portfolioAnalysis.rationale || []).map((r, i) => <li key={i}>{r}</li>)}
+                {(portfolioAnalysis.rationale || []).map((r, i) => <li key={i}><SmartText text={r} /></li>)}
              </ul>
           </div>
           <div style={{ flex: '1 1 300px', height: '250px' }}>
@@ -362,6 +365,7 @@ const Dashboard = () => {
                   <Pie
                     data={Object.entries(portfolioAnalysis.sector_breakdown).map(([name, value]) => ({ name, value }))}
                     cx="50%" cy="50%" innerRadius={40} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value"
+                    label={({name, percent}) => `${name}`}
                   >
                     {Object.entries(portfolioAnalysis.sector_breakdown).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -373,10 +377,32 @@ const Dashboard = () => {
               </ResponsiveContainer>
             ) : <p className="text-muted" style={{ textAlign: 'center' }}>No sector data.</p>}
           </div>
-          <div style={{ flex: '1 1 300px' }}>
+          
+          <div style={{ flex: '1 1 300px', height: '250px' }}>
+            <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Country Breakdown</h4>
+            {portfolioAnalysis.country_breakdown ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={Object.entries(portfolioAnalysis.country_breakdown).map(([name, value]) => ({ name, value }))}
+                    cx="50%" cy="50%" innerRadius={40} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value"
+                    label={({name, percent}) => `${name}`}
+                  >
+                    {Object.entries(portfolioAnalysis.country_breakdown).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--panel-border)' }} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <p className="text-muted" style={{ textAlign: 'center' }}>No country data.</p>}
+          </div>
+
+          <div style={{ flex: '1 1 400px' }}>
             <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>1Y Correlation Matrix</h4>
             {portfolioMetrics && portfolioMetrics.correlation && Object.keys(portfolioMetrics.correlation).length > 0 ? (
-               <div className="table-responsive" style={{ maxHeight: '220px', overflow: 'auto' }}>
+               <div className="table-responsive" style={{ height: '300px', overflow: 'auto', resize: 'vertical' }}>
                  <table className="portfolio-table" style={{ fontSize: '0.75rem', width: '100%' }}>
                    <thead>
                      <tr>
@@ -559,7 +585,7 @@ const Dashboard = () => {
 
             {/* Tabs Header */}
             <div style={{ display: 'flex', borderBottom: '1px solid var(--panel-border)', marginBottom: '1.5rem', marginTop: '1rem', overflowX: 'auto' }}>
-               {['Overview', 'Fundamentals', 'News', 'Learn'].map(tab => (
+               {['Overview', 'Fundamentals', 'Financials', 'News', 'Learn'].map(tab => (
                   <button 
                     key={tab} 
                     onClick={() => setActiveTab(tab)}
@@ -583,6 +609,19 @@ const Dashboard = () => {
                   positions={individualPositions}
                   currentPrice={selectedTicker.last_close_price}
                 />
+                
+                {selectedPrediction && selectedPrediction.rationale && (
+                  <div className="glass-panel" style={{ marginTop: '2rem', padding: '1.5rem', borderLeft: '4px solid var(--accent-blue)' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <Target size={20} color="var(--accent-blue)"/> AI Quantitative Analysis
+                    </h3>
+                    <ul style={{ paddingLeft: '1.25rem', lineHeight: 1.6 }}>
+                      {selectedPrediction.rationale.map((r, i) => (
+                        <li key={i}><SmartText text={r} /></li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <div style={{ marginTop: '2rem' }}>
                   <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
@@ -634,11 +673,35 @@ const Dashboard = () => {
             )}
 
             {activeTab === 'Fundamentals' && (
-              <div style={{ marginTop: '1rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              <div style={{ marginTop: '1rem' }}>
+                 <div className="glass-panel" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+                    <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Macro & Fundamental Analysis</h3>
+                    {selectedFundamentals && selectedFundamentals.macro_analysis ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.95rem' }}>
+                        <div>
+                           <div style={{ color: 'var(--accent-blue)', marginBottom: '0.5rem', fontWeight: 'bold' }}>Macro Environment</div>
+                           <div style={{ lineHeight: '1.6' }}><SmartText text={selectedFundamentals.macro_analysis.macro_environment} /></div>
+                        </div>
+                        <div>
+                           <div style={{ color: 'var(--accent-blue)', marginBottom: '0.5rem', fontWeight: 'bold' }}>Sector Tailwinds & Risks</div>
+                           <div style={{ lineHeight: '1.6' }}><SmartText text={selectedFundamentals.macro_analysis.sector_analysis} /></div>
+                        </div>
+                        <div>
+                           <div style={{ color: 'var(--accent-blue)', marginBottom: '0.5rem', fontWeight: 'bold' }}>Fundamental Health</div>
+                           <div style={{ lineHeight: '1.6' }}><SmartText text={selectedFundamentals.macro_analysis.fundamental_health} /></div>
+                        </div>
+                      </div>
+                    ) : <p className="text-muted small">Loading macro analysis...</p>}
+                 </div>
+              </div>
+            )}
+
+            {activeTab === 'Financials' && (
+              <div style={{ marginTop: '1rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', flexDirection: 'column' }}>
                  <div className="glass-panel" style={{ flex: '1 1 100%', background: 'rgba(255, 255, 255, 0.02)' }}>
-                    <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Fundamental Analysis</h3>
+                    <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Key Metrics</h3>
                     {selectedFundamentals ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', fontSize: '0.95rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', fontSize: '0.95rem' }}>
                         <div>
                            <div style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>P/E Ratio</div>
                            <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{selectedFundamentals.trailing_pe?.toFixed(2) || 'N/A'}</div>
@@ -660,22 +723,68 @@ const Dashboard = () => {
                            <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{(selectedFundamentals.return_on_equity * 100)?.toFixed(2) || 'N/A'}%</div>
                         </div>
                       </div>
-                    ) : <p className="text-muted small">Loading fundamentals...</p>}
+                    ) : <p className="text-muted small">Loading metrics...</p>}
+                 </div>
+
+                 <div className="glass-panel" style={{ flex: '1 1 100%', background: 'rgba(255, 255, 255, 0.02)' }}>
+                    <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Quarterly Financials</h3>
+                    {selectedFundamentals && selectedFundamentals.quarterly && selectedFundamentals.quarterly.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="portfolio-table" style={{ fontSize: '0.875rem' }}>
+                          <thead>
+                            <tr>
+                              <th>Metric</th>
+                              {selectedFundamentals.quarterly.map(q => <th key={q.date}>{q.date}</th>)}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.keys(selectedFundamentals.quarterly[0]).filter(k => k !== 'date' && k !== 'Tax Effect Of Unusual Items' && k !== 'Tax Rate For Calcs').slice(0, 8).map(metric => (
+                              <tr key={metric}>
+                                <td>{metric}</td>
+                                {selectedFundamentals.quarterly.map(q => {
+                                  const val = q[metric];
+                                  return (
+                                    <td key={q.date}>
+                                      {val ? (val > 1000000 ? `$${(val/1000000).toFixed(1)}M` : `$${val.toLocaleString()}`) : '-'}
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : <p className="text-muted small">Loading quarterly financials...</p>}
                  </div>
               </div>
             )}
 
             {activeTab === 'News' && (
               <div style={{ marginTop: '1rem' }}>
-                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                  <BookOpen size={18} /> Recent News Flow & Impact
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                    <BookOpen size={18} /> Recent News Flow & Impact
+                  </h3>
+                  <select 
+                    value={newsTierFilter} 
+                    onChange={e => setNewsTierFilter(e.target.value)}
+                    style={{ background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', padding: '0.5rem', borderRadius: '4px' }}
+                  >
+                    <option value="All">All Tiers</option>
+                    <option value="1">Tier 1 Only</option>
+                    <option value="2">Tier 2 & Above</option>
+                  </select>
+                </div>
                 <p className="small text-muted" style={{ marginBottom: '1rem' }}>
                    Sources are tiered by reliability. Sentiment scores range from -1.0 (Negative) to 1.0 (Positive).
                 </p>
                 {news && news.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {news.map(n => {
+                    {news.filter(n => {
+                      if (newsTierFilter === 'All') return true;
+                      const tier = parseInt(n.source_tier || 3);
+                      return tier <= parseInt(newsTierFilter);
+                    }).map(n => {
                       const sentimentColor = n.sentiment_score > 0.2 ? 'var(--accent-green)' : n.sentiment_score < -0.2 ? 'var(--accent-red)' : 'var(--text-secondary)';
                       return (
                         <a 
@@ -715,36 +824,15 @@ const Dashboard = () => {
             {activeTab === 'Learn' && (
               <div style={{ marginTop: '1rem' }}>
                  <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Financial Glossary & Education</h3>
+                 <p className="small text-muted" style={{ marginBottom: '1rem' }}>Hover over these terms throughout the application to see their definitions.</p>
                  <div className="glass-panel" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
                     <ul style={{ lineHeight: '1.8', listStyleType: 'none', padding: 0, margin: 0 }}>
-                      <li style={{ marginBottom: '1rem' }}>
-                        <strong style={{ color: 'var(--accent-blue)' }}>Sharpe Ratio:</strong> 
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Measures risk-adjusted return. A ratio above 1.0 is generally considered good, as it means you are earning excess return for the volatility endured.</p>
-                      </li>
-                      <li style={{ marginBottom: '1rem' }}>
-                        <strong style={{ color: 'var(--accent-blue)' }}>Correlation Matrix:</strong> 
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Shows how assets move relative to each other (1 = perfectly together, -1 = perfectly opposite). Lower correlation (e.g. &lt; 0.2) means better diversification, reducing portfolio risk.</p>
-                      </li>
-                      <li style={{ marginBottom: '1rem' }}>
-                        <strong style={{ color: 'var(--accent-blue)' }}>P/E Ratio (Price-to-Earnings):</strong> 
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Compares a company's share price to its earnings per share. High P/E might mean it's overvalued or investors expect high growth. Low P/E can indicate a value stock.</p>
-                      </li>
-                      <li style={{ marginBottom: '1rem' }}>
-                        <strong style={{ color: 'var(--accent-blue)' }}>P/B Ratio (Price-to-Book):</strong> 
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Compares market capitalization to book value. Under 1.0 can indicate the stock is undervalued.</p>
-                      </li>
-                      <li style={{ marginBottom: '1rem' }}>
-                        <strong style={{ color: 'var(--accent-blue)' }}>Debt-to-Equity:</strong> 
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Indicates how much debt a company uses to finance assets relative to shareholders' equity. High values mean higher financial risk.</p>
-                      </li>
-                      <li style={{ marginBottom: '1rem' }}>
-                        <strong style={{ color: 'var(--accent-blue)' }}>ROE (Return on Equity):</strong> 
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Measures profitability by revealing how much profit a company generates with the money shareholders have invested. Higher is generally better.</p>
-                      </li>
-                      <li>
-                        <strong style={{ color: 'var(--accent-blue)' }}>AI Conviction Score:</strong> 
-                        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>The AI's confidence level (1-10) in its recommendation, based on the confluence of macro factors, fundamentals, news sentiment, and technical analysis.</p>
-                      </li>
+                      {Object.keys(glossary).sort().map(term => (
+                        <li key={term} style={{ marginBottom: '1.5rem' }}>
+                          <strong style={{ color: 'var(--accent-blue)', fontSize: '1.1rem' }}>{term}:</strong> 
+                          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>{glossary[term]}</p>
+                        </li>
+                      ))}
                     </ul>
                  </div>
               </div>
