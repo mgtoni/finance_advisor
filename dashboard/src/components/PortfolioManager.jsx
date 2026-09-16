@@ -193,7 +193,7 @@ const PortfolioManager = () => {
 
   return (
     <div className="dashboard-grid">
-      <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+      <div className="glass-panel" style={{ width: '100%', alignSelf: 'start' }}>
         <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <PlusCircle size={24} color="var(--accent-blue)" />
           Add / Update Holding
@@ -333,7 +333,7 @@ const PortfolioManager = () => {
       </div>
 
       {/* Existing Positions Section */}
-      <div className="glass-panel" style={{ gridColumn: '1 / -1', maxWidth: '800px', margin: '2rem auto 0', width: '100%', padding: '1.5rem' }}>
+      <div className="glass-panel" style={{ width: '100%', padding: '1.5rem', alignSelf: 'start' }}>
         <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>Existing Open Positions (Tax Lots)</h3>
         {positions && positions.length > 0 ? (
           <div className="table-responsive">
@@ -349,12 +349,29 @@ const PortfolioManager = () => {
                 </tr>
               </thead>
               <tbody>
-                {positions.map((pos, index) => {
-                  const isEditing = editingId === pos.id;
-                  const isFirstOfSymbol = index === 0 || pos.symbol !== positions[index - 1].symbol;
-                  return (
-                    <tr key={pos.id} style={{ borderTop: isFirstOfSymbol && index !== 0 ? '1px solid rgba(255, 255, 255, 0.15)' : undefined }}>
-                      <td style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>
+                {(() => {
+                  const symbolCounts = {};
+                  positions.forEach(p => {
+                    symbolCounts[p.symbol] = (symbolCounts[p.symbol] || 0) + 1;
+                  });
+
+                  return positions.map((pos, index) => {
+                    const isEditing = editingId === pos.id;
+                    const isFirstOfSymbol = index === 0 || pos.symbol !== positions[index - 1].symbol;
+                    const hasMultipleLots = symbolCounts[pos.symbol] > 1;
+                    
+                    return (
+                      <React.Fragment key={pos.id}>
+                        {isFirstOfSymbol && index !== 0 && (
+                          <tr>
+                            <td colSpan="6" style={{ padding: 0, height: '1.5rem', borderBottom: 'none' }}></td>
+                          </tr>
+                        )}
+                        <tr style={{ 
+                          borderTop: isFirstOfSymbol && hasMultipleLots ? '2px solid rgba(59, 130, 246, 0.5)' : (isFirstOfSymbol && index !== 0 ? '1px solid rgba(255,255,255,0.1)' : 'none'),
+                          background: hasMultipleLots ? 'rgba(59, 130, 246, 0.03)' : 'transparent'
+                        }}>
+                          <td style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>
                         {isFirstOfSymbol ? pos.symbol : ''}
                       </td>
                       
@@ -450,9 +467,11 @@ const PortfolioManager = () => {
                           </div>
                         )}
                       </td>
-                    </tr>
+                        </tr>
+                      </React.Fragment>
                   );
-                })}
+                });
+                })()}
               </tbody>
             </table>
           </div>
