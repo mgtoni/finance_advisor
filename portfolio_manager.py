@@ -272,7 +272,7 @@ class PortfolioManagerService:
             You are a Chief Investment Officer managing a portfolio.
             Given the user's current portfolio holdings, calculate or estimate the sector and country breakdown.
             Provide a high-level risk assessment and actionable insights.
-            CRITICAL RULE: Consider the individual asset predictions provided in the prompt holistically. Weigh them against macroeconomic risks and provide honest, objective, and realistic portfolio-level advice. Your recommendations should optimize for the best possible outcome given the overall portfolio risk exposure.
+            CRITICAL RULE: Consider the individual asset predictions provided in the prompt holistically. Weigh them against macroeconomic risks and provide honest, objective, and highly critical portfolio-level advice. Do NOT just be complimentary. Proactively identify concentration risks, overvaluations, and macroeconomic vulnerabilities. Your recommendations should optimize for the best possible outcome given the overall portfolio risk exposure.
             Provide at least 6-8 detailed insights in the rationale list covering macro, fundamentals, and specific asset synergies or risks.
             Output as JSON:
             {
@@ -280,6 +280,8 @@ class PortfolioManagerService:
                 "action": "REBALANCE" | "HOLD" | "DE-RISK",
                 "sector_breakdown": {"Technology": 40, "Healthcare": 20, ...},
                 "country_breakdown": {"US": 80, "China": 20, ...},
+                "sector_assets": {"Technology": ["AAPL", "MSFT"], "Healthcare": ["JNJ"]},
+                "country_assets": {"US": ["AAPL", "MSFT", "JNJ"], "China": ["BABA"]},
                 "rationale": ["insight 1", "insight 2", "insight 3", "insight 4", "insight 5", "insight 6"]
             }
             '''
