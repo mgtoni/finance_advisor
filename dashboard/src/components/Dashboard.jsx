@@ -365,14 +365,12 @@ const Dashboard = () => {
                   <Pie
                     data={Object.entries(portfolioAnalysis.sector_breakdown).map(([name, value]) => ({ name, value }))}
                     cx="50%" cy="50%" innerRadius={40} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value"
-                    label={({name, percent}) => `${name}`}
                   >
                     {Object.entries(portfolioAnalysis.sector_breakdown).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <RechartsTooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--panel-border)' }} />
-                  <Legend />
+                  <RechartsTooltip contentStyle={{ background: '#ffffff', color: '#000000', border: '1px solid #ccc', borderRadius: '4px' }} itemStyle={{ color: '#000000' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : <p className="text-muted" style={{ textAlign: 'center' }}>No sector data.</p>}
@@ -386,14 +384,12 @@ const Dashboard = () => {
                   <Pie
                     data={Object.entries(portfolioAnalysis.country_breakdown).map(([name, value]) => ({ name, value }))}
                     cx="50%" cy="50%" innerRadius={40} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value"
-                    label={({name, percent}) => `${name}`}
                   >
                     {Object.entries(portfolioAnalysis.country_breakdown).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
                     ))}
                   </Pie>
-                  <RechartsTooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--panel-border)' }} />
-                  <Legend />
+                  <RechartsTooltip contentStyle={{ background: '#ffffff', color: '#000000', border: '1px solid #ccc', borderRadius: '4px' }} itemStyle={{ color: '#000000' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : <p className="text-muted" style={{ textAlign: 'center' }}>No country data.</p>}
