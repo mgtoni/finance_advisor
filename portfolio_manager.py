@@ -4,6 +4,7 @@ import requests
 import google.generativeai as genai
 from datetime import datetime
 import yfinance as yf
+import pandas as pd
 
 class PortfolioManagerService:
     def __init__(self, supabase_client=None):
@@ -92,7 +93,10 @@ class PortfolioManagerService:
                 for idx in financials.index:
                     val = financials.at[idx, date_col]
                     if not pd.isna(val):
-                        q_data[idx] = val
+                        try:
+                            q_data[idx] = float(val)
+                        except (ValueError, TypeError):
+                            q_data[idx] = val
                 result.append(q_data)
                 
             if self.supabase and result:
