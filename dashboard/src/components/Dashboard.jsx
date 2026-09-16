@@ -357,42 +357,46 @@ const Dashboard = () => {
                 {(portfolioAnalysis.rationale || []).map((r, i) => <li key={i}><SmartText text={r} /></li>)}
              </ul>
           </div>
-          <div style={{ flex: '1 1 300px', height: '250px' }}>
-            <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Sector Breakdown</h4>
-            {portfolioAnalysis.sector_breakdown ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={Object.entries(portfolioAnalysis.sector_breakdown).map(([name, value]) => ({ name, value }))}
-                    cx="50%" cy="50%" innerRadius={40} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value"
-                  >
-                    {Object.entries(portfolioAnalysis.sector_breakdown).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={{ background: '#ffffff', color: '#000000', border: '1px solid #ccc', borderRadius: '4px' }} itemStyle={{ color: '#000000' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="text-muted" style={{ textAlign: 'center' }}>No sector data.</p>}
-          </div>
-          
-          <div style={{ flex: '1 1 300px', height: '250px' }}>
-            <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Country Breakdown</h4>
-            {portfolioAnalysis.country_breakdown ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={Object.entries(portfolioAnalysis.country_breakdown).map(([name, value]) => ({ name, value }))}
-                    cx="50%" cy="50%" innerRadius={40} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value"
-                  >
-                    {Object.entries(portfolioAnalysis.country_breakdown).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={{ background: '#ffffff', color: '#000000', border: '1px solid #ccc', borderRadius: '4px' }} itemStyle={{ color: '#000000' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="text-muted" style={{ textAlign: 'center' }}>No country data.</p>}
+          <div style={{ display: 'flex', flex: '2 1 500px', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 220px', height: '300px' }}>
+              <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Sector Breakdown</h4>
+              {portfolioAnalysis.sector_breakdown ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(portfolioAnalysis.sector_breakdown).map(([name, value]) => ({ name, value }))}
+                      cx="50%" cy="50%" innerRadius={50} outerRadius={100} fill="#8884d8" paddingAngle={5} dataKey="value"
+                      label={({name}) => name}
+                    >
+                      {Object.entries(portfolioAnalysis.sector_breakdown).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip contentStyle={{ background: '#ffffff', color: '#000000', border: '1px solid #ccc', borderRadius: '4px' }} itemStyle={{ color: '#000000' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : <p className="text-muted" style={{ textAlign: 'center' }}>No sector data.</p>}
+            </div>
+            
+            <div style={{ flex: '1 1 220px', height: '300px' }}>
+              <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Country Breakdown</h4>
+              {portfolioAnalysis.country_breakdown ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(portfolioAnalysis.country_breakdown).map(([name, value]) => ({ name, value }))}
+                      cx="50%" cy="50%" innerRadius={50} outerRadius={100} fill="#8884d8" paddingAngle={5} dataKey="value"
+                      label={({name}) => name}
+                    >
+                      {Object.entries(portfolioAnalysis.country_breakdown).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip contentStyle={{ background: '#ffffff', color: '#000000', border: '1px solid #ccc', borderRadius: '4px' }} itemStyle={{ color: '#000000' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : <p className="text-muted" style={{ textAlign: 'center' }}>No country data.</p>}
+            </div>
           </div>
 
           <div style={{ flex: '1 1 400px' }}>
