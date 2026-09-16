@@ -11,8 +11,9 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from utils import get_yf_ticker
 from portfolio_manager import PortfolioManagerService
-from apscheduler.schedulers.background import BackgroundScheduler
-import pytz
+import threading
+import time
+import datetime
 import pandas as pd
 import numpy as np
 
@@ -268,11 +269,23 @@ def scheduled_news_run():
     except Exception as e:
         print(f"Error in scheduled news run: {e}")
 
-# Initialize APScheduler for intraday news
-scheduler = BackgroundScheduler(timezone=pytz.timezone('US/Eastern'))
-scheduler.add_job(scheduled_news_run, 'cron', day_of_week='mon-fri', hour=9, minute=30)
-scheduler.add_job(scheduled_news_run, 'cron', day_of_week='mon-fri', hour=16, minute=0)
-scheduler.start()
+def run_scheduler():
+    while True:
+        now = datetime.datetime.utcnow()
+        # roughly check if it's 9:30 AM EST (13:30 or 14:30 UTC depending on DST)
+        # For simplicity, we just use a basic check.
+        # It's better to just sleep and check the time.
+        # To avoid timezone complexities without pytz, we just sleep.
+        # Actually, let's just not do this background thread if it crashes gunicorn.
+        time.sleep(60)
+
+# We will disable the background thread for now to prevent VPS crashes.
+# The user can hit an endpoint /api/cron/news to trigger it via external cron.
+@app.route('/api/cron/news', methods=['GET', 'POST'])
+def trigger_news_cron():
+    # Run in background to not block the request
+    threading.Thread(target=scheduled_news_run).start()
+    return jsonify({"status": "success", "message": "News aggregation started in background"})
 
 @app.route('/api/portfolio-metrics', methods=['GET'])
 def get_portfolio_metrics():
