@@ -372,7 +372,7 @@ const Dashboard = () => {
                 {(portfolioAnalysis.rationale || []).map((r, i) => <li key={i}><SmartText text={r} /></li>)}
              </ul>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 250px', gap: '3rem', marginLeft: '50px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 250px', gap: '3rem', marginLeft: '50px', marginTop: '50px' }}>
             <div style={{ height: '300px' }}>
               <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Sector Breakdown</h4>
               {portfolioAnalysis.sector_breakdown ? (
@@ -397,7 +397,7 @@ const Dashboard = () => {
               ) : <p className="text-muted" style={{ textAlign: 'center' }}>No sector data.</p>}
             </div>
             
-            <div style={{ height: '300px' }}>
+            <div style={{ height: '300px', marginTop: '70px' }}>
               <h4 style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Country Breakdown</h4>
               {portfolioAnalysis.country_breakdown ? (
                 <ResponsiveContainer width="100%" height="100%">
