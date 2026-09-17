@@ -124,15 +124,15 @@ class NewsAggregatorService:
         return articles
 
     def fetch_alternative_sentiment(self, symbol):
-        """Fetches alternative retail sentiment from Reddit using DuckDuckGo."""
+        """Fetches alternative retail sentiment from Reddit and StockTwits using DuckDuckGo."""
         articles = []
         try:
             with DDGS() as ddgs:
-                results = ddgs.text(keywords=f"site:reddit.com/r/wallstreetbets OR site:reddit.com/r/stocks {symbol} stock", max_results=3)
+                results = ddgs.text(keywords=f"(site:reddit.com/r/wallstreetbets OR site:reddit.com/r/stocks OR site:stocktwits.com) {symbol} stock", max_results=5)
                 for item in results:
                     articles.append({
                         'symbol': symbol,
-                        'headline': f"[Reddit Sentiment] {item.get('title', '')}",
+                        'headline': f"[Retail Sentiment] {item.get('title', '')}",
                         'url': item.get('href', ''),
                         'source': 'Reddit/Retail',
                         'published_at': datetime.now().isoformat()

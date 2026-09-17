@@ -40,6 +40,8 @@ const Dashboard = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'symbol', direction: 'asc' });
   const [portfolioAnalysis, setPortfolioAnalysis] = useState(null);
   const [newsTierFilter, setNewsTierFilter] = useState('All');
+  const [newsSummary, setNewsSummary] = useState(null);
+  const [socialSentiment, setSocialSentiment] = useState(null);
   
   // New States for Macro & Discovery
   const [macroData, setMacroData] = useState(null);
@@ -105,37 +107,29 @@ const Dashboard = () => {
         setPredictions(preds);
       }
 
-      // 3. Fetch Portfolio Analysis
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetch(`${apiUrl}/api/portfolio-analysis`);
-        if (response.ok) {
-           const analysisRes = await response.json();
+      // 3. Fire off Portfolio Analysis asynchronously without awaiting it
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      fetch(`${apiUrl}/api/portfolio-analysis`)
+        .then(res => res.json())
+        .then(analysisRes => {
            if (analysisRes.status === 'success') {
                setPortfolioAnalysis(analysisRes.data);
            }
-        }
-      } catch (err) {
-        console.error("Error fetching portfolio analysis", err);
-      }
+        })
+        .catch(err => console.error("Error fetching portfolio analysis", err));
 
-      // 4. Fetch Portfolio Metrics (Sharpe, Correlation)
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const metricsRes = await fetch(`${apiUrl}/api/portfolio-metrics`);
-        if (metricsRes.ok) {
-           const metricsData = await metricsRes.json();
+      // 4. Fire off Portfolio Metrics asynchronously without awaiting
+      fetch(`${apiUrl}/api/portfolio-metrics`)
+        .then(res => res.json())
+        .then(metricsData => {
            if (metricsData.status === 'success') {
                setPortfolioMetrics(metricsData.data);
            }
-        }
-      } catch (err) {
-        console.error("Error fetching portfolio metrics", err);
-      }
+        })
+        .catch(err => console.error("Error fetching portfolio metrics", err));
 
-      // 5. Fetch Macro Data
+      // 5. Fetch Macro Data (Wait for this so the UI has structure, it's fast)
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
         const macroRes = await fetch(`${apiUrl}/api/macro-data`);
         if (macroRes.ok) {
            const macroJson = await macroRes.json();
@@ -201,6 +195,8 @@ const Dashboard = () => {
     setSelectedTicker(ticker);
     setSelectedPrediction(predictions[ticker.symbol] || null);
     setIsModalOpen(true);
+    setNewsSummary(null);
+    setSocialSentiment(null);
     
     // Fetch recent news for the selected ticker
     try {
@@ -257,6 +253,22 @@ const Dashboard = () => {
       console.error('Error fetching fundamentals:', err);
     }
     
+    // Fetch News Summary asynchronously
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/news-summary/${ticker.symbol}`)
+      .then(res => res.json())
+      .then(data => {
+         if(data.status === 'success') setNewsSummary(data.summary);
+      })
+      .catch(err => console.error("Error fetching news summary", err));
+
+    // Fetch Social Sentiment asynchronously
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/social-sentiment/${ticker.symbol}`)
+      .then(res => res.json())
+      .then(data => {
+         if(data.status === 'success') setSocialSentiment(data.data);
+      })
+      .catch(err => console.error("Error fetching social sentiment", err));
+      
     setActiveTab('Overview');
   };
 
@@ -413,67 +425,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       
-      {/* AI Discovery Engine Panel (Moved to Top for Visibility) */}
-      <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid var(--accent-blue)' }}>
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: 'var(--text-primary)' }}>
-                <Target size={20} color="var(--accent-blue)" /> 
-                AI Discovery Engine
-             </h3>
-             <button 
-                 onClick={async () => {
-                     setIsDiscovering(true);
-                     const apiUrl = import.meta.env.VITE_API_URL || '';
-                     try {
-                         await fetch(`${apiUrl}/api/run-discovery`, { method: 'POST' });
-                         alert("AI Discovery triggered! It will calculate portfolio gaps and scrape global assets. Check back in ~60 seconds and refresh.");
-                     } catch(e) {
-                         console.error(e);
-                     }
-                     setTimeout(() => setIsDiscovering(false), 5000);
-                 }}
-                 disabled={isDiscovering}
-                 className="btn btn-primary"
-             >
-                 {isDiscovering ? 'Triggered...' : 'Run Active Discovery'}
-             </button>
-         </div>
-         <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
-            The AI acts as your global screener, calculating correlation matrices on your current portfolio and finding exact global tickers to perfectly hedge your gaps.
-         </p>
-         {discoveryPicks && discoveryPicks.length > 0 ? (
-           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {discoveryPicks.map(pick => (
-                 <div key={pick.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                       <div>
-                          <h4 style={{ fontSize: '1.25rem', margin: 0, color: 'white' }}>{pick.symbol}</h4>
-                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{pick.company_name} • {pick.sector}</div>
-                       </div>
-                       <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: pick.quant_score > 0 ? 'var(--accent-green)' : 'var(--text-primary)' }}>
-                             {pick.quant_score}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Quant Score</div>
-                       </div>
-                    </div>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: '1rem' }}>
-                       <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>AI Investment Thesis</strong>
-                       <ul style={{ paddingLeft: '1rem', margin: 0, fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-primary)' }}>
-                          {(pick.thesis || []).map((point, idx) => (
-                             <li key={idx} style={{ marginBottom: '0.5rem' }}>{point}</li>
-                          ))}
-                       </ul>
-                    </div>
-                 </div>
-              ))}
-           </div>
-         ) : (
-           <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', color: 'var(--text-secondary)' }}>
-              No draft picks yet. Click "Run Active Discovery" to find new assets!
-           </div>
-         )}
-      </div>
+
 
       {/* Macro Environment Panel */}
       {macroData && (
@@ -993,9 +945,16 @@ const Dashboard = () => {
                   <p className="small text-muted" style={{ margin: 0 }}>
                     News sources tagged as <strong>Tier 1 (Earnings Calls)</strong> are automatically scraped via DuckDuckGo and fed into the AI's core predictive model. 
                     This allows the AI to forecast using management's forward-looking guidance rather than relying solely on past quarterly fundamentals.
-                    <strong> Tier 3 (Retail)</strong> represents scraped sentiment from forums like r/wallstreetbets to detect short-squeeze risks.
                   </p>
                 </div>
+                {newsSummary ? (
+                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', borderLeft: '4px solid var(--accent-blue)' }}>
+                    <strong style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.85rem' }}>AI Executive Summary</strong>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>{newsSummary}</p>
+                  </div>
+                ) : (
+                  <div style={{ padding: '1rem', marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Generating AI Summary...</div>
+                )}
                 {news && news.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {news.filter(n => {
@@ -1048,13 +1007,14 @@ const Dashboard = () => {
                     The AI specifically monitors these platforms to detect <strong>retail mania, pump-and-dump schemes, and short-squeeze risks</strong> that institutional news misses.
                   </p>
                 </div>
-                {news && news.filter(n => parseInt(n.source_tier || 3) === 3).length > 0 ? (
+                {socialSentiment ? (
+                  socialSentiment.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {news.filter(n => parseInt(n.source_tier || 3) === 3).map(n => {
+                    {socialSentiment.map((n, idx) => {
                       const sentimentColor = n.sentiment_score > 0.2 ? 'var(--accent-green)' : n.sentiment_score < -0.2 ? 'var(--accent-red)' : 'var(--text-secondary)';
                       return (
                         <a 
-                          key={n.id} 
+                          key={idx} 
                           href={n.url} 
                           target="_blank" 
                           rel="noopener noreferrer" 
@@ -1070,6 +1030,7 @@ const Dashboard = () => {
                             </span>
                           </div>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '0.95rem' }}>{n.headline}</h4>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0' }}>{n.impact_summary}</p>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
                              <span style={{ color: sentimentColor, fontWeight: 'bold', fontSize: '0.85rem' }}>
                                {n.sentiment_score > 0 ? '+' : ''}{n.sentiment_score?.toFixed(2)}
@@ -1079,10 +1040,13 @@ const Dashboard = () => {
                       );
                     })}
                   </div>
+                  ) : (
+                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                      No retail or social sentiment data found for {selectedTicker.symbol}.
+                    </p>
+                  )
                 ) : (
-                  <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                    No retail or social sentiment data found for {selectedTicker.symbol}.
-                  </p>
+                  <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>Loading social sentiment...</p>
                 )}
               </div>
             )}
