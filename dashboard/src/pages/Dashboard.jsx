@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import StockChart from './StockChart';
-import Modal from './Modal';
+import StockChart from '../components/StockChart';
+import Modal from '../components/Modal';
 import { Activity, BookOpen, TrendingUp, TrendingDown, PieChart as PieChartIcon, Target } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-import SmartText from './SmartText';
+import SmartText from '../components/SmartText';
 import { glossary } from '../data/glossary';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
@@ -178,6 +178,22 @@ const Dashboard = () => {
       console.error('Error fetching dashboard data:', error);
       setFetchError(error.message);
       setLoading(false);
+    }
+  };
+
+  const forceRefreshPortfolioAnalysis = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const analysisRes = await fetch(`${apiUrl}/api/portfolio-analysis?force=true`);
+      if (analysisRes.ok) {
+         const analysisJson = await analysisRes.json();
+         if (analysisJson.status === 'success') {
+             setPortfolioAnalysis(analysisJson.data);
+             alert("AI Portfolio Analysis forced refresh complete!");
+         }
+      }
+    } catch (err) {
+      console.error("Error forcing refresh", err);
     }
   };
 
@@ -468,25 +484,25 @@ const Dashboard = () => {
            </h3>
            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="The benchmark risk-free rate. Rising yields hurt growth stocks.">10Y Treasury Yield ⓘ</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="The 10Y Yield represents the risk-free rate. A rising yield acts as gravity on stock valuations (especially tech and growth stocks) because it discounts their future cash flows at a higher rate. When yields hit 4.5%+, expect heavy pressure on tech.">10Y Treasury Yield ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.treasury_10y_yield?.toFixed(2)}%</div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Negative means inverted (classic recession signal).">Yield Curve (10Y-3M) ⓘ</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Calculated as 10Y Yield minus 3M Yield. Normally positive. When it goes negative (inverts), it means short-term borrowing costs more than long-term lending. This breaks the banking business model and is a historical leading indicator of a severe recession. This forces the AI to scrutinize highly leveraged companies in your portfolio for debt refinancing risks.">Yield Curve (10Y-3M) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: macroData.yield_curve_10y_3m < 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
                     {macroData.yield_curve_10y_3m?.toFixed(2)}%
                  </div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Safe-haven asset. Tracks inflation and fear.">Gold (GLD) ⓘ</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Gold is a classic safe-haven asset and inflation hedge. A rapidly rising gold price signals that institutional money is fleeing risky equities due to fear of currency debasement or systemic banking issues.">Gold (GLD) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.gold?.toFixed(2)}</div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Tracks energy costs. Highly correlated with inflation.">Crude Oil (USO) ⓘ</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Crude oil acts as a leading indicator of broad inflation. Surging oil prices act as a 'tax' on consumers, reducing discretionary spending and squeezing margins for transport/industrial sectors.">Crude Oil (USO) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.oil?.toFixed(2)}</div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="High-Yield vs Inv. Grade. Falling = Corporate Credit Stress!">Credit Spread (HYG/LQD) ⓘ</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Ratio of High-Yield (Junk) bonds to Investment Grade bonds. This measures corporate credit stress. When the spread widens (ratio drops), it means investors are demanding huge premiums to lend to risky companies. A plunging ratio often precedes massive equity market sell-offs.">Credit Spread (HYG/LQD) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.credit_spread_hyg_lqd_ratio?.toFixed(2)}</div>
               </div>
            </div>
@@ -516,10 +532,15 @@ const Dashboard = () => {
       {portfolioAnalysis && (
         <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
           <div style={{ flex: '2 1 500px' }}>
-             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                <PieChartIcon size={20} color="var(--accent-blue)" /> 
-                Portfolio Analysis (AI)
-             </h3>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                    <PieChartIcon size={20} color="var(--accent-blue)" /> 
+                    Portfolio Analysis (AI)
+                 </h3>
+                 <button onClick={forceRefreshPortfolioAnalysis} className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.25rem 0.75rem', border: '1px solid var(--panel-border)', background: 'transparent', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
+                    Force Refresh AI
+                 </button>
+             </div>
              <div style={{ marginBottom: '1rem' }}>
                 <span className={`badge badge-${portfolioAnalysis.action?.toLowerCase() || 'hold'}`}>
                   {portfolioAnalysis.action || 'HOLD'}
@@ -777,19 +798,19 @@ const Dashboard = () => {
 
             {/* Tabs Header */}
             <div style={{ display: 'flex', borderBottom: '1px solid var(--panel-border)', marginBottom: '1.5rem', marginTop: '1rem', overflowX: 'auto' }}>
-               {['Overview', 'Fundamentals', 'Financials', 'News', 'Learn'].map(tab => (
+               {['Overview', 'Fundamentals', 'Financials', 'News', 'Social', 'Learn'].map(tab => (
                   <button 
                     key={tab} 
                     onClick={() => setActiveTab(tab)}
-                    style={{
-                      padding: '0.75rem 1.5rem', background: 'transparent', border: 'none',
+                    style={{ 
+                      background: 'transparent', border: 'none', padding: '0.5rem 1rem', 
                       color: activeTab === tab ? 'var(--accent-blue)' : 'var(--text-secondary)',
                       borderBottom: activeTab === tab ? '2px solid var(--accent-blue)' : '2px solid transparent',
-                      cursor: 'pointer', fontWeight: activeTab === tab ? 600 : 400,
+                      cursor: 'pointer', fontWeight: activeTab === tab ? 'bold' : 'normal',
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    {tab}
+                    {tab === 'News' ? 'Institutional News' : tab === 'Social' ? 'Social Sentiment' : tab}
                   </button>
                ))}
             </div>
@@ -988,23 +1009,23 @@ const Dashboard = () => {
                           key={n.id} 
                           href={n.url} 
                           target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ color: 'inherit', textDecoration: 'none' }}
+                          rel="noopener noreferrer" 
+                          className="news-item"
+                          style={{ textDecoration: 'none', color: 'inherit' }}
                         >
-                          <div className="glass-panel news-card">
-                            <h4 style={{ fontSize: '1rem', fontWeight: 500 }}>{n.headline}</h4>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                              <span>
-                                 {n.source} 
-                                 <span style={{ marginLeft: '0.5rem', padding: '0.1rem 0.4rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>Tier {n.source_tier || 3}</span>
-                              </span>
-                              <span>{new Date(n.published_at).toLocaleString()}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                            <div className="news-source">
+                              {n.source} <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>• Tier {n.source_tier || '3'}</span>
                             </div>
-                            {n.impact_summary && (
-                              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-primary)', borderLeft: `3px solid ${sentimentColor}`, paddingLeft: '0.5rem' }}>
-                                <strong>AI Impact Analysis:</strong> {n.impact_summary}
-                              </div>
-                            )}
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              {new Date(n.published_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '0.95rem' }}>{n.headline}</h4>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                             <span style={{ color: sentimentColor, fontWeight: 'bold', fontSize: '0.85rem' }}>
+                               {n.sentiment_score > 0 ? '+' : ''}{n.sentiment_score?.toFixed(2)}
+                             </span>
                           </div>
                         </a>
                       );
@@ -1012,7 +1033,55 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                    No recent news found for {selectedTicker.symbol}.
+                    No recent institutional news found.
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {activeTab === 'Social' && (
+              <div style={{ marginTop: '1rem' }}>
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                  <h4 style={{ color: '#F59E0B', margin: '0 0 0.5rem 0' }}>Social Sentiment Analysis (Tier 3)</h4>
+                  <p className="small text-muted" style={{ margin: 0 }}>
+                    This tab tracks alternative media and retail forums (e.g., Reddit, r/WallStreetBets, StockTwits). 
+                    The AI specifically monitors these platforms to detect <strong>retail mania, pump-and-dump schemes, and short-squeeze risks</strong> that institutional news misses.
+                  </p>
+                </div>
+                {news && news.filter(n => parseInt(n.source_tier || 3) === 3).length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {news.filter(n => parseInt(n.source_tier || 3) === 3).map(n => {
+                      const sentimentColor = n.sentiment_score > 0.2 ? 'var(--accent-green)' : n.sentiment_score < -0.2 ? 'var(--accent-red)' : 'var(--text-secondary)';
+                      return (
+                        <a 
+                          key={n.id} 
+                          href={n.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="news-item"
+                          style={{ textDecoration: 'none', color: 'inherit', borderLeft: '4px solid #F59E0B' }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                            <div className="news-source">
+                              {n.source} <span style={{ color: '#F59E0B', fontSize: '0.8rem', marginLeft: '0.5rem' }}>Retail Tracker</span>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              {new Date(n.published_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '0.95rem' }}>{n.headline}</h4>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                             <span style={{ color: sentimentColor, fontWeight: 'bold', fontSize: '0.85rem' }}>
+                               {n.sentiment_score > 0 ? '+' : ''}{n.sentiment_score?.toFixed(2)}
+                             </span>
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                    No retail or social sentiment data found for {selectedTicker.symbol}.
                   </p>
                 )}
               </div>

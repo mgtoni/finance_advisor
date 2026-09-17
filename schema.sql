@@ -137,3 +137,16 @@ ALTER TABLE discovery_picks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access for discovery_picks" ON discovery_picks FOR SELECT USING (true);
 CREATE POLICY "Allow public insert for discovery_picks" ON discovery_picks FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for discovery_picks" ON discovery_picks FOR UPDATE USING (true);
+
+-- 9. Calendar Insights Cache Table
+CREATE TABLE IF NOT EXISTS calendar_insights_cache (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cache_date DATE DEFAULT CURRENT_DATE UNIQUE,
+    insights JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE calendar_insights_cache ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access for calendar_insights_cache" ON calendar_insights_cache FOR SELECT USING (true);
+CREATE POLICY "Allow public insert for calendar_insights_cache" ON calendar_insights_cache FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update for calendar_insights_cache" ON calendar_insights_cache FOR UPDATE USING (true);

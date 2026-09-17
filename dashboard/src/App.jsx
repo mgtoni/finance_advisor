@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import Dashboard from './components/Dashboard';
+import Dashboard from './pages/Dashboard';
+import Discover from './pages/Discover';
 import PortfolioManager from './components/PortfolioManager';
 import Auth from './components/Auth';
 import { supabase } from './lib/supabase';
-import { LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { LogOut, LayoutDashboard, Settings, Target } from 'lucide-react';
 
 function AppContent({ session, handleSignOut }) {
   const location = useLocation();
@@ -34,6 +35,16 @@ function AppContent({ session, handleSignOut }) {
               <LayoutDashboard size={18} /> Dashboard
             </Link>
             <Link 
+              to="/discover" 
+              style={{ 
+                color: location.pathname === '/discover' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                fontWeight: location.pathname === '/discover' ? 600 : 400
+              }}
+            >
+              <Target size={18} /> Discover
+            </Link>
+            <Link 
               to="/manage" 
               style={{ 
                 color: location.pathname === '/manage' ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -60,6 +71,7 @@ function AppContent({ session, handleSignOut }) {
       <main>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/discover" element={<Discover />} />
           <Route path="/manage" element={<PortfolioManager />} />
         </Routes>
       </main>

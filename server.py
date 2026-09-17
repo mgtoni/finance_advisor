@@ -245,13 +245,25 @@ def get_history(symbol):
 @app.route('/api/portfolio-analysis', methods=['GET'])
 def get_portfolio_analysis():
     try:
+        force = request.args.get('force', 'false').lower() == 'true'
         if not supabase:
             return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
+            
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
         
+        # 1. Check Cache first unless forced
+        if not force:
+            cache_res = supabase.table('portfolio_analysis_logs').select('*').eq('analysis_date', today).order('created_at', desc=True).limit(1).execute()
+            if cache_res.data and len(cache_res.data) > 0:
+                print("Returning portfolio analysis from cache")
+                return jsonify({"status": "success", "data": cache_res.data[0]})
+        
+        print("Generating new portfolio analysis via AI")
         pm = PortfolioManagerService(supabase_client=supabase)
         analysis = pm.synthesize_portfolio()
         
         if analysis and "error" not in analysis:
+            # Save to cache explicitly if synthesize_portfolio didn't (though it usually does)
             return jsonify({"status": "success", "data": analysis})
         else:
             err = analysis.get("error", "Failed to synthesize portfolio") if analysis else "No data returned"
@@ -388,11 +400,21 @@ def generate_calendar_insights():
         if not events:
             return jsonify({"status": "success", "insights": {}})
             
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
+        
+        # Check cache first
+        if supabase:
+            cache_res = supabase.table('calendar_insights_cache').select('insights').eq('cache_date', today).execute()
+            if cache_res.data and len(cache_res.data) > 0:
+                print("Returning calendar insights from cache")
+                return jsonify({"status": "success", "insights": cache_res.data[0]['insights']})
+                
+        print("Generating new calendar insights via Gemini")
         prompt = "You are a Bloomberg macro analyst. For each of the following upcoming economic events, provide a strict 1-sentence insight on how it might impact the stock market or specific sectors. Output JSON where the keys are the event titles, and values are the 1-sentence insight.\n\nEvents:\n"
         for ev in events:
             prompt += f"- {ev.get('title')} ({ev.get('country')})\n"
             
-        model = genai.GenerativeModel('gemini-3.8-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash') # Updated model name just in case
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -400,6 +422,17 @@ def generate_calendar_insights():
             )
         )
         insights = json.loads(response.text)
+        
+        # Save to cache
+        if supabase:
+            try:
+                supabase.table('calendar_insights_cache').insert({
+                    "cache_date": today,
+                    "insights": insights
+                }).execute()
+            except Exception as cache_err:
+                print(f"Error caching insights: {cache_err}")
+                
         return jsonify({"status": "success", "insights": insights})
     except Exception as e:
         print(f"Error generating insights: {e}")
@@ -409,15 +442,15 @@ def generate_calendar_insights():
 def run_discovery():
     try:
         # Run discovery engine in the background or blocking
-        from discovery_engine import DiscoveryEngine
-        engine = DiscoveryEngine(supabase_client=supabase)
+        from discovery_engine import DiscoveryEngineService
+        engine = DiscoveryEngineService(supabase_client=supabase)
         
         # We can run the pipeline directly
         # To avoid timeout, we might want to do it in a thread, but for this MVP blocking is okay if it's < 30s.
         # Let's run it in a thread to be safe and return "processing"
         def run():
             try:
-                engine.run_discovery_pipeline()
+                engine.run_discovery()
             except Exception as ex:
                 print("Discovery Engine Error:", ex)
                 
