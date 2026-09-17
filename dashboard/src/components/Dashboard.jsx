@@ -40,6 +40,10 @@ const Dashboard = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'symbol', direction: 'asc' });
   const [portfolioAnalysis, setPortfolioAnalysis] = useState(null);
   const [newsTierFilter, setNewsTierFilter] = useState('All');
+  
+  // New States for Macro & Discovery
+  const [macroData, setMacroData] = useState(null);
+  const [discoveryPicks, setDiscoveryPicks] = useState([]);
 
   // New state for individual positions fractional closing
   const [individualPositions, setIndividualPositions] = useState([]);
@@ -125,6 +129,34 @@ const Dashboard = () => {
         }
       } catch (err) {
         console.error("Error fetching portfolio metrics", err);
+      }
+
+      // 5. Fetch Macro Data
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const macroRes = await fetch(`${apiUrl}/api/macro-data`);
+        if (macroRes.ok) {
+           const macroJson = await macroRes.json();
+           if (macroJson.status === 'success') {
+               setMacroData(macroJson.data);
+           }
+        }
+      } catch (err) {
+        console.error("Error fetching macro data", err);
+      }
+
+      // 6. Fetch Discovery Picks
+      try {
+        const { data: discoveryData, error: discoveryError } = await supabase
+          .from('discovery_picks')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        if (!discoveryError) {
+          setDiscoveryPicks(discoveryData || []);
+        }
+      } catch (err) {
+        console.error("Error fetching discovery picks", err);
       }
 
       setLoading(false);
@@ -350,6 +382,54 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      
+      {/* Macro Environment Panel */}
+      {macroData && (
+        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid #F59E0B' }}>
+           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+              <Activity size={20} color="#F59E0B" /> 
+              Global Macro Environment
+           </h3>
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              <div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>10Y Treasury Yield</div>
+                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.treasury_10y_yield?.toFixed(2)}%</div>
+              </div>
+              <div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Negative means inverted (recession signal)">Yield Curve (10Y-3M)</div>
+                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: macroData.yield_curve_10y_3m < 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
+                    {macroData.yield_curve_10y_3m?.toFixed(2)}%
+                 </div>
+              </div>
+              <div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Gold (GLD)</div>
+                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.gold?.toFixed(2)}</div>
+              </div>
+              <div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Crude Oil (USO)</div>
+                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.oil?.toFixed(2)}</div>
+              </div>
+              <div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Rising = Bullish, Falling = Credit Stress">Credit Spread (HYG/LQD)</div>
+                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.credit_spread_hyg_lqd_ratio?.toFixed(2)}</div>
+              </div>
+           </div>
+           
+           {macroData.economic_calendar && macroData.economic_calendar.length > 0 && (
+             <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--panel-border)', paddingTop: '1rem' }}>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Upcoming High-Impact Events (This Week)</h4>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  {macroData.economic_calendar.map((ev, i) => (
+                    <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px', fontSize: '0.85rem' }}>
+                       <strong style={{ color: 'var(--accent-red)' }}>{ev.country}</strong> {ev.title} ({ev.date})
+                    </div>
+                  ))}
+                </div>
+             </div>
+           )}
+        </div>
+      )}
+
       {portfolioAnalysis && (
         <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
           <div style={{ flex: '2 1 500px' }}>
@@ -464,7 +544,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="glass-panel" style={{ padding: '1rem' }}>
+      <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
             <Activity size={20} color="var(--accent-blue)" /> 
@@ -562,6 +642,45 @@ const Dashboard = () => {
           </table>
         </div>
       </div>
+
+      {/* AI Discovery Engine Panel */}
+      {discoveryPicks && discoveryPicks.length > 0 && (
+        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid var(--accent-blue)' }}>
+           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+              <Target size={20} color="var(--accent-blue)" /> 
+              AI Discovery Engine - Draft Picks
+           </h3>
+           <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
+              These assets were automatically identified by the AI to perfectly balance your current portfolio concentration risks and sector gaps.
+           </p>
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              {discoveryPicks.map(pick => (
+                 <div key={pick.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                       <div>
+                          <h4 style={{ fontSize: '1.25rem', margin: 0, color: 'white' }}>{pick.symbol}</h4>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{pick.company_name} • {pick.sector}</div>
+                       </div>
+                       <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: pick.quant_score > 0 ? 'var(--accent-green)' : 'var(--text-primary)' }}>
+                             {pick.quant_score}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Quant Score</div>
+                       </div>
+                    </div>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: '1rem' }}>
+                       <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>AI Investment Thesis</strong>
+                       <ul style={{ paddingLeft: '1rem', margin: 0, fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-primary)' }}>
+                          {(pick.thesis || []).map((point, idx) => (
+                             <li key={idx} style={{ marginBottom: '0.5rem' }}>{point}</li>
+                          ))}
+                       </ul>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        </div>
+      )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         {selectedTicker && (

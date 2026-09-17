@@ -121,3 +121,19 @@ ALTER TABLE financials_cache ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access for financials_cache" ON financials_cache FOR SELECT USING (true);
 CREATE POLICY "Allow public insert for financials_cache" ON financials_cache FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for financials_cache" ON financials_cache FOR UPDATE USING (true);
+
+-- 8. Discovery Picks Table
+CREATE TABLE IF NOT EXISTS discovery_picks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    symbol VARCHAR(15) NOT NULL,
+    company_name VARCHAR(100),
+    sector VARCHAR(50),
+    quant_score NUMERIC(5, 2),
+    thesis JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE discovery_picks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access for discovery_picks" ON discovery_picks FOR SELECT USING (true);
+CREATE POLICY "Allow public insert for discovery_picks" ON discovery_picks FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update for discovery_picks" ON discovery_picks FOR UPDATE USING (true);

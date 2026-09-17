@@ -16,15 +16,49 @@ class DataIngestionService:
         set_identity(edgar_identity)
 
     def update_daily_closes(self, tickers):
-        """Updates the last_close_price in the Supabase tickers table."""
+        """Updates the last_close_price in the Supabase tickers table using Alpaca real-time data, fallback to yfinance."""
+        import requests
+        alpaca_key = os.getenv("ALPACA_API_KEY")
+        alpaca_secret = os.getenv("ALPACA_SECRET_KEY")
+        
         updates = []
+        alpaca_prices = {}
+        
+        # Attempt to get bulk real-time prices from Alpaca
+        if alpaca_key and alpaca_secret:
+            try:
+                headers = {
+                    "APCA-API-KEY-ID": alpaca_key,
+                    "APCA-API-SECRET-KEY": alpaca_secret
+                }
+                symbols_str = ",".join(tickers)
+                url = f"https://data.alpaca.markets/v2/stocks/trades/latest?symbols={symbols_str}"
+                response = requests.get(url, headers=headers)
+                if response.status_code == 200:
+                    data = response.json().get('trades', {})
+                    for sym, trade in data.items():
+                        alpaca_prices[sym] = trade.get('p')
+            except Exception as e:
+                print(f"Alpaca API error: {e}")
+
         for symbol in tickers:
             try:
                 yf_symbol = get_yf_ticker(symbol)
-                ticker = yf.Ticker(yf_symbol)
-                history = ticker.history(period="1d")
-                if not history.empty:
-                    last_close = float(history['Close'].iloc[-1])
+                last_close = None
+                
+                # Use Alpaca price if available, else yfinance
+                if symbol in alpaca_prices and alpaca_prices[symbol] is not None:
+                    last_close = float(alpaca_prices[symbol])
+                    print(f"Got real-time price for {symbol} from Alpaca: {last_close}")
+                else:
+                    ticker = yf.Ticker(yf_symbol)
+                    history = ticker.history(period="1d")
+                    if not history.empty:
+                        last_close = float(history['Close'].iloc[-1])
+                        print(f"Got fallback price for {symbol} from yfinance: {last_close}")
+                
+                if last_close is not None:
+                    ticker = yf.Ticker(yf_symbol)
                     info = ticker.info
                     company_name = info.get('longName', '') or info.get('shortName', '')
                     currency = info.get('currency', 'USD')
@@ -62,22 +96,48 @@ class DataIngestionService:
         return updates
 
     def get_macro_regime(self):
-        """Fetches 10Y Treasury Yield and VIX."""
-        # While FRED is great, yfinance provides free access to ^TNX (10Y Yield) and ^VIX without API keys.
+        """Fetches 10Y Yield, VIX, Yield Curve (10Y-3M), Commodities, FX, and Credit Spreads."""
+        macro = {}
         try:
-            vix_ticker = yf.Ticker('^VIX')
-            vix_close = vix_ticker.history(period="1d")['Close'].iloc[-1]
+            # Traditional Macro
+            macro['vix'] = float(yf.Ticker('^VIX').history(period="1d")['Close'].iloc[-1])
+            tnx = float(yf.Ticker('^TNX').history(period="1d")['Close'].iloc[-1])
+            macro['treasury_10y_yield'] = tnx
             
-            tnx_ticker = yf.Ticker('^TNX')
-            tnx_close = tnx_ticker.history(period="1d")['Close'].iloc[-1]
+            # Yield Curve: 10Y (^TNX) minus 3-Month (^IRX)
+            irx = float(yf.Ticker('^IRX').history(period="1d")['Close'].iloc[-1])
+            macro['yield_curve_10y_3m'] = tnx - irx
             
-            return {
-                'vix': float(vix_close),
-                'treasury_10y_yield': float(tnx_close)
-            }
+            # Commodities
+            macro['gold'] = float(yf.Ticker('GLD').history(period="1d")['Close'].iloc[-1])
+            macro['oil'] = float(yf.Ticker('USO').history(period="1d")['Close'].iloc[-1])
+            
+            # FX (Dollar Index Proxy)
+            macro['usd_index'] = float(yf.Ticker('UUP').history(period="1d")['Close'].iloc[-1])
+            
+            # Credit Spread (High Yield vs Investment Grade)
+            hyg = float(yf.Ticker('HYG').history(period="1d")['Close'].iloc[-1])
+            lqd = float(yf.Ticker('LQD').history(period="1d")['Close'].iloc[-1])
+            macro['credit_spread_hyg_lqd_ratio'] = hyg / lqd if lqd > 0 else None
+            
         except Exception as e:
-            print(f"Error fetching macro regime: {e}")
-            return {'vix': None, 'treasury_10y_yield': None}
+            print(f"Error fetching extended macro regime: {e}")
+            
+        return macro
+
+    def get_economic_calendar(self):
+        """Fetches upcoming high-impact economic events from ForexFactory JSON API."""
+        import requests
+        try:
+            res = requests.get("https://nfs.faireconomy.media/ff_calendar_thisweek.json")
+            if res.status_code == 200:
+                events = res.json()
+                high_impact = [e for e in events if e.get('impact') == 'High']
+                # Return the top 5 upcoming high impact events
+                return [{'title': h['title'], 'country': h['country'], 'date': h['date']} for h in high_impact[:5]]
+        except Exception as e:
+            print(f"Error fetching economic calendar: {e}")
+        return []
 
     def get_earnings_drift(self, symbol):
         """Attempts to detect earnings drift via yfinance."""
@@ -171,6 +231,10 @@ class DataIngestionService:
         print("Starting Data Ingestion...")
         price_updates = self.update_daily_closes(tickers)
         macro = self.get_macro_regime()
+        calendar = self.get_economic_calendar()
+        
+        # Add calendar to macro object so it's passed smoothly to the AI
+        macro['economic_calendar'] = calendar
         
         alpha_data = {}
         for symbol in tickers:

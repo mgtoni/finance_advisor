@@ -360,6 +360,23 @@ def get_fundamentals(symbol):
         print(f"Error fetching fundamentals for {symbol}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/macro-data', methods=['GET'])
+def get_macro_data():
+    try:
+        from data_ingestion import DataIngestionService
+        svc = DataIngestionService(supabase_client=supabase)
+        macro = svc.get_macro_regime()
+        calendar = svc.get_economic_calendar()
+        macro['economic_calendar'] = calendar
+        
+        return jsonify({
+            "status": "success",
+            "data": macro
+        })
+    except Exception as e:
+        print(f"Error fetching macro data: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == '__main__':
     # Run on port 5000
     app.run(host='127.0.0.1', port=5000)

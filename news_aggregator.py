@@ -123,18 +123,58 @@ class NewsAggregatorService:
             print(f"Error fetching Google RSS news for {symbol}: {e}")
         return articles
 
+    def fetch_alternative_sentiment(self, symbol):
+        """Fetches alternative retail sentiment from Reddit using DuckDuckGo."""
+        articles = []
+        try:
+            with DDGS() as ddgs:
+                results = ddgs.text(keywords=f"site:reddit.com/r/wallstreetbets OR site:reddit.com/r/stocks {symbol} stock", max_results=3)
+                for item in results:
+                    articles.append({
+                        'symbol': symbol,
+                        'headline': f"[Reddit Sentiment] {item.get('title', '')}",
+                        'url': item.get('href', ''),
+                        'source': 'Reddit/Retail',
+                        'published_at': datetime.now().isoformat()
+                    })
+        except Exception as e:
+            print(f"Error fetching alt sentiment for {symbol}: {e}")
+        return articles
+
+    def fetch_earnings_transcript_summaries(self, symbol):
+        """Fetches recent earnings call transcript summaries via DuckDuckGo."""
+        articles = []
+        try:
+            with DDGS() as ddgs:
+                results = ddgs.news(keywords=f"{symbol} earnings call transcript summary", max_results=2)
+                for item in results:
+                    articles.append({
+                        'symbol': symbol,
+                        'headline': f"[Earnings Call] {item.get('title', '')}",
+                        'url': item.get('url', ''),
+                        'source': item.get('source', 'DuckDuckGo Earnings'),
+                        'published_at': item.get('date', datetime.now().isoformat())
+                    })
+        except Exception as e:
+            print(f"Error fetching earnings transcripts for {symbol}: {e}")
+        return articles
+
     def aggregate_and_deduplicate(self, symbol):
         """Runs parallel scrapes and deduplicates the results."""
         all_articles = []
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             future_yahoo = executor.submit(self.fetch_yahoo_news, symbol)
             future_ddg = executor.submit(self.fetch_duckduckgo_news, symbol)
             future_google = executor.submit(self.fetch_google_news_rss, symbol)
+            future_alt = executor.submit(self.fetch_alternative_sentiment, symbol)
+            future_earnings = executor.submit(self.fetch_earnings_transcript_summaries, symbol)
             
             all_articles.extend(future_yahoo.result())
             all_articles.extend(future_ddg.result())
             all_articles.extend(future_google.result())
+            all_articles.extend(future_alt.result())
+            all_articles.extend(future_earnings.result())
             
         # Deduplication Logic
         deduped = []

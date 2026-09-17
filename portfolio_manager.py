@@ -124,16 +124,23 @@ class PortfolioManagerService:
         You MUST use position-aware logic based on 'total_unrealized_pnl_pct'.
         - If a position is up heavily (e.g., > 40%), suggest trailing stops or partial profit taking (SELL or HOLD) unless the quantitative and macro conviction is exceptionally high.
         - Ignore short-term volatility and rely on long-term macro/technical structures.
-        - Analyze the confluence of the deduplicated news, technical score (-1.0 to 1.0, where 1.0 is highly bullish), macro regime (VIX, 10Y Yield), and insider buying.
+        - Analyze the confluence of the deduplicated news, technical score (-1.0 to 1.0, where 1.0 is highly bullish), macro regime, and insider buying.
+        - CRITICAL MACRO INTERPRETATION: You are provided with expanded macro data in `alpha_data.macro`. You MUST use it and explain its impact:
+          * Commodities (Gold/Oil): High oil is a tax on consumers/growth; Gold is a risk-off or inflation hedge.
+          * Credit Spread (HYG/LQD): A rising ratio is risk-on (bullish credit); falling means credit stress.
+          * Yield Curve (10Y - 3M): If inverted (negative), high recession risk. If steepening, signals growth/inflation.
+          * US Dollar Index: Strong dollar hurts US exporters and emerging markets.
+          * Economic Calendar: Flag any upcoming high-impact events (CPI, Fed) that threaten short-term volatility.
+        - You MUST explain in your rationale EXACTLY how these macro factors influence your decision for this specific asset.
         
         Output strictly as JSON matching this schema:
         {
             "action": "BUY_MORE" | "HOLD" | "SELL",
             "conviction_score": <int between 1 and 10>,
             "rationale": [
-                "bullet point 1 explaining the tech/macro confluence",
+                "bullet point 1 explaining the tech/macro confluence (must mention yield curve, credit spread, or commodities)",
                 "bullet point 2 explaining the position-aware logic",
-                "bullet point 3 on news sentiment"
+                "bullet point 3 on news sentiment and economic calendar"
             ]
         }
         """
@@ -277,6 +284,7 @@ class PortfolioManagerService:
             Given the user's current portfolio holdings, calculate or estimate the sector and country breakdown.
             Provide a high-level risk assessment and actionable insights.
             CRITICAL RULE: Consider the individual asset predictions provided in the prompt holistically. Weigh them against macroeconomic risks and provide honest, objective, and highly critical portfolio-level advice. Do NOT just be complimentary. Proactively identify concentration risks, overvaluations, and macroeconomic vulnerabilities. Your recommendations should optimize for the best possible outcome given the overall portfolio risk exposure.
+            Explicitly analyze the provided Macro Regime (Commodities, Yield Curve, Credit Spreads, USD Index, Economic Calendar) and explain how the overall portfolio is positioned for or against these macro trends.
             Provide at least 6-8 detailed insights in the rationale list covering macro, fundamentals, and specific asset synergies or risks.
             Output as JSON:
             {
@@ -286,7 +294,7 @@ class PortfolioManagerService:
                 "country_breakdown": {"US": 80, "China": 20, ...},
                 "sector_assets": {"Technology": ["AAPL", "MSFT"], "Healthcare": ["JNJ"]},
                 "country_assets": {"US": ["AAPL", "MSFT", "JNJ"], "China": ["BABA"]},
-                "rationale": ["insight 1", "insight 2", "insight 3", "insight 4", "insight 5", "insight 6"]
+                "rationale": ["insight 1 (macro impact)", "insight 2 (concentration risk)", "insight 3", "insight 4", "insight 5", "insight 6"]
             }
             '''
             
@@ -308,7 +316,18 @@ class PortfolioManagerService:
                     item['country'] = 'Unknown'
                     item['sector'] = 'Unknown'
             
-            prompt = f"Portfolio Holdings (with sectors and countries):\n{json.dumps(portfolio)}\n\nIndividual Asset Predictions (DO NOT contradict these actions):\n{json.dumps(latest_preds)}"
+            # Fetch latest macro data from DataIngestion (assuming it runs daily and we can grab it, or we do a live pull)
+            # For simplicity, we can instantiate DataIngestionService here just to get the macro state for portfolio synthesis
+            try:
+                from data_ingestion import DataIngestionService
+                ingestion = DataIngestionService(supabase_client=self.supabase)
+                macro_data = ingestion.get_macro_regime()
+                calendar_data = ingestion.get_economic_calendar()
+                macro_data['economic_calendar'] = calendar_data
+            except Exception as e:
+                macro_data = {"error": "Could not fetch live macro data"}
+                
+            prompt = f"Portfolio Holdings (with sectors and countries):\n{json.dumps(portfolio)}\n\nIndividual Asset Predictions (DO NOT contradict these actions):\n{json.dumps(latest_preds)}\n\nCurrent Macro Regime:\n{json.dumps(macro_data)}"
             
             res = self.model.generate_content(
                 contents=[system_instruction, prompt],
