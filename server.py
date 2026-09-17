@@ -310,14 +310,51 @@ def get_portfolio_metrics():
         if not supabase:
             return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
         
-        # Get all symbols
-        res = supabase.table('positions').select('symbol, shares, entry_price').execute()
+        res = supabase.table('portfolio_summary').select('*').execute()
         if not res.data:
             return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
         
         symbols = list(set([r['symbol'] for r in res.data]))
         if len(symbols) < 1:
             return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
+            
+        import concurrent.futures
+        sector_assets = {}
+        country_assets = {}
+        sector_value = {}
+        country_value = {}
+        total_val = 0
+        
+        def fetch_info(row):
+            sym = row['symbol']
+            try:
+                info = yf.Ticker(sym).info
+                sec = info.get('sector', 'Unknown')
+                cntry = info.get('country', 'Unknown')
+            except Exception:
+                sec = 'Unknown'
+                cntry = 'Unknown'
+            price = row.get('last_close_price') or row.get('average_entry_price') or 0
+            val = float(row.get('total_shares', 0)) * float(price)
+            return sym, sec, cntry, val
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_info, r) for r in res.data]
+            for future in concurrent.futures.as_completed(futures):
+                sym, sec, cntry, val = future.result()
+                total_val += val
+                sector_value[sec] = sector_value.get(sec, 0) + val
+                if sec not in sector_assets: sector_assets[sec] = []
+                sector_assets[sec].append(sym)
+                country_value[cntry] = country_value.get(cntry, 0) + val
+                if cntry not in country_assets: country_assets[cntry] = []
+                country_assets[cntry].append(sym)
+                
+        sector_breakdown = {}
+        country_breakdown = {}
+        if total_val > 0:
+            for s, v in sector_value.items(): sector_breakdown[s] = round((v / total_val) * 100, 2)
+            for c, v in country_value.items(): country_breakdown[c] = round((v / total_val) * 100, 2)
             
         data = yf.download(symbols, period="1y")
         if 'Close' in data:
@@ -348,7 +385,11 @@ def get_portfolio_metrics():
             "status": "success", 
             "data": {
                 "correlation": corr_matrix,
-                "sharpe_ratio": sharpe_ratio
+                "sharpe_ratio": sharpe_ratio,
+                "sector_breakdown": sector_breakdown,
+                "country_breakdown": country_breakdown,
+                "sector_assets": sector_assets,
+                "country_assets": country_assets
             }
         })
     except Exception as e:

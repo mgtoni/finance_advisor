@@ -281,8 +281,7 @@ class PortfolioManagerService:
                 
             system_instruction = '''
             You are a Chief Investment Officer managing a portfolio.
-            Given the user's current portfolio holdings, calculate or estimate the sector and country breakdown.
-            Provide a high-level risk assessment and actionable insights.
+            Provide a high-level risk assessment and actionable insights based on the provided portfolio holdings.
             CRITICAL RULE: Consider the individual asset predictions provided in the prompt holistically. Weigh them against macroeconomic risks and provide honest, objective, and highly critical portfolio-level advice. Do NOT just be complimentary. Proactively identify concentration risks, overvaluations, and macroeconomic vulnerabilities. Your recommendations should optimize for the best possible outcome given the overall portfolio risk exposure.
             Explicitly analyze the provided Macro Regime (Commodities, Yield Curve, Credit Spreads, USD Index, Economic Calendar) and explain how the overall portfolio is positioned for or against these macro trends.
             Provide at least 6-8 detailed insights in the rationale list covering macro, fundamentals, and specific asset synergies or risks.
@@ -290,10 +289,6 @@ class PortfolioManagerService:
             {
                 "risk_level": "LOW" | "MEDIUM" | "HIGH",
                 "action": "REBALANCE" | "HOLD" | "DE-RISK",
-                "sector_breakdown": {"Technology": 40, "Healthcare": 20, ...},
-                "country_breakdown": {"US": 80, "China": 20, ...},
-                "sector_assets": {"Technology": ["AAPL", "MSFT"], "Healthcare": ["JNJ"]},
-                "country_assets": {"US": ["AAPL", "MSFT", "JNJ"], "China": ["BABA"]},
                 "rationale": ["insight 1 (macro impact)", "insight 2 (concentration risk)", "insight 3", "insight 4", "insight 5", "insight 6"]
             }
             '''
