@@ -24,6 +24,48 @@ const CustomPieTooltip = ({ active, payload }) => {
   return null;
 };
 
+const MacroMetricCard = ({ title, value, colorClass, educationalText }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  return (
+    <div 
+      style={{ position: 'relative', display: 'flex', flexDirection: 'column', width: '100%' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', cursor: 'help', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+        {title} ⓘ
+      </div>
+      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: colorClass || 'inherit' }}>
+        {value}
+      </div>
+
+      {isHovered && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: '0',
+          zIndex: 100,
+          marginTop: '0.5rem',
+          width: '320px',
+          background: 'rgba(15, 20, 25, 0.98)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid var(--panel-border)',
+          borderRadius: '8px',
+          padding: '1rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+          color: 'var(--text-primary)',
+          fontSize: '0.85rem',
+          lineHeight: '1.5',
+          pointerEvents: 'none'
+        }}>
+          {educationalText}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const [tickers, setTickers] = useState([]);
   const [predictions, setPredictions] = useState({});
@@ -421,29 +463,72 @@ const Dashboard = () => {
               <Activity size={20} color="#F59E0B" /> 
               Global Macro Environment
            </h3>
-           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-              <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="The 10Y Yield represents the risk-free rate. A rising yield acts as gravity on stock valuations (especially tech and growth stocks) because it discounts their future cash flows at a higher rate. When yields hit 4.5%+, expect heavy pressure on tech.">10Y Treasury Yield ⓘ</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.treasury_10y_yield?.toFixed(2)}%</div>
-              </div>
-              <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Calculated as 10Y Yield minus 3M Yield. Normally positive. When it goes negative (inverts), it means short-term borrowing costs more than long-term lending. This breaks the banking business model and is a historical leading indicator of a severe recession. This forces the AI to scrutinize highly leveraged companies in your portfolio for debt refinancing risks.">Yield Curve (10Y-3M) ⓘ</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: macroData.yield_curve_10y_3m < 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
-                    {macroData.yield_curve_10y_3m?.toFixed(2)}%
-                 </div>
-              </div>
-              <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Gold is a classic safe-haven asset and inflation hedge. A rapidly rising gold price signals that institutional money is fleeing risky equities due to fear of currency debasement or systemic banking issues.">Gold (GLD) ⓘ</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.gold?.toFixed(2)}</div>
-              </div>
-              <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Crude oil acts as a leading indicator of broad inflation. Surging oil prices act as a 'tax' on consumers, reducing discretionary spending and squeezing margins for transport/industrial sectors.">Crude Oil (USO) ⓘ</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.oil?.toFixed(2)}</div>
-              </div>
-              <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Ratio of High-Yield (Junk) bonds to Investment Grade bonds. This measures corporate credit stress. When the spread widens (ratio drops), it means investors are demanding huge premiums to lend to risky companies. A plunging ratio often precedes massive equity market sell-offs.">Credit Spread (HYG/LQD) ⓘ</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.credit_spread_hyg_lqd_ratio?.toFixed(2)}</div>
-              </div>
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', paddingBottom: '1rem' }}>
+              <MacroMetricCard 
+                  title="10Y Treasury Yield" 
+                  value={`${macroData.treasury_10y_yield?.toFixed(2)}%`}
+                  educationalText={
+                    <>
+                      <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The "Risk-Free" Rate</h4>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>The 10-Year Yield represents the baseline return investors can get from the US government without taking stock market risk.</p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> Think of this as financial gravity. When yields rise sharply, stocks (especially tech and growth) get pulled down because their future cash flows become less valuable compared to safe bonds.</p>
+                      <p style={{ margin: 0, color: 'var(--accent-red)', fontSize: '0.8rem', fontStyle: 'italic' }}>When yields cross 4.5%+, the AI flags high-PE stocks for immediate risk assessment.</p>
+                    </>
+                  }
+              />
+
+              <MacroMetricCard 
+                  title="Yield Curve (10Y-3M)" 
+                  value={`${macroData.yield_curve_10y_3m?.toFixed(2)}%`}
+                  colorClass={macroData.yield_curve_10y_3m < 0 ? 'var(--accent-red)' : 'var(--accent-green)'}
+                  educationalText={
+                    <>
+                      <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Recession Predictor</h4>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>Normally, locking money up for 10 years pays more than 3 months. When this curve goes negative ("inverts"), short-term rates are higher than long-term rates.</p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> An inverted curve breaks the banking business model and is historically the most accurate leading indicator of a severe recession.</p>
+                      <p style={{ margin: 0, color: 'var(--accent-red)', fontSize: '0.8rem', fontStyle: 'italic' }}>If inverted, the AI heavily scrutinizes your portfolio for highly leveraged companies facing debt refinancing risks.</p>
+                    </>
+                  }
+              />
+
+              <MacroMetricCard 
+                  title="Gold (GLD)" 
+                  value={`$${macroData.gold?.toFixed(2)}`}
+                  educationalText={
+                    <>
+                      <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Ultimate Safe-Haven</h4>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>Gold acts as a timeless hedge against inflation, currency debasement, and systemic banking collapses.</p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> A rapidly surging gold price often signals that institutional "smart money" is quietly fleeing risky equities due to fear of major market instability.</p>
+                      <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI tracks gold breakouts to determine if a defensive portfolio rotation is necessary.</p>
+                    </>
+                  }
+              />
+
+              <MacroMetricCard 
+                  title="Crude Oil (USO)" 
+                  value={`$${macroData.oil?.toFixed(2)}`}
+                  educationalText={
+                    <>
+                      <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Broad Inflation Engine</h4>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>Oil powers global transport and manufacturing. When crude prices surge, the cost of almost everything else goes up.</p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> Surging oil acts as a direct "tax" on consumers. Discretionary spending collapses and margins for airlines, logistics, and retail get violently squeezed.</p>
+                      <p style={{ margin: 0, color: 'var(--accent-red)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI penalizes consumer discretionary stocks in your portfolio when oil breaches $85/bbl.</p>
+                    </>
+                  }
+              />
+
+              <MacroMetricCard 
+                  title="Credit Spread (HYG/LQD)" 
+                  value={`${macroData.credit_spread_hyg_lqd_ratio?.toFixed(2)}`}
+                  educationalText={
+                    <>
+                      <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Corporate Stress Test</h4>
+                      <p style={{ margin: '0 0 0.5rem 0' }}>This is the ratio of High-Yield "Junk" bonds (HYG) to safe Investment Grade bonds (LQD). It measures how terrified lenders are of corporate bankruptcies.</p>
+                      <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> When the spread widens (ratio drops), investors are demanding huge premiums to lend money to risky companies. A plunging ratio almost always precedes massive equity market sell-offs.</p>
+                      <p style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI uses credit spreads to confirm if an ongoing market drop is a healthy pullback or a systemic crisis.</p>
+                    </>
+                  }
+              />
            </div>
            
            {macroData.economic_calendar && macroData.economic_calendar.length > 0 && (
