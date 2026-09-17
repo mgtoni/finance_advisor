@@ -1,4 +1,5 @@
 import os
+import json
 import warnings
 # Suppress package deprecation warnings (e.g., google.generativeai and duckduckgo_search)
 warnings.filterwarnings("ignore")
@@ -435,11 +436,11 @@ def generate_calendar_insights():
                 return jsonify({"status": "success", "insights": cache_res.data[0]['insights']})
                 
         print("Generating new calendar insights via Gemini")
-        prompt = "You are a Bloomberg macro analyst. For each of the following upcoming economic events, provide a strict 1-sentence insight on how it might impact the stock market or specific sectors. Output JSON where the keys are the event titles, and values are the 1-sentence insight.\n\nEvents:\n"
+        prompt = "You are a Bloomberg macro analyst. For each of the following upcoming economic events, provide a strict 1-sentence insight on how it might impact the stock market or specific sectors. Output JSON where the exact keys are the event titles provided below, and values are the 1-sentence insight.\n\nEvents:\n"
         for ev in events:
-            prompt += f"- {ev.get('title')} ({ev.get('country')})\n"
+            prompt += f"- {ev.get('title')}\n"
             
-        model = genai.GenerativeModel('gemini-1.5-flash') # Updated model name just in case
+        model = genai.GenerativeModel('gemini-3.8-flash')
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
