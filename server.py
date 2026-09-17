@@ -407,7 +407,12 @@ def get_macro_data():
         from data_ingestion import DataIngestionService
         svc = DataIngestionService(supabase_client=supabase)
         macro = svc.get_macro_regime()
-        calendar = svc.get_economic_calendar()
+        
+        # Get portfolio tickers to filter economic calendar
+        tickers_res = supabase.table('tickers').select('symbol').execute() if supabase else None
+        symbols = [t['symbol'] for t in tickers_res.data] if tickers_res and tickers_res.data else []
+        
+        calendar = svc.get_economic_calendar(symbols)
         macro['economic_calendar'] = calendar
         
         return jsonify({

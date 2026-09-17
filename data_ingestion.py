@@ -125,14 +125,31 @@ class DataIngestionService:
             
         return macro
 
-    def get_economic_calendar(self):
-        """Fetches upcoming high-impact economic events from ForexFactory JSON API."""
+    def get_economic_calendar(self, symbols=None):
+        """Fetches upcoming high-impact economic events from ForexFactory JSON API and filters by portfolio exposure."""
         import requests
         try:
             res = requests.get("https://nfs.faireconomy.media/ff_calendar_thisweek.json")
             if res.status_code == 200:
                 events = res.json()
                 high_impact = [e for e in events if e.get('impact') == 'High']
+                
+                # Filter by portfolio exposure
+                if symbols:
+                    allowed_currencies = {'USD', 'All'}
+                    for sym in symbols:
+                        sym = sym.upper()
+                        if sym.endswith('.L'): allowed_currencies.add('GBP')
+                        elif sym.endswith('.NV') or sym.endswith('.MI') or sym.endswith('.DE') or sym.endswith('.PA') or sym.endswith('.AS'): allowed_currencies.add('EUR')
+                        elif sym.endswith('.OL'): allowed_currencies.add('NOK')
+                        elif sym.endswith('.TO'): allowed_currencies.add('CAD')
+                        elif sym.endswith('.AX'): allowed_currencies.add('AUD')
+                        elif sym.endswith('.HK'): allowed_currencies.add('HKD')
+                        elif sym.endswith('.T'): allowed_currencies.add('JPY')
+                        elif sym.endswith('.SZ') or sym.endswith('.SS'): allowed_currencies.add('CNY')
+                    
+                    high_impact = [e for e in high_impact if e.get('country') in allowed_currencies]
+
                 # Return the top 5 upcoming high impact events
                 return [{'title': h['title'], 'country': h['country'], 'date': h['date']} for h in high_impact[:5]]
         except Exception as e:
