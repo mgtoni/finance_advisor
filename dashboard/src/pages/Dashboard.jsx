@@ -60,55 +60,82 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // 1. Fetch Tickers (Portfolio)
-      const { data: tickerData, error: tickerError } = await supabase
-        .from('portfolio_summary')
-        .select('*')
-        .order('symbol');
+      // Start all independent fetches concurrently
+      const portfolioPromise = supabase.from('portfolio_summary').select('*').order('symbol');
+      const tickersInfoPromise = supabase.from('tickers').select('symbol, company_name');
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       
-      if (tickerError) throw tickerError;
+      const macroPromise = fetch(`${apiUrl}/api/macro-data`);
+      const discoveryPromise = supabase.from('discovery_picks').select('*').order('created_at', { ascending: false }).limit(5);
 
-      // 1.5 Fetch company names from tickers table
-      const { data: tickersInfo } = await supabase.from('tickers').select('symbol, company_name');
+      // Wait for the essential ones (portfolio and tickers) to build the core UI
+      const [portfolioRes, tickersInfoRes] = await Promise.all([portfolioPromise, tickersInfoPromise]);
+      
+      if (portfolioRes.error) throw portfolioRes.error;
+
       const companyNamesMap = {};
-      if (tickersInfo) {
-        tickersInfo.forEach(t => {
+      if (tickersInfoRes.data) {
+        tickersInfoRes.data.forEach(t => {
           companyNamesMap[t.symbol] = t.company_name;
         });
       }
 
-      const enhancedTickerData = tickerData ? tickerData.map(t => ({
+      const enhancedTickerData = portfolioRes.data ? portfolioRes.data.map(t => ({
         ...t,
         company_name: companyNamesMap[t.symbol] || ''
       })) : [];
 
       setTickers(enhancedTickerData);
 
-      // 2. Fetch Latest Predictions for all tickers to populate the table column
-      if (tickerData && tickerData.length > 0) {
-        const symbols = tickerData.map(t => t.symbol);
-        
-        // Since we want the *latest* for each, we can fetch all recent and group,
-        // or just fetch them individually if the list isn't huge.
-        // For simplicity and to ensure we get the latest, we will fetch for each symbol.
-        const preds = {};
-        for (const sym of symbols) {
-          const { data: predData } = await supabase
-            .from('prediction_logs')
-            .select('*')
-            .eq('symbol', sym)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          
-          if (predData && predData.length > 0) {
-            preds[sym] = predData[0];
-          }
-        }
-        setPredictions(preds);
+      // 💥 Core UI Data is ready - Unblock the UI render! 💥
+      setLoading(false);
+
+      // Fetch Latest Predictions in parallel, not sequentially
+      if (portfolioRes.data && portfolioRes.data.length > 0) {
+        const symbols = portfolioRes.data.map(t => t.symbol);
+        Promise.all(symbols.map(sym => 
+           supabase.from('prediction_logs').select('*').eq('symbol', sym).order('created_at', { ascending: false }).limit(1)
+        )).then(results => {
+           const preds = {};
+           results.forEach((res, index) => {
+               if (res.data && res.data.length > 0) {
+                   preds[symbols[index]] = res.data[0];
+               }
+           });
+           setPredictions(preds);
+        }).catch(err => console.error("Error fetching predictions", err));
       }
 
-      // 3. Fire off Portfolio Analysis asynchronously without awaiting it
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      // Handle macro data asynchronously
+      macroPromise.then(res => {
+         if (res.ok) return res.json();
+         throw new Error("Macro fetch failed");
+      }).then(macroJson => {
+         if (macroJson.status === 'success') {
+             setMacroData(macroJson.data);
+             // Fire off async fetch for calendar insights
+             if (macroJson.data.economic_calendar && macroJson.data.economic_calendar.length > 0) {
+                 fetch(`${apiUrl}/api/generate-calendar-insights`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ events: macroJson.data.economic_calendar })
+                 }).then(res => res.json()).then(data => {
+                     if (data.status === 'success') {
+                         setCalendarInsights(data.insights);
+                     }
+                 }).catch(console.error);
+             }
+         }
+      }).catch(err => console.error("Error fetching macro data", err));
+
+      // Handle discovery picks asynchronously
+      discoveryPromise.then(({ data, error }) => {
+         if (!error && data) {
+           setDiscoveryPicks(data);
+         }
+      }).catch(err => console.error("Error fetching discovery picks", err));
+
+      // Fire off Portfolio Analysis asynchronously
       fetch(`${apiUrl}/api/portfolio-analysis`)
         .then(res => res.json())
         .then(analysisRes => {
@@ -118,7 +145,7 @@ const Dashboard = () => {
         })
         .catch(err => console.error("Error fetching portfolio analysis", err));
 
-      // 4. Fire off Portfolio Metrics asynchronously without awaiting
+      // Fire off Portfolio Metrics asynchronously
       fetch(`${apiUrl}/api/portfolio-metrics`)
         .then(res => res.json())
         .then(metricsData => {
@@ -128,46 +155,6 @@ const Dashboard = () => {
         })
         .catch(err => console.error("Error fetching portfolio metrics", err));
 
-      // 5. Fetch Macro Data (Wait for this so the UI has structure, it's fast)
-      try {
-        const macroRes = await fetch(`${apiUrl}/api/macro-data`);
-        if (macroRes.ok) {
-           const macroJson = await macroRes.json();
-           if (macroJson.status === 'success') {
-               setMacroData(macroJson.data);
-               // Fire off async fetch for calendar insights
-               if (macroJson.data.economic_calendar && macroJson.data.economic_calendar.length > 0) {
-                   fetch(`${apiUrl}/api/generate-calendar-insights`, {
-                       method: 'POST',
-                       headers: { 'Content-Type': 'application/json' },
-                       body: JSON.stringify({ events: macroJson.data.economic_calendar })
-                   }).then(res => res.json()).then(data => {
-                       if (data.status === 'success') {
-                           setCalendarInsights(data.insights);
-                       }
-                   }).catch(console.error);
-               }
-           }
-        }
-      } catch (err) {
-        console.error("Error fetching macro data", err);
-      }
-
-      // 6. Fetch Discovery Picks
-      try {
-        const { data: discoveryData, error: discoveryError } = await supabase
-          .from('discovery_picks')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(5);
-        if (!discoveryError) {
-          setDiscoveryPicks(discoveryData || []);
-        }
-      } catch (err) {
-        console.error("Error fetching discovery picks", err);
-      }
-
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setFetchError(error.message);
