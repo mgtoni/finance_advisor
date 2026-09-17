@@ -481,7 +481,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {portfolioAnalysis && (
+      {portfolioAnalysis ? (
         <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
           <div style={{ flex: '2 1 500px' }}>
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -598,8 +598,12 @@ const Dashboard = () => {
             ) : <p className="text-muted" style={{ textAlign: 'center' }}>No correlation data.</p>}
           </div>
         </div>
+      ) : (
+        <div className="glass-panel" style={{ padding: '2rem', marginBottom: '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+           <h3><PieChartIcon size={20} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} color="var(--accent-blue)" /> Generating AI Portfolio Analysis...</h3>
+           <p style={{ fontSize: '0.9rem' }}>The AI is synthesizing macro trends, checking position gaps, and assigning risk levels. This usually takes ~25 seconds.</p>
+        </div>
       )}
-
       <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
