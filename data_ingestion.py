@@ -128,10 +128,32 @@ class DataIngestionService:
     def get_economic_calendar(self, symbols=None):
         """Fetches upcoming high-impact economic events from ForexFactory JSON API and filters by portfolio exposure."""
         import requests
-        try:
-            res = requests.get("https://nfs.faireconomy.media/ff_calendar_thisweek.json")
-            if res.status_code == 200:
-                events = res.json()
+        import time
+        
+        # Check global cache to prevent 429 rate limit
+        global _CALENDAR_CACHE, _CALENDAR_CACHE_TIME
+        if '_CALENDAR_CACHE' not in globals():
+            _CALENDAR_CACHE = None
+            _CALENDAR_CACHE_TIME = 0
+            
+        if _CALENDAR_CACHE and (time.time() - _CALENDAR_CACHE_TIME) < 3600:
+            events = _CALENDAR_CACHE
+        else:
+            try:
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+                res = requests.get("https://nfs.faireconomy.media/ff_calendar_thisweek.json", headers=headers, timeout=5)
+                if res.status_code == 200:
+                    events = res.json()
+                    _CALENDAR_CACHE = events
+                    _CALENDAR_CACHE_TIME = time.time()
+                else:
+                    events = []
+            except Exception as e:
+                print(f"Error fetching economic calendar: {e}")
+                events = []
+
+        if events:
+            try:
                 high_impact = [e for e in events if e.get('impact') == 'High']
                 
                 # Filter by portfolio exposure
@@ -152,8 +174,8 @@ class DataIngestionService:
 
                 # Return the top 5 upcoming high impact events
                 return [{'title': h['title'], 'country': h['country'], 'date': h['date']} for h in high_impact[:5]]
-        except Exception as e:
-            print(f"Error fetching economic calendar: {e}")
+            except Exception as e:
+                print(f"Error fetching economic calendar: {e}")
         return []
 
     def get_earnings_drift(self, symbol):

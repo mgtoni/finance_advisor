@@ -107,8 +107,16 @@ def add_position():
         if not supabase:
             return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
 
-        # Upsert ticker
-        supabase.table('tickers').upsert({'symbol': symbol}).execute()
+        # Upsert ticker with sector and country
+        try:
+            info = yf.Ticker(symbol).info
+            sector = info.get('sector', 'Unknown')
+            country = info.get('country', 'Unknown')
+        except Exception:
+            sector = 'Unknown'
+            country = 'Unknown'
+            
+        supabase.table('tickers').upsert({'symbol': symbol, 'sector': sector, 'country': country}).execute()
         
         # Insert position
         position_data = {
@@ -318,37 +326,33 @@ def get_portfolio_metrics():
         if len(symbols) < 1:
             return jsonify({"status": "success", "data": {"correlation": {}, "sharpe_ratio": 0}})
             
-        import concurrent.futures
+        # Fetch pre-calculated static info from tickers table
+        tickers_res = supabase.table('tickers').select('symbol, sector, country').execute()
+        ticker_meta = {t['symbol']: t for t in tickers_res.data} if tickers_res and tickers_res.data else {}
+
         sector_assets = {}
         country_assets = {}
         sector_value = {}
         country_value = {}
         total_val = 0
         
-        def fetch_info(row):
+        for row in res.data:
             sym = row['symbol']
-            try:
-                info = yf.Ticker(sym).info
-                sec = info.get('sector', 'Unknown')
-                cntry = info.get('country', 'Unknown')
-            except Exception:
-                sec = 'Unknown'
-                cntry = 'Unknown'
+            meta = ticker_meta.get(sym, {})
+            sec = meta.get('sector') or 'Unknown'
+            cntry = meta.get('country') or 'Unknown'
+            
             price = row.get('last_close_price') or row.get('average_entry_price') or 0
             val = float(row.get('total_shares', 0)) * float(price)
-            return sym, sec, cntry, val
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(fetch_info, r) for r in res.data]
-            for future in concurrent.futures.as_completed(futures):
-                sym, sec, cntry, val = future.result()
-                total_val += val
-                sector_value[sec] = sector_value.get(sec, 0) + val
-                if sec not in sector_assets: sector_assets[sec] = []
-                sector_assets[sec].append(sym)
-                country_value[cntry] = country_value.get(cntry, 0) + val
-                if cntry not in country_assets: country_assets[cntry] = []
-                country_assets[cntry].append(sym)
+            
+            total_val += val
+            sector_value[sec] = sector_value.get(sec, 0) + val
+            if sec not in sector_assets: sector_assets[sec] = []
+            sector_assets[sec].append(sym)
+            
+            country_value[cntry] = country_value.get(cntry, 0) + val
+            if cntry not in country_assets: country_assets[cntry] = []
+            country_assets[cntry].append(sym)
                 
         sector_breakdown = {}
         country_breakdown = {}
