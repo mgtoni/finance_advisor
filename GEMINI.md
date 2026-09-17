@@ -6,6 +6,7 @@ These guidelines apply across the backend (Flask / Python / Supabase) and fronte
 - **Honest, Objective & Critical Feedback**: The AI must provide realistic, objective risk analysis. Avoid sycophancy or overly flattering/complimentary assessments. Highlight vulnerabilities, macro headwinds, and portfolio concentration risks.
 - **No Forced Action Alignment**: Do not restrict or force the AI's macro/portfolio recommendations to match micro/individual stock ratings (e.g., do not forbid "SELL" recommendations on assets with individual "BUY/HOLD" ratings). Instead, feed the individual stock data and context into the prompt and allow the model to evaluate the whole-portfolio trade-offs independently.
 - **Depth of Insights**: Synthesis outputs must be substantive and comprehensive (provide detailed, actionable takeaways beyond surface-level bullet points).
+- **Mandatory Model Version**: NEVER use `gemini-1.5-flash` in any code or prompt, as it is deprecated in 2026. Only ever use `gemini-3.8-flash` or newer supported models.
 
 ## 2. Backend & Data Serialization (Python / Flask / yfinance)
 - **Sanitize NumPy & Pandas Types**: Flask's `jsonify` cannot serialize NumPy data types (`numpy.float64`, `numpy.int64`) or Pandas `NaN`/`NaT` values. When extracting financial data from `yfinance` or Pandas DataFrames, always safely convert them to standard Python primitives (`float(val)`, `int(val)`, or `None` if `pd.isna(val)`) before returning in API responses or writing to Supabase.
