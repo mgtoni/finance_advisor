@@ -16,11 +16,14 @@ import time
 import datetime
 import pandas as pd
 import numpy as np
+import google.generativeai as genai
 
 load_dotenv()
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(supabase_url, supabase_key) if supabase_url else None
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 app = Flask(__name__)
 
@@ -375,6 +378,53 @@ def get_macro_data():
         })
     except Exception as e:
         print(f"Error fetching macro data: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/generate-calendar-insights', methods=['POST'])
+def generate_calendar_insights():
+    try:
+        data = request.json
+        events = data.get('events', [])
+        if not events:
+            return jsonify({"status": "success", "insights": {}})
+            
+        prompt = "You are a Bloomberg macro analyst. For each of the following upcoming economic events, provide a strict 1-sentence insight on how it might impact the stock market or specific sectors. Output JSON where the keys are the event titles, and values are the 1-sentence insight.\n\nEvents:\n"
+        for ev in events:
+            prompt += f"- {ev.get('title')} ({ev.get('country')})\n"
+            
+        model = genai.GenerativeModel('gemini-3.8-flash')
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type="application/json",
+            )
+        )
+        insights = json.loads(response.text)
+        return jsonify({"status": "success", "insights": insights})
+    except Exception as e:
+        print(f"Error generating insights: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/run-discovery', methods=['POST'])
+def run_discovery():
+    try:
+        # Run discovery engine in the background or blocking
+        from discovery_engine import DiscoveryEngine
+        engine = DiscoveryEngine(supabase_client=supabase)
+        
+        # We can run the pipeline directly
+        # To avoid timeout, we might want to do it in a thread, but for this MVP blocking is okay if it's < 30s.
+        # Let's run it in a thread to be safe and return "processing"
+        def run():
+            try:
+                engine.run_discovery_pipeline()
+            except Exception as ex:
+                print("Discovery Engine Error:", ex)
+                
+        threading.Thread(target=run).start()
+        return jsonify({"status": "success", "message": "Discovery Engine triggered in the background. It will take ~30-60 seconds."})
+    except Exception as e:
+        print(f"Error running discovery engine: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':

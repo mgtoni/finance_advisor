@@ -44,6 +44,8 @@ const Dashboard = () => {
   // New States for Macro & Discovery
   const [macroData, setMacroData] = useState(null);
   const [discoveryPicks, setDiscoveryPicks] = useState([]);
+  const [calendarInsights, setCalendarInsights] = useState({});
+  const [isDiscovering, setIsDiscovering] = useState(false);
 
   // New state for individual positions fractional closing
   const [individualPositions, setIndividualPositions] = useState([]);
@@ -139,6 +141,18 @@ const Dashboard = () => {
            const macroJson = await macroRes.json();
            if (macroJson.status === 'success') {
                setMacroData(macroJson.data);
+               // Fire off async fetch for calendar insights
+               if (macroJson.data.economic_calendar && macroJson.data.economic_calendar.length > 0) {
+                   fetch(`${apiUrl}/api/generate-calendar-insights`, {
+                       method: 'POST',
+                       headers: { 'Content-Type': 'application/json' },
+                       body: JSON.stringify({ events: macroJson.data.economic_calendar })
+                   }).then(res => res.json()).then(data => {
+                       if (data.status === 'success') {
+                           setCalendarInsights(data.insights);
+                       }
+                   }).catch(console.error);
+               }
            }
         }
       } catch (err) {
@@ -383,6 +397,68 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       
+      {/* AI Discovery Engine Panel (Moved to Top for Visibility) */}
+      <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid var(--accent-blue)' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: 'var(--text-primary)' }}>
+                <Target size={20} color="var(--accent-blue)" /> 
+                AI Discovery Engine
+             </h3>
+             <button 
+                 onClick={async () => {
+                     setIsDiscovering(true);
+                     const apiUrl = import.meta.env.VITE_API_URL || '';
+                     try {
+                         await fetch(`${apiUrl}/api/run-discovery`, { method: 'POST' });
+                         alert("AI Discovery triggered! It will calculate portfolio gaps and scrape global assets. Check back in ~60 seconds and refresh.");
+                     } catch(e) {
+                         console.error(e);
+                     }
+                     setTimeout(() => setIsDiscovering(false), 5000);
+                 }}
+                 disabled={isDiscovering}
+                 className="btn btn-primary"
+             >
+                 {isDiscovering ? 'Triggered...' : 'Run Active Discovery'}
+             </button>
+         </div>
+         <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
+            The AI acts as your global screener, calculating correlation matrices on your current portfolio and finding exact global tickers to perfectly hedge your gaps.
+         </p>
+         {discoveryPicks && discoveryPicks.length > 0 ? (
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              {discoveryPicks.map(pick => (
+                 <div key={pick.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                       <div>
+                          <h4 style={{ fontSize: '1.25rem', margin: 0, color: 'white' }}>{pick.symbol}</h4>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{pick.company_name} • {pick.sector}</div>
+                       </div>
+                       <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: pick.quant_score > 0 ? 'var(--accent-green)' : 'var(--text-primary)' }}>
+                             {pick.quant_score}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Quant Score</div>
+                       </div>
+                    </div>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: '1rem' }}>
+                       <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>AI Investment Thesis</strong>
+                       <ul style={{ paddingLeft: '1rem', margin: 0, fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-primary)' }}>
+                          {(pick.thesis || []).map((point, idx) => (
+                             <li key={idx} style={{ marginBottom: '0.5rem' }}>{point}</li>
+                          ))}
+                       </ul>
+                    </div>
+                 </div>
+              ))}
+           </div>
+         ) : (
+           <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', color: 'var(--text-secondary)' }}>
+              No draft picks yet. Click "Run Active Discovery" to find new assets!
+           </div>
+         )}
+      </div>
+
       {/* Macro Environment Panel */}
       {macroData && (
         <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid #F59E0B' }}>
@@ -392,25 +468,25 @@ const Dashboard = () => {
            </h3>
            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>10Y Treasury Yield</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="The benchmark risk-free rate. Rising yields hurt growth stocks.">10Y Treasury Yield ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.treasury_10y_yield?.toFixed(2)}%</div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Negative means inverted (recession signal)">Yield Curve (10Y-3M)</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Negative means inverted (classic recession signal).">Yield Curve (10Y-3M) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: macroData.yield_curve_10y_3m < 0 ? 'var(--accent-red)' : 'var(--accent-green)' }}>
                     {macroData.yield_curve_10y_3m?.toFixed(2)}%
                  </div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Gold (GLD)</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Safe-haven asset. Tracks inflation and fear.">Gold (GLD) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.gold?.toFixed(2)}</div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Crude Oil (USO)</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Tracks energy costs. Highly correlated with inflation.">Crude Oil (USO) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${macroData.oil?.toFixed(2)}</div>
               </div>
               <div>
-                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="Rising = Bullish, Falling = Credit Stress">Credit Spread (HYG/LQD)</div>
+                 <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }} title="High-Yield vs Inv. Grade. Falling = Corporate Credit Stress!">Credit Spread (HYG/LQD) ⓘ</div>
                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{macroData.credit_spread_hyg_lqd_ratio?.toFixed(2)}</div>
               </div>
            </div>
@@ -420,8 +496,15 @@ const Dashboard = () => {
                 <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Upcoming High-Impact Events (This Week)</h4>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   {macroData.economic_calendar.map((ev, i) => (
-                    <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px', fontSize: '0.85rem' }}>
-                       <strong style={{ color: 'var(--accent-red)' }}>{ev.country}</strong> {ev.title} ({ev.date})
+                    <div key={i} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem 1rem', borderRadius: '4px', fontSize: '0.85rem', maxWidth: '300px' }}>
+                       <div style={{ marginBottom: '0.25rem' }}><strong style={{ color: 'var(--accent-red)' }}>{ev.country}</strong> {ev.title} ({ev.date})</div>
+                       {calendarInsights[ev.title] ? (
+                           <div style={{ color: 'var(--accent-blue)', fontSize: '0.75rem', fontStyle: 'italic', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.5rem' }}>
+                               AI Insight: {calendarInsights[ev.title]}
+                           </div>
+                       ) : (
+                           <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.5rem' }}>Loading AI Insight...</div>
+                       )}
                     </div>
                   ))}
                 </div>
@@ -568,14 +651,14 @@ const Dashboard = () => {
             <thead>
               <tr>
                 <th onClick={() => handleSort('symbol')} style={{cursor: 'pointer'}}>Asset{getSortIndicator('symbol')}</th>
-                <th onClick={() => handleSort('last_close_price')} style={{cursor: 'pointer'}}>Price{getSortIndicator('last_close_price')}</th>
+                <th onClick={() => handleSort('last_close_price')} style={{cursor: 'pointer'}}>Price <span style={{ color: '#F59E0B', fontSize: '0.7rem' }}>⚡ Alpaca</span>{getSortIndicator('last_close_price')}</th>
                 <th onClick={() => handleSort('total_shares')} style={{cursor: 'pointer'}}>Units{getSortIndicator('total_shares')}</th>
                 <th onClick={() => handleSort('average_entry_price')} style={{cursor: 'pointer'}}>Avg. Open{getSortIndicator('average_entry_price')}</th>
                 <th onClick={() => handleSort('totalInvested')} style={{cursor: 'pointer'}}>Total Invested{getSortIndicator('totalInvested')}</th>
                 <th onClick={() => handleSort('total_unrealized_pnl_fiat')} style={{cursor: 'pointer'}}>P/L{getSortIndicator('total_unrealized_pnl_fiat')}</th>
                 <th onClick={() => handleSort('total_unrealized_pnl_pct')} style={{cursor: 'pointer'}}>P/L(%){getSortIndicator('total_unrealized_pnl_pct')}</th>
                 <th onClick={() => handleSort('netValue')} style={{cursor: 'pointer'}}>Net Value{getSortIndicator('netValue')}</th>
-                <th onClick={() => handleSort('conviction')} style={{cursor: 'pointer'}}>Conviction{getSortIndicator('conviction')}</th>
+                <th onClick={() => handleSort('conviction')} style={{cursor: 'pointer'}}>AI Conviction{getSortIndicator('conviction')}</th>
                 <th onClick={() => handleSort('recommendation')} style={{cursor: 'pointer'}}>Recommendation{getSortIndicator('recommendation')}</th>
               </tr>
             </thead>
@@ -642,45 +725,6 @@ const Dashboard = () => {
           </table>
         </div>
       </div>
-
-      {/* AI Discovery Engine Panel */}
-      {discoveryPicks && discoveryPicks.length > 0 && (
-        <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid var(--accent-blue)' }}>
-           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
-              <Target size={20} color="var(--accent-blue)" /> 
-              AI Discovery Engine - Draft Picks
-           </h3>
-           <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
-              These assets were automatically identified by the AI to perfectly balance your current portfolio concentration risks and sector gaps.
-           </p>
-           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {discoveryPicks.map(pick => (
-                 <div key={pick.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--panel-border)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                       <div>
-                          <h4 style={{ fontSize: '1.25rem', margin: 0, color: 'white' }}>{pick.symbol}</h4>
-                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{pick.company_name} • {pick.sector}</div>
-                       </div>
-                       <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: pick.quant_score > 0 ? 'var(--accent-green)' : 'var(--text-primary)' }}>
-                             {pick.quant_score}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Quant Score</div>
-                       </div>
-                    </div>
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: '1rem' }}>
-                       <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>AI Investment Thesis</strong>
-                       <ul style={{ paddingLeft: '1rem', margin: 0, fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-primary)' }}>
-                          {(pick.thesis || []).map((point, idx) => (
-                             <li key={idx} style={{ marginBottom: '0.5rem' }}>{point}</li>
-                          ))}
-                       </ul>
-                    </div>
-                 </div>
-              ))}
-           </div>
-        </div>
-      )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         {selectedTicker && (
@@ -923,9 +967,14 @@ const Dashboard = () => {
                     <option value="2">Tier 2 & Above</option>
                   </select>
                 </div>
-                <p className="small text-muted" style={{ marginBottom: '1rem' }}>
-                   Sources are tiered by reliability. Sentiment scores range from -1.0 (Negative) to 1.0 (Positive).
-                </p>
+                <div style={{ background: 'rgba(0,123,255,0.1)', border: '1px solid rgba(0,123,255,0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0' }}>AI Earnings Transcript Integration</h4>
+                  <p className="small text-muted" style={{ margin: 0 }}>
+                    News sources tagged as <strong>Tier 1 (Earnings Calls)</strong> are automatically scraped via DuckDuckGo and fed into the AI's core predictive model. 
+                    This allows the AI to forecast using management's forward-looking guidance rather than relying solely on past quarterly fundamentals.
+                    <strong> Tier 3 (Retail)</strong> represents scraped sentiment from forums like r/wallstreetbets to detect short-squeeze risks.
+                  </p>
+                </div>
                 {news && news.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {news.filter(n => {
