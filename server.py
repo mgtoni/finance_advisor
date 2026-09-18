@@ -58,6 +58,27 @@ def run_analysis():
         print(f"Error running pipeline: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/refresh-prices', methods=['POST'])
+def refresh_prices():
+    try:
+        if not supabase:
+            return jsonify({"status": "error", "message": "Database not initialized"}), 500
+            
+        res = supabase.table('tickers').select('symbol').execute()
+        if not res.data:
+            return jsonify({"status": "success", "message": "No tickers found", "prices": {}})
+            
+        tickers = [r['symbol'] for r in res.data]
+        
+        from data_ingestion import DataIngestionService
+        svc = DataIngestionService(supabase_client=supabase)
+        prices = svc.update_daily_closes(tickers)
+        
+        return jsonify({"status": "success", "message": "Prices updated successfully", "prices": prices})
+    except Exception as e:
+        print(f"Error refreshing prices: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/api/add-position', methods=['POST'])
 def add_position():
     try:

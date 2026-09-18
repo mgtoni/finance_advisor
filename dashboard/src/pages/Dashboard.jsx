@@ -99,6 +99,45 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+
+    // Set up 5-minute price polling
+    const priceInterval = setInterval(async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        // 1. Request backend to update prices
+        await fetch(`${apiUrl}/api/refresh-prices`, { method: 'POST' });
+        
+        // 2. Refresh tickers for the main table
+        const portfolioRes = await supabase.from('portfolio_summary').select('*').order('symbol');
+        const tickersInfoRes = await supabase.from('tickers').select('symbol, company_name');
+        
+        if (!portfolioRes.error && portfolioRes.data) {
+          const companyNamesMap = {};
+          if (tickersInfoRes.data) {
+            tickersInfoRes.data.forEach(t => {
+              companyNamesMap[t.symbol] = t.company_name;
+            });
+          }
+          setTickers(portfolioRes.data.map(t => ({
+            ...t,
+            company_name: companyNamesMap[t.symbol] || ''
+          })));
+        }
+
+        // 3. Refresh portfolio metrics (Total value, day P/L)
+        const metricsRes = await fetch(`${apiUrl}/api/portfolio-metrics`);
+        if (metricsRes.ok) {
+          const metricsJson = await metricsRes.json();
+          if (metricsJson.status === 'success') {
+            setPortfolioMetrics(metricsJson.data);
+          }
+        }
+      } catch (err) {
+        console.error("Error in background price refresh", err);
+      }
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(priceInterval);
   }, []);
 
   const LastRunLabel = ({ date, align = 'left' }) => {
