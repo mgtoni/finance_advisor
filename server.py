@@ -622,19 +622,28 @@ def run_discovery():
         from discovery_engine import DiscoveryEngineService
         engine = DiscoveryEngineService(supabase_client=supabase)
         
-        # We can run the pipeline directly
-        # To avoid timeout, we might want to do it in a thread, but for this MVP blocking is okay if it's < 30s.
-        # Let's run it in a thread to be safe and return "processing"
-        def run():
+        # We can run it in a thread if it takes too long
+        def run_in_bg():
             try:
                 engine.run_discovery()
             except Exception as ex:
                 print("Discovery Engine Error:", ex)
                 
-        threading.Thread(target=run).start()
+        import threading
+        threading.Thread(target=run_in_bg).start()
         return jsonify({"status": "success", "message": "Discovery Engine triggered in the background. It will take ~30-60 seconds."})
     except Exception as e:
         print(f"Error running discovery engine: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/discovery-picks', methods=['GET'])
+def get_discovery_picks():
+    try:
+        res = supabase.table('discovery_picks').select('*').order('created_at', desc=True).limit(3).execute()
+        picks = res.data if res.data else []
+        return jsonify({"status": "success", "data": picks})
+    except Exception as e:
+        print(f"Error fetching discovery picks: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/social-sentiment/<symbol>', methods=['GET'])

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import StockChart from '../components/StockChart';
 import Modal from '../components/Modal';
-import { Activity, BookOpen, TrendingUp, TrendingDown, PieChart as PieChartIcon, Target } from 'lucide-react';
+import { Activity, BookOpen, TrendingUp, TrendingDown, PieChart as PieChartIcon, Target, RefreshCw } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import SmartText from '../components/SmartText';
 import { glossary } from '../data/glossary';
@@ -478,6 +478,32 @@ const Dashboard = () => {
     }
   };
 
+  const handleRunDiscovery = async () => {
+    setIsDiscovering(true);
+    setAnalysisStatus({ type: '', message: '' });
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/run-discovery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Discovery failed');
+
+      setAnalysisStatus({ type: 'success', message: 'Discovery Engine started in background! Check back in ~60 seconds.' });
+      
+      // Auto-hide success message
+      setTimeout(() => setAnalysisStatus({ type: '', message: '' }), 5000);
+    } catch (err) {
+      console.error(err);
+      setAnalysisStatus({ type: 'error', message: err.message || 'Failed to trigger discovery engine.' });
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
   if (loading) return <div className="spinner"></div>;
   if (fetchError) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--accent-red)' }}>Error loading dashboard: {fetchError}</div>;
   if (tickers.length === 0) {
@@ -942,6 +968,59 @@ const Dashboard = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Discovery Engine Panel */}
+      <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid var(--accent-purple)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: 'var(--text-primary)' }}>
+            <Target size={20} color="var(--accent-purple)" />
+            AI Discovery Engine
+          </h3>
+          <button 
+            className="btn btn-primary" 
+            onClick={handleRunDiscovery}
+            disabled={isDiscovering}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-purple)' }}
+          >
+            {isDiscovering ? <RefreshCw size={16} className="spinner" /> : <Target size={16} />}
+            {isDiscovering ? 'Starting...' : 'Run AI Discovery'}
+          </button>
+        </div>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          The Discovery Engine analyzes your portfolio for missing sectors or country exposures, and uses quant screening to find the best assets to balance your risk profile.
+        </p>
+
+        {discoveryPicks && discoveryPicks.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            {discoveryPicks.map((pick, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem', color: 'var(--text-primary)' }}>{pick.symbol}</h4>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{pick.company_name} • {pick.sector}</span>
+                  </div>
+                  <div style={{ background: 'rgba(139, 92, 246, 0.2)', color: 'var(--accent-purple)', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                    Score: {pick.quant_score?.toFixed(1) || 'N/A'}
+                  </div>
+                </div>
+                
+                <div style={{ marginTop: '1rem' }}>
+                  <strong style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Thesis</strong>
+                  <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.2rem', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    {(pick.thesis || []).map((point, idx) => (
+                      <li key={idx} style={{ marginBottom: '0.5rem' }}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px dashed var(--panel-border)' }}>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No discovery picks available yet. Run the Discovery Engine to find new opportunities!</p>
+          </div>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
