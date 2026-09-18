@@ -109,12 +109,12 @@ class DataIngestionService:
             macro['yield_curve_10y_3m'] = tnx - irx
             
             # Commodities
-            macro['gold'] = float(yf.Ticker('GLD').history(period="1d")['Close'].iloc[-1])
-            macro['oil'] = float(yf.Ticker('USO').history(period="1d")['Close'].iloc[-1])
+            gold_futures = float(yf.Ticker('GC=F').history(period="1d")['Close'].iloc[-1])
+            macro['gold'] = gold_futures
+            macro['oil'] = float(yf.Ticker('CL=F').history(period="1d")['Close'].iloc[-1])
             macro['brent_oil'] = float(yf.Ticker('BZ=F').history(period="1d")['Close'].iloc[-1])
             
             copper = float(yf.Ticker('HG=F').history(period="1d")['Close'].iloc[-1])
-            gold_futures = float(yf.Ticker('GC=F').history(period="1d")['Close'].iloc[-1])
             macro['copper_gold_ratio'] = copper / gold_futures if gold_futures > 0 else None
             
             # Global Equities & Risk

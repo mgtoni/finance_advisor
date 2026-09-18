@@ -463,7 +463,7 @@ const Dashboard = () => {
             <Activity size={20} color="#F59E0B" />
             Global Macro Environment
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', paddingBottom: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.5rem', paddingBottom: '1rem' }}>
             <MacroMetricCard
               title="10Y Treasury Yield"
               value={`${macroData.treasury_10y_yield?.toFixed(2)}%`}
@@ -492,32 +492,6 @@ const Dashboard = () => {
             />
 
             <MacroMetricCard
-              title="Gold (GLD)"
-              value={`$${macroData.gold?.toFixed(2)}`}
-              educationalText={
-                <>
-                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Ultimate Safe-Haven</h4>
-                  <p style={{ margin: '0 0 0.5rem 0' }}>Gold acts as a timeless hedge against inflation, currency debasement, and systemic banking collapses.</p>
-                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> A rapidly surging gold price often signals that institutional "smart money" is quietly fleeing risky equities due to fear of major market instability.</p>
-                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI tracks gold breakouts to determine if a defensive portfolio rotation is necessary.</p>
-                </>
-              }
-            />
-
-            <MacroMetricCard
-              title="Crude Oil (USO)"
-              value={`$${macroData.oil?.toFixed(2)}`}
-              educationalText={
-                <>
-                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Broad Inflation Engine</h4>
-                  <p style={{ margin: '0 0 0.5rem 0' }}>Oil powers global transport and manufacturing. When crude prices surge, the cost of almost everything else goes up.</p>
-                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> Surging oil acts as a direct "tax" on consumers. Discretionary spending collapses and margins for airlines, logistics, and retail get violently squeezed.</p>
-                  <p style={{ margin: 0, color: 'var(--accent-red)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI penalizes consumer discretionary stocks in your portfolio when oil breaches $85/bbl.</p>
-                </>
-              }
-            />
-
-            <MacroMetricCard
               title="Credit Spread (HYG/LQD)"
               value={`${macroData.credit_spread_hyg_lqd_ratio?.toFixed(2)}`}
               educationalText={
@@ -531,14 +505,27 @@ const Dashboard = () => {
             />
 
             <MacroMetricCard
-              title="Copper-to-Gold (HG/GC)"
-              value={`${macroData.copper_gold_ratio?.toFixed(4)}`}
+              title="Crude Oil (CL)"
+              value={`$${macroData.oil?.toFixed(2)}`}
               educationalText={
                 <>
-                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>Dr. Copper vs The Safe-Haven</h4>
-                  <p style={{ margin: '0 0 0.5rem 0' }}>Copper is heavily used in global manufacturing and infrastructure. Gold is a safe-haven asset.</p>
-                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> A rising ratio means global economic expansion and risk-on sentiment. A falling ratio signals global economic contraction or fear.</p>
-                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI tracks this ratio as the ultimate leading indicator for global economic momentum.</p>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Broad Inflation Engine</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>Oil powers global transport and manufacturing. When crude prices surge, the cost of almost everything else goes up.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> Surging oil acts as a direct "tax" on consumers. Discretionary spending collapses and margins for airlines, logistics, and retail get violently squeezed.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-red)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI penalizes consumer discretionary stocks in your portfolio when oil breaches $85/bbl.</p>
+                </>
+              }
+            />
+
+            <MacroMetricCard
+              title="Gold (GC)"
+              value={`$${macroData.gold?.toFixed(2)}`}
+              educationalText={
+                <>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Ultimate Safe-Haven</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>Gold acts as a timeless hedge against inflation, currency debasement, and systemic banking collapses.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> A rapidly surging gold price often signals that institutional "smart money" is quietly fleeing risky equities due to fear of major market instability.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI tracks gold breakouts to determine if a defensive portfolio rotation is necessary.</p>
                 </>
               }
             />
@@ -570,6 +557,19 @@ const Dashboard = () => {
             />
 
             <MacroMetricCard
+              title="Bitcoin (BTC)"
+              value={`$${macroData.btc_usd?.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`}
+              educationalText={
+                <>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Apex Liquidity Sponge</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>Regardless of opinion on crypto, institutional Bitcoin trades as a high-beta proxy for global fiat liquidity.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> When global central banks print money or ease conditions, BTC typically rallies first as a hypersensitive leading indicator.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI watches BTC movements to sniff out stealth liquidity injections before they hit legacy markets.</p>
+                </>
+              }
+            />
+
+            <MacroMetricCard
               title="Brent Crude (BZ)"
               value={`$${macroData.brent_oil?.toFixed(2)}`}
               educationalText={
@@ -583,14 +583,14 @@ const Dashboard = () => {
             />
 
             <MacroMetricCard
-              title="Bitcoin (BTC)"
-              value={`$${macroData.btc_usd?.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`}
+              title="Copper-to-Gold (HG/GC)"
+              value={`${macroData.copper_gold_ratio?.toFixed(4)}`}
               educationalText={
                 <>
-                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Apex Liquidity Sponge</h4>
-                  <p style={{ margin: '0 0 0.5rem 0' }}>Regardless of opinion on crypto, institutional Bitcoin trades as a high-beta proxy for global fiat liquidity.</p>
-                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> When global central banks print money or ease conditions, BTC typically rallies first as a hypersensitive leading indicator.</p>
-                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI watches BTC movements to sniff out stealth liquidity injections before they hit legacy markets.</p>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>Dr. Copper vs The Safe-Haven</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>Copper is heavily used in global manufacturing and infrastructure. Gold is a safe-haven asset.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> A rising ratio means global economic expansion and risk-on sentiment. A falling ratio signals global economic contraction or fear.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI tracks this ratio as the ultimate leading indicator for global economic momentum.</p>
                 </>
               }
             />
