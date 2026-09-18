@@ -655,35 +655,148 @@ def get_social_sentiment(symbol):
         print(f"Error fetching social sentiment for {symbol}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+NEWS_SUMMARY_CACHE_FILE = os.path.join(os.path.dirname(__file__), 'news_summary_cache.json')
+
+def load_news_summary_cache():
+    if os.path.exists(NEWS_SUMMARY_CACHE_FILE):
+        try:
+            with open(NEWS_SUMMARY_CACHE_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error reading news summary cache file: {e}")
+    return {}
+
+def save_news_summary_cache(cache):
+    try:
+        with open(NEWS_SUMMARY_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, indent=2)
+    except Exception as e:
+        print(f"Error saving news summary cache file: {e}")
+
+@app.route('/api/news-summary', defaults={'symbol': 'ALL'}, methods=['GET'])
 @app.route('/api/news-summary/<symbol>', methods=['GET'])
 def get_news_summary(symbol):
     try:
         if not supabase:
             return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
 
-        # Fetch recent Tier 1/2 news from database
-        res = supabase.table('news_events').select('*').eq('symbol', symbol).order('published_at', desc=True).limit(10).execute()
-        news = res.data or []
-        
-        # Filter for tier 1/2
-        top_tier_news = [n for n in news if int(n.get('source_tier', 3)) <= 2]
-        
-        if not top_tier_news:
-            return jsonify({"status": "success", "summary": "No recent Tier 1 or Tier 2 institutional news found to summarize."})
+        sym = (symbol or 'ALL').upper().strip()
+        force = request.args.get('force', 'false').lower() == 'true'
 
-        prompt = f"You are a hedge fund analyst. Write a concise, 2-3 sentence executive summary describing the recent institutional news flow for {symbol} and its market impact. Here are the recent headlines:\n\n"
-        for n in top_tier_news:
-            prompt += f"- {n.get('headline')} (Source: {n.get('source')})\n"
+        now = datetime.datetime.now(datetime.timezone.utc)
+        current_week_id = now.strftime('%G-W%V')  # ISO week identifier, e.g. '2026-W38'
+        one_week_ago = now - datetime.timedelta(days=7)
 
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        cache = load_news_summary_cache()
+        cached_entry = cache.get(sym)
+
+        # 1. Weekly Cache Check: If already generated for the current week, return cached
+        if not force and cached_entry and cached_entry.get('week_id') == current_week_id:
+            print(f"Returning cached weekly news summary for {sym} ({current_week_id})")
+            return jsonify({
+                "status": "success",
+                "summary": cached_entry.get("summary"),
+                "cached": True,
+                "week_id": current_week_id,
+                "date_range": cached_entry.get("date_range", ""),
+                "article_count": cached_entry.get("article_count", 0),
+                "generated_at": cached_entry.get("generated_at", "")
+            })
+
+        # 2. Query ALL articles published in the previous week (all tiers included)
+        if sym == 'ALL':
+            query = supabase.table('news_events').select('*').gte('published_at', one_week_ago.isoformat()).order('published_at', desc=True)
+        else:
+            query = supabase.table('news_events').select('*').eq('symbol', sym).gte('published_at', one_week_ago.isoformat()).order('published_at', desc=True)
+            
+        res = query.execute()
+        articles = res.data or []
+
+        # Fallback if fewer than 2 articles in exact last 7 days: expand to most recent available
+        date_range_label = f"{one_week_ago.strftime('%b %d')} - {now.strftime('%b %d, %Y')}"
+        if len(articles) < 2:
+            if sym == 'ALL':
+                fallback_query = supabase.table('news_events').select('*').order('published_at', desc=True).limit(30)
+            else:
+                fallback_query = supabase.table('news_events').select('*').eq('symbol', sym).order('published_at', desc=True).limit(30)
+            fb_res = fallback_query.execute()
+            if fb_res.data and len(fb_res.data) > len(articles):
+                articles = fb_res.data
+                date_range_label = f"Most Recent ({len(articles)} articles)"
+
+        if not articles:
+            return jsonify({
+                "status": "success",
+                "summary": f"No news articles found for {sym} in the database to summarize.",
+                "cached": False,
+                "week_id": current_week_id,
+                "date_range": date_range_label,
+                "article_count": 0
+            })
+
+        # 3. Format ALL articles for Gemini analysis with source tiers & sentiment context
+        lines = []
+        for a in articles:
+            pub_date = (a.get('published_at') or '')[:10]
+            tier = a.get('source_tier') or 3
+            source = a.get('source') or 'Unknown'
+            score = a.get('sentiment_score', 0.0)
+            headline = a.get('headline') or ''
+            impact = a.get('impact_summary') or ''
+            lines.append(f"- [{pub_date}] (Tier {tier}, Source: {source}, Score: {score}): {headline} -> {impact}")
+
+        prompt = f"""You are a senior quantitative financial research analyst at an institutional investment fund.
+Analyze ALL {len(articles)} news articles published over the previous week for {sym} and synthesize an objective, high-signal weekly executive summary.
+Sources are categorized by Trust Tiers (1 to 3). You MUST heavily weight Tier 1 sources (e.g., Financial Times, Wall Street Journal, Bloomberg, Reuters) and discount Tier 3 sources (e.g., Seeking Alpha, Motley Fool, Reddit retail buzz).
+Provide an objective, critical, and realistic assessment highlighting genuine catalysts, valuation risks, and supply/demand headwinds without fluff or sycophancy.
+
+Previous Week News Articles for {sym} ({len(articles)} total):
+{chr(10).join(lines)}
+
+Provide a substantive weekly executive summary (2-3 paragraphs) structured with:
+- **1. Prevailing Institutional Narrative:** What major financial media and institutions focused on this past week.
+- **2. Key Catalysts, Headwinds & Valuation Risks:** Substantive breakdown of drivers, operational developments, and downside vulnerabilities.
+- **3. Near-Term Market Outlook:** What this aggregated news flow implies for the stock's price action, volatility, and risk profile over the coming days and weeks.
+"""
+
+        model = genai.GenerativeModel('gemini-3.8-flash')
         response = model.generate_content(prompt)
-        
+        summary_text = response.text.strip()
+
+        # 4. Save to weekly disk cache
+        cache[sym] = {
+            "summary": summary_text,
+            "week_id": current_week_id,
+            "generated_at": now.isoformat(),
+            "date_range": date_range_label,
+            "article_count": len(articles)
+        }
+        save_news_summary_cache(cache)
+
+        # 5. Also sync to Supabase table if it exists
+        try:
+            supabase.table('news_summary_cache').upsert({
+                'symbol': sym,
+                'week_id': current_week_id,
+                'summary': summary_text,
+                'date_range': date_range_label,
+                'article_count': len(articles),
+                'last_updated': now.isoformat()
+            }).execute()
+        except Exception:
+            pass
+
         return jsonify({
             "status": "success",
-            "summary": response.text.strip()
+            "summary": summary_text,
+            "cached": False,
+            "week_id": current_week_id,
+            "date_range": date_range_label,
+            "article_count": len(articles),
+            "generated_at": now.isoformat()
         })
     except Exception as e:
-        print(f"Error generating news summary for {symbol}: {e}")
+        print(f"Error generating weekly news summary for {symbol}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':

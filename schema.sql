@@ -151,3 +151,19 @@ ALTER TABLE calendar_insights_cache ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access for calendar_insights_cache" ON calendar_insights_cache FOR SELECT USING (true);
 CREATE POLICY "Allow public insert for calendar_insights_cache" ON calendar_insights_cache FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for calendar_insights_cache" ON calendar_insights_cache FOR UPDATE USING (true);
+
+-- 10. News Summary Cache Table (Weekly AI Summary per symbol)
+CREATE TABLE IF NOT EXISTS news_summary_cache (
+    symbol VARCHAR(15) PRIMARY KEY,
+    week_id VARCHAR(10) NOT NULL,
+    summary TEXT NOT NULL,
+    date_range VARCHAR(50),
+    article_count INT,
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE news_summary_cache ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access for news_summary_cache" ON news_summary_cache FOR SELECT USING (true);
+CREATE POLICY "Allow public insert for news_summary_cache" ON news_summary_cache FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update for news_summary_cache" ON news_summary_cache FOR UPDATE USING (true);
+

@@ -83,6 +83,8 @@ const Dashboard = () => {
   const [portfolioAnalysis, setPortfolioAnalysis] = useState(null);
   const [newsTierFilter, setNewsTierFilter] = useState('All');
   const [newsSummary, setNewsSummary] = useState(null);
+  const [newsSummaryMeta, setNewsSummaryMeta] = useState(null);
+  const [newsSummaryLoading, setNewsSummaryLoading] = useState(false);
   const [socialSentiment, setSocialSentiment] = useState(null);
 
   // New States for Macro & Discovery
@@ -279,11 +281,32 @@ const Dashboard = () => {
     }
   };
 
+  const fetchNewsSummary = async (symbol, force = false) => {
+    if (!symbol) return;
+    try {
+      setNewsSummaryLoading(true);
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/news-summary/${symbol}${force ? '?force=true' : ''}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'success') {
+          setNewsSummary(data.summary);
+          setNewsSummaryMeta(data);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching news summary:", err);
+    } finally {
+      setNewsSummaryLoading(false);
+    }
+  };
+
   const handleRowClick = async (ticker) => {
     setSelectedTicker(ticker);
     setSelectedPrediction(predictions[ticker.symbol] || null);
     setIsModalOpen(true);
     setNewsSummary(null);
+    setNewsSummaryMeta(null);
     setSocialSentiment(null);
 
     // Fetch recent news for the selected ticker
@@ -341,13 +364,8 @@ const Dashboard = () => {
       console.error('Error fetching fundamentals:', err);
     }
 
-    // Fetch News Summary asynchronously
-    fetch(`${import.meta.env.VITE_API_URL || ''}/api/news-summary/${ticker.symbol}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') setNewsSummary(data.summary);
-      })
-      .catch(err => console.error("Error fetching news summary", err));
+    // Fetch News Summary asynchronously (weekly cached)
+    fetchNewsSummary(ticker.symbol);
 
     // Fetch Social Sentiment asynchronously
     fetch(`${import.meta.env.VITE_API_URL || ''}/api/social-sentiment/${ticker.symbol}`)
@@ -1168,12 +1186,43 @@ const Dashboard = () => {
                   </select>
                 </div>
                 {newsSummary ? (
-                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', borderLeft: '4px solid var(--accent-blue)' }}>
-                    <strong style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.85rem' }}>AI Executive Summary</strong>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>{newsSummary}</p>
+                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1.5rem', borderLeft: '4px solid var(--accent-blue)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <div>
+                        <strong style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                          Weekly AI Executive Summary {newsSummaryMeta?.date_range ? `(${newsSummaryMeta.date_range})` : ''}
+                        </strong>
+                        {newsSummaryMeta?.article_count > 0 && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', opacity: 0.8, marginLeft: '0.5rem' }}>
+                            • {newsSummaryMeta.article_count} articles analyzed {newsSummaryMeta.cached ? '(Cached for Current Week)' : '(Freshly Generated)'}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => fetchNewsSummary(selectedTicker?.symbol, true)}
+                        disabled={newsSummaryLoading}
+                        style={{
+                          background: 'rgba(0,123,255,0.15)',
+                          border: '1px solid rgba(0,123,255,0.4)',
+                          color: 'var(--accent-blue)',
+                          borderRadius: '4px',
+                          padding: '0.25rem 0.6rem',
+                          fontSize: '0.75rem',
+                          cursor: newsSummaryLoading ? 'not-allowed' : 'pointer'
+                        }}
+                        title="Force refresh weekly news summary"
+                      >
+                        {newsSummaryLoading ? 'Regenerating...' : 'Refresh Summary'}
+                      </button>
+                    </div>
+                    <div style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.6', whiteSpace: 'pre-line', color: 'rgba(255,255,255,0.9)' }}>
+                      {newsSummary}
+                    </div>
                   </div>
+                ) : newsSummaryLoading ? (
+                  <div style={{ padding: '1rem', marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Generating Weekly AI Summary...</div>
                 ) : (
-                  <div style={{ padding: '1rem', marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Generating AI Summary...</div>
+                  <div style={{ padding: '1rem', marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No summary available.</div>
                 )}
                 {news && news.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '500px', overflowY: 'auto', paddingRight: '0.5rem' }}>
