@@ -687,12 +687,31 @@ def get_news_summary(symbol):
         current_week_id = now.strftime('%G-W%V')  # ISO week identifier, e.g. '2026-W38'
         one_week_ago = now - datetime.timedelta(days=7)
 
+        # 1. Weekly Cache Check: Check Supabase DB first, then local disk cache
+        if not force and supabase:
+            try:
+                db_res = supabase.table('news_summary_cache').select('*').eq('symbol', sym).execute()
+                if db_res.data and len(db_res.data) > 0:
+                    db_entry = db_res.data[0]
+                    if db_entry.get('week_id') == current_week_id:
+                        print(f"Returning Supabase-cached weekly news summary for {sym} ({current_week_id})")
+                        return jsonify({
+                            "status": "success",
+                            "summary": db_entry.get("summary"),
+                            "cached": True,
+                            "week_id": current_week_id,
+                            "date_range": db_entry.get("date_range", ""),
+                            "article_count": db_entry.get("article_count", 0),
+                            "generated_at": db_entry.get("last_updated", "")
+                        })
+            except Exception:
+                pass
+
         cache = load_news_summary_cache()
         cached_entry = cache.get(sym)
 
-        # 1. Weekly Cache Check: If already generated for the current week, return cached
         if not force and cached_entry and cached_entry.get('week_id') == current_week_id:
-            print(f"Returning cached weekly news summary for {sym} ({current_week_id})")
+            print(f"Returning disk-cached weekly news summary for {sym} ({current_week_id})")
             return jsonify({
                 "status": "success",
                 "summary": cached_entry.get("summary"),
