@@ -16,9 +16,24 @@ class NewsAggregatorService:
         self.model = genai.GenerativeModel('gemini-3.8-flash')
         
         self.SOURCE_TIERS = {
-            'Financial Times': 1, 'Bloomberg': 1, 'Wall Street Journal': 1, 'Reuters': 1,
-            'Yahoo Finance': 2, 'CNBC': 2, 'MarketWatch': 2, 'Barron\'s': 2,
-            'Seeking Alpha': 3, 'Motley Fool': 3, 'Zacks': 3
+            # Tier 1
+            'Wall Street Journal': 1, 'Financial Times': 1, 'Bloomberg': 1,
+            'Barron\'s': 1, 'Reuters': 1, 'The Economist': 1, 'Handelsblatt': 1,
+            'Les Echos': 1, 'Il Sole 24 Ore': 1, 'International Financing Review': 1,
+            'Benzinga': 1,
+
+            # Tier 2
+            'Institutional Investor': 2, 'The Information': 2, 'Risk.net': 2,
+            'American Banker': 2, 'Private Equity International': 2, 'The Deal': 2,
+            'PitchBook': 2, 'S&P Global': 2, 'Financial News': 2, 'Börsen-Zeitung': 2,
+            'Expansión': 2, 'Cinco Días': 2, 'Dagens Industri': 2, 'De Tijd': 2,
+            'L\'Echo': 2, 'Fortune': 2, 'Forbes': 2, 'Yahoo Finance': 2, 'MarketWatch': 2,
+
+            # Tier 3
+            'Investor\'s Business Daily': 3, 'Seeking Alpha': 3, 'Investopedia': 3,
+            'Motley Fool': 3, 'Business Insider': 3, 'Zacks': 3, 'Kiplinger': 3,
+            'TheStreet': 3, 'City A.M.': 3, 'MoneyWeek': 3, 'Finanzen.net': 3,
+            'Boursorama': 3, 'Finansavisen': 3
         }
 
     def assign_tier(self, source):
@@ -42,28 +57,33 @@ class NewsAggregatorService:
         - "impact_summary": a 1-sentence summary of how this news might impact the stock price today.
         '''
         
-        prompt = f"Symbol: {symbol}\nArticles:\n"
-        for i, article in enumerate(articles):
-            prompt += f"{i+1}. Headline: {article['headline']} (Source: {article['source']}, Tier: {article.get('source_tier', 3)})\n"
-            
-        try:
-            response = self.model.generate_content(
-                contents=[system_instruction, prompt],
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.1
+        # Process in chunks of 15 to prevent the LLM from losing count or truncating output
+        chunk_size = 15
+        for i in range(0, len(articles), chunk_size):
+            chunk = articles[i:i + chunk_size]
+            prompt = f"Symbol: {symbol}\nArticles:\n"
+            for j, article in enumerate(chunk):
+                prompt += f"{j+1}. Headline: {article['headline']} (Source: {article['source']}, Tier: {article.get('source_tier', 3)})\n"
+                
+            try:
+                response = self.model.generate_content(
+                    contents=[system_instruction, prompt],
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.1
+                    )
                 )
-            )
-            analysis = json.loads(response.text)
-            
-            for i, article in enumerate(articles):
-                if i < len(analysis):
-                    article['sentiment_score'] = analysis[i].get('sentiment_score', 0)
-                    article['impact_summary'] = analysis[i].get('impact_summary', '')
-                    
-        except Exception as e:
-            print(f"Error generating sentiment for {symbol}: {e}")
-            
+                import json
+                analysis = json.loads(response.text)
+                
+                for j, article in enumerate(chunk):
+                    if j < len(analysis):
+                        article['sentiment_score'] = analysis[j].get('sentiment_score', 0)
+                        article['impact_summary'] = analysis[j].get('impact_summary', '')
+                        
+            except Exception as e:
+                print(f"Error generating sentiment for {symbol} (chunk {i}): {e}")
+                
         return articles
 
     def fetch_alpaca_news_bulk(self, tickers):
