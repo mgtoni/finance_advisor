@@ -255,9 +255,12 @@ def get_historical_news():
             
         url = f"https://data.alpaca.markets/v1beta1/news?symbols={symbol}&limit=50"
         if start:
-            # allow YYYY-MM-DD or RFC3339
+            if len(start) == 10:
+                start += "T00:00:00Z"
             url += f"&start={start}"
         if end:
+            if len(end) == 10:
+                end += "T23:59:59Z"
             url += f"&end={end}"
             
         headers = {
@@ -276,6 +279,22 @@ def get_historical_news():
                     'published_at': item.get('created_at', datetime.now().isoformat()),
                     'summary': item.get('summary', '')
                 })
+                
+            # Fallback for non-US or zero-result symbols
+            if len(articles) == 0:
+                from news_aggregator import NewsAggregatorService
+                svc = NewsAggregatorService()
+                ddg_news = svc.fetch_duckduckgo_news(symbol)
+                # Note: DDG ignores the strict date parameters, but better than no news.
+                for item in ddg_news:
+                    articles.append({
+                        'headline': item.get('headline', ''),
+                        'url': item.get('url', ''),
+                        'source': item.get('source', 'DuckDuckGo'),
+                        'published_at': item.get('published_at', datetime.now().isoformat()),
+                        'summary': ''
+                    })
+                    
             return jsonify({"status": "success", "data": articles}), 200
         else:
             return jsonify({"status": "error", "message": res.text}), res.status_code

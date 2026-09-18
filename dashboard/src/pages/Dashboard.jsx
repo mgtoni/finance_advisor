@@ -293,7 +293,7 @@ const Dashboard = () => {
         .select('*')
         .eq('symbol', ticker.symbol)
         .order('published_at', { ascending: false })
-        .limit(5);
+        .limit(50);
 
       if (!newsError) {
         setNews(newsData || []);
@@ -1183,7 +1183,7 @@ const Dashboard = () => {
                   <div style={{ padding: '1rem', marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Generating AI Summary...</div>
                 )}
                 {news && news.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '500px', overflowY: 'auto', paddingRight: '0.5rem' }}>
                     {news.filter(n => {
                       if (newsTierFilter === 'All') return true;
                       const tier = parseInt(n.source_tier || 3);

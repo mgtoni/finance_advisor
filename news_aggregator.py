@@ -103,6 +103,42 @@ class NewsAggregatorService:
             
         return articles_by_symbol
 
+    def fetch_yahoo_news(self, symbol):
+        """Fetches news from Yahoo Finance backdoor."""
+        articles = []
+        try:
+            ticker = yf.Ticker(symbol)
+            news = ticker.news
+            for item in news:
+                articles.append({
+                    'symbol': symbol,
+                    'headline': item.get('title', ''),
+                    'url': item.get('link', ''),
+                    'source': item.get('publisher', 'Yahoo Finance'),
+                    'published_at': datetime.fromtimestamp(item.get('providerPublishTime', 0)).isoformat() if item.get('providerPublishTime') else datetime.now().isoformat()
+                })
+        except Exception as e:
+            print(f"Error fetching Yahoo news for {symbol}: {e}")
+        return articles
+
+    def fetch_duckduckgo_news(self, symbol):
+        """Fetches news via DuckDuckGo."""
+        articles = []
+        try:
+            with DDGS() as ddgs:
+                results = ddgs.news(keywords=symbol, max_results=5)
+                for item in results:
+                    articles.append({
+                        'symbol': symbol,
+                        'headline': item.get('title', ''),
+                        'url': item.get('url', ''),
+                        'source': item.get('source', 'DuckDuckGo'),
+                        'published_at': item.get('date', datetime.now().isoformat())
+                    })
+        except Exception as e:
+            print(f"Error fetching DDG news for {symbol}: {e}")
+        return articles
+
     def fetch_alternative_sentiment(self, symbol):
         """Fetches alternative retail sentiment from Reddit and StockTwits using DuckDuckGo."""
         articles = []
@@ -143,10 +179,16 @@ class NewsAggregatorService:
         """Runs parallel scrapes for alternative data and deduplicates with base Alpaca articles."""
         all_articles = list(base_articles)
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             future_alt = executor.submit(self.fetch_alternative_sentiment, symbol)
             future_earnings = executor.submit(self.fetch_earnings_transcript_summaries, symbol)
             
+            if len(base_articles) == 0:
+                future_yahoo = executor.submit(self.fetch_yahoo_news, symbol)
+                future_ddg = executor.submit(self.fetch_duckduckgo_news, symbol)
+                all_articles.extend(future_yahoo.result())
+                all_articles.extend(future_ddg.result())
+                
             all_articles.extend(future_alt.result())
             all_articles.extend(future_earnings.result())
             
