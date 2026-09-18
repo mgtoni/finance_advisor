@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, RefreshCw } from 'lucide-react';
+import { Target, RefreshCw, Info } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const Discover = () => {
@@ -88,11 +88,13 @@ const Discover = () => {
                           <h4 style={{ fontSize: '1.25rem', margin: 0, color: 'white' }}>{pick.symbol}</h4>
                           <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{pick.company_name} • {pick.sector}</div>
                        </div>
-                       <div style={{ textAlign: 'right' }}>
+                       <div style={{ textAlign: 'right' }} title="A technical momentum score ranging from -1.0 (strongly bearish) to +1.0 (strongly bullish), factoring in daily and weekly moving average trends.">
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: pick.quant_score > 0 ? 'var(--accent-green)' : 'var(--text-primary)' }}>
                              {pick.quant_score}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Quant Score</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'help', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                             Quant Score <Info size={12} />
+                          </div>
                        </div>
                     </div>
                     <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: '1rem' }}>
