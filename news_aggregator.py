@@ -66,62 +66,42 @@ class NewsAggregatorService:
             
         return articles
 
-    def fetch_yahoo_news(self, symbol):
-        """Fetches news from Yahoo Finance backdoor."""
-        articles = []
-        try:
-            ticker = yf.Ticker(symbol)
-            news = ticker.news
-            for item in news:
-                articles.append({
-                    'symbol': symbol,
-                    'headline': item.get('title', ''),
-                    'url': item.get('link', ''),
-                    'source': item.get('publisher', 'Yahoo Finance'),
-                    'published_at': datetime.fromtimestamp(item.get('providerPublishTime', 0)).isoformat() if item.get('providerPublishTime') else datetime.now().isoformat()
-                })
-        except Exception as e:
-            print(f"Error fetching Yahoo news for {symbol}: {e}")
-        return articles
+    def fetch_alpaca_news_bulk(self, tickers):
+        """Fetches news from Alpaca REST API for all tickers in one bulk request."""
+        import requests
+        articles_by_symbol = {t: [] for t in tickers}
+        alpaca_key = os.getenv("ALPACA_API_KEY")
+        alpaca_secret = os.getenv("ALPACA_SECRET_KEY")
+        
+        if not alpaca_key or not alpaca_secret:
+            print("Alpaca API keys missing. Cannot fetch news.")
+            return articles_by_symbol
 
-    def fetch_duckduckgo_news(self, symbol):
-        """Fetches news via DuckDuckGo."""
-        articles = []
         try:
-            with DDGS() as ddgs:
-                results = ddgs.news(keywords=symbol, max_results=5)
-                for item in results:
-                    articles.append({
-                        'symbol': symbol,
-                        'headline': item.get('title', ''),
+            url = f"https://data.alpaca.markets/v1beta1/news?symbols={','.join(tickers)}&limit=50"
+            headers = {
+                "APCA-API-KEY-ID": alpaca_key,
+                "APCA-API-SECRET-KEY": alpaca_secret
+            }
+            res = requests.get(url, headers=headers)
+            if res.status_code == 200:
+                news_items = res.json().get('news', [])
+                for item in news_items:
+                    article_obj = {
+                        'headline': item.get('headline', ''),
                         'url': item.get('url', ''),
-                        'source': item.get('source', 'DuckDuckGo'),
-                        'published_at': item.get('date', datetime.now().isoformat())
-                    })
+                        'source': item.get('source', 'Benzinga/Alpaca'),
+                        'published_at': item.get('created_at', datetime.now().isoformat())
+                    }
+                    for sym in item.get('symbols', []):
+                        if sym in articles_by_symbol:
+                            articles_by_symbol[sym].append({**article_obj, 'symbol': sym})
+            else:
+                print(f"Alpaca API error: {res.status_code} - {res.text}")
         except Exception as e:
-            print(f"Error fetching DDG news for {symbol}: {e}")
-        return articles
-
-    def fetch_google_news_rss(self, symbol):
-        """Fetches news from Google News RSS for the last 24 hours."""
-        articles = []
-        try:
-            # We add 'stock' to help disambiguate tickers like MU or WDC
-            query = urllib.parse.quote(f"{symbol} stock when:1d")
-            rss_url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
-            feed = feedparser.parse(rss_url)
+            print(f"Error fetching Alpaca news: {e}")
             
-            for entry in feed.entries[:5]:  # Limit to top 5 recent to avoid noise
-                articles.append({
-                    'symbol': symbol,
-                    'headline': entry.title,
-                    'url': entry.link,
-                    'source': entry.source.title if hasattr(entry, 'source') else 'Google News RSS',
-                    'published_at': entry.published if hasattr(entry, 'published') else datetime.now().isoformat()
-                })
-        except Exception as e:
-            print(f"Error fetching Google RSS news for {symbol}: {e}")
-        return articles
+        return articles_by_symbol
 
     def fetch_alternative_sentiment(self, symbol):
         """Fetches alternative retail sentiment from Reddit and StockTwits using DuckDuckGo."""
@@ -159,20 +139,14 @@ class NewsAggregatorService:
             print(f"Error fetching earnings transcripts for {symbol}: {e}")
         return articles
 
-    def aggregate_and_deduplicate(self, symbol):
-        """Runs parallel scrapes and deduplicates the results."""
-        all_articles = []
+    def aggregate_and_deduplicate(self, symbol, base_articles):
+        """Runs parallel scrapes for alternative data and deduplicates with base Alpaca articles."""
+        all_articles = list(base_articles)
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            future_yahoo = executor.submit(self.fetch_yahoo_news, symbol)
-            future_ddg = executor.submit(self.fetch_duckduckgo_news, symbol)
-            future_google = executor.submit(self.fetch_google_news_rss, symbol)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             future_alt = executor.submit(self.fetch_alternative_sentiment, symbol)
             future_earnings = executor.submit(self.fetch_earnings_transcript_summaries, symbol)
             
-            all_articles.extend(future_yahoo.result())
-            all_articles.extend(future_ddg.result())
-            all_articles.extend(future_google.result())
             all_articles.extend(future_alt.result())
             all_articles.extend(future_earnings.result())
             
@@ -205,8 +179,13 @@ class NewsAggregatorService:
     def run_aggregation(self, tickers):
         print("Starting News Aggregation...")
         results = {}
+        
+        # 1. Fetch bulk Alpaca News for all tickers at once
+        alpaca_news_by_symbol = self.fetch_alpaca_news_bulk(tickers)
+        
         for symbol in tickers:
-            articles = self.aggregate_and_deduplicate(symbol)
+            base_articles = alpaca_news_by_symbol.get(symbol, [])
+            articles = self.aggregate_and_deduplicate(symbol, base_articles)
             articles = self.analyze_sentiment(symbol, articles)
             results[symbol] = articles
             

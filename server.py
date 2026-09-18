@@ -233,6 +233,56 @@ def edit_position():
         print(f"Error editing position: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/news/historical', methods=['GET'])
+def get_historical_news():
+    try:
+        import requests
+        import os
+        from datetime import datetime
+        
+        symbol = request.args.get('symbol')
+        start = request.args.get('start')
+        end = request.args.get('end')
+        
+        if not symbol:
+            return jsonify({"status": "error", "message": "Symbol is required"}), 400
+            
+        alpaca_key = os.getenv("ALPACA_API_KEY")
+        alpaca_secret = os.getenv("ALPACA_SECRET_KEY")
+        
+        if not alpaca_key or not alpaca_secret:
+            return jsonify({"status": "error", "message": "Alpaca keys missing"}), 500
+            
+        url = f"https://data.alpaca.markets/v1beta1/news?symbols={symbol}&limit=50"
+        if start:
+            # allow YYYY-MM-DD or RFC3339
+            url += f"&start={start}"
+        if end:
+            url += f"&end={end}"
+            
+        headers = {
+            "APCA-API-KEY-ID": alpaca_key,
+            "APCA-API-SECRET-KEY": alpaca_secret
+        }
+        res = requests.get(url, headers=headers)
+        if res.status_code == 200:
+            news_items = res.json().get('news', [])
+            articles = []
+            for item in news_items:
+                articles.append({
+                    'headline': item.get('headline', ''),
+                    'url': item.get('url', ''),
+                    'source': item.get('source', 'Benzinga/Alpaca'),
+                    'published_at': item.get('created_at', datetime.now().isoformat()),
+                    'summary': item.get('summary', '')
+                })
+            return jsonify({"status": "success", "data": articles}), 200
+        else:
+            return jsonify({"status": "error", "message": res.text}), res.status_code
+    except Exception as e:
+        print(f"Error fetching historical news: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/api/history/<symbol>', methods=['GET'])
 def get_history(symbol):
     try:

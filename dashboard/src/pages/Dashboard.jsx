@@ -97,6 +97,12 @@ const Dashboard = () => {
   const [closeLoading, setCloseLoading] = useState(false);
   const [dataFetchedAt, setDataFetchedAt] = useState(null);
 
+  // Historical news search states
+  const [historicalStart, setHistoricalStart] = useState('');
+  const [historicalEnd, setHistoricalEnd] = useState('');
+  const [historicalNews, setHistoricalNews] = useState(null);
+  const [historicalLoading, setHistoricalLoading] = useState(false);
+
   useEffect(() => {
     fetchDashboardData();
 
@@ -352,6 +358,28 @@ const Dashboard = () => {
       .catch(err => console.error("Error fetching social sentiment", err));
 
     setActiveTab('Overview');
+  };
+
+  const fetchHistoricalNews = async () => {
+    if (!historicalStart || !historicalEnd || !selectedTicker) return;
+    setHistoricalLoading(true);
+    setHistoricalNews(null);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/news/historical?symbol=${selectedTicker.symbol}&start=${historicalStart}&end=${historicalEnd}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setHistoricalNews(data.data);
+      } else {
+        console.error("Error fetching historical news", data.message);
+        setHistoricalNews([]);
+      }
+    } catch (e) {
+      console.error(e);
+      setHistoricalNews([]);
+    } finally {
+      setHistoricalLoading(false);
+    }
   };
 
   const [analysisLoading, setAnalysisLoading] = useState(false);
@@ -1194,6 +1222,51 @@ const Dashboard = () => {
                     No recent institutional news found.
                   </p>
                 )}
+
+                <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <h4 style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Historical News Search</h4>
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Start Date</label>
+                      <input type="date" value={historicalStart} onChange={e => setHistoricalStart(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', padding: '0.5rem', borderRadius: '4px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>End Date</label>
+                      <input type="date" value={historicalEnd} onChange={e => setHistoricalEnd(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--panel-border)', padding: '0.5rem', borderRadius: '4px' }} />
+                    </div>
+                    <button onClick={fetchHistoricalNews} disabled={historicalLoading || !historicalStart || !historicalEnd} className="btn btn-primary" style={{ height: '38px', background: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: '4px', padding: '0 1rem', cursor: 'pointer' }}>
+                      {historicalLoading ? 'Searching...' : 'Search'}
+                    </button>
+                  </div>
+                  {historicalNews && historicalNews.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                      {historicalNews.map((n, i) => (
+                        <a
+                          key={i}
+                          href={n.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="news-item"
+                          style={{ textDecoration: 'none', color: 'inherit' }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                            <div className="news-source">
+                              {n.source}
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              {new Date(n.published_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '0.95rem' }}>{n.headline}</h4>
+                          {n.summary && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>{n.summary.substring(0, 150)}...</p>}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {historicalNews && historicalNews.length === 0 && !historicalLoading && (
+                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>No historical news found for this date range.</p>
+                  )}
+                </div>
               </div>
             )}
 
