@@ -29,14 +29,24 @@ const Discover = () => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     try {
       await fetch(`${apiUrl}/api/run-discovery`, { method: 'POST' });
-      alert("AI Discovery triggered! It will calculate portfolio gaps and scrape global assets. Check back in ~60 seconds and refresh.");
+      alert("AI Discovery triggered! It will calculate portfolio gaps and scrape global assets. The UI will check for updates automatically over the next minute.");
     } catch(e) {
       console.error(e);
-    }
-    setTimeout(() => {
       setIsDiscovering(false);
+      return;
+    }
+    
+    // The backend task takes ~30-60 seconds.
+    // Poll every 10 seconds for a minute to refresh the picks.
+    let elapsed = 0;
+    const pollInterval = setInterval(() => {
       fetchDiscoveryPicks();
-    }, 5000);
+      elapsed += 10;
+      if (elapsed >= 60) {
+        clearInterval(pollInterval);
+        setIsDiscovering(false);
+      }
+    }, 10000);
   };
 
   return (
