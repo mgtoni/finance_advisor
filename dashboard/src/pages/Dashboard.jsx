@@ -1167,13 +1167,6 @@ const Dashboard = () => {
                     <option value="2">Tier 2 & Above</option>
                   </select>
                 </div>
-                <div style={{ background: 'rgba(0,123,255,0.1)', border: '1px solid rgba(0,123,255,0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0' }}>AI Earnings Transcript Integration</h4>
-                  <p className="small text-muted" style={{ margin: 0 }}>
-                    News sources tagged as <strong>Tier 1 (Earnings Calls)</strong> are automatically scraped via DuckDuckGo and fed into the AI's core predictive model.
-                    This allows the AI to forecast using management's forward-looking guidance rather than relying solely on past quarterly fundamentals.
-                  </p>
-                </div>
                 {newsSummary ? (
                   <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', borderLeft: '4px solid var(--accent-blue)' }}>
                     <strong style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.85rem' }}>AI Executive Summary</strong>
