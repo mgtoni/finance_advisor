@@ -126,7 +126,7 @@ class NewsAggregatorService:
         articles = []
         try:
             with DDGS() as ddgs:
-                results = ddgs.news(keywords=symbol, max_results=5)
+                results = ddgs.news(keywords=symbol, max_results=25)
                 for item in results:
                     articles.append({
                         'symbol': symbol,
