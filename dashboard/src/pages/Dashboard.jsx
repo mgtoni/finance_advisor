@@ -95,13 +95,27 @@ const Dashboard = () => {
   const [individualPositions, setIndividualPositions] = useState([]);
   const [closeInputs, setCloseInputs] = useState({});
   const [closeLoading, setCloseLoading] = useState(false);
+  const [dataFetchedAt, setDataFetchedAt] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
+  const LastRunLabel = ({ date, align = 'left' }) => {
+    if (!date) return null;
+    const d = new Date(date);
+    return (
+      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem', marginTop: '-0.25rem', fontStyle: 'italic', textAlign: align }}>
+        Last run on: {d.toLocaleString()}
+      </div>
+    );
+  };
+
   const fetchDashboardData = async () => {
     try {
+      const fetchTime = new Date().toISOString();
+      setDataFetchedAt(fetchTime);
+      
       // Start all independent fetches concurrently
       const portfolioPromise = supabase.from('portfolio_summary').select('*').order('symbol');
       const tickersInfoPromise = supabase.from('tickers').select('symbol, company_name');
@@ -463,6 +477,7 @@ const Dashboard = () => {
             <Activity size={20} color="#F59E0B" />
             Global Macro Environment
           </h3>
+          <LastRunLabel date={dataFetchedAt} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.5rem', paddingBottom: '1rem' }}>
             <MacroMetricCard
               title="10Y Treasury Yield"
@@ -630,6 +645,7 @@ const Dashboard = () => {
                 Force Refresh AI
               </button>
             </div>
+            <LastRunLabel date={portfolioAnalysis.created_at || dataFetchedAt} />
             <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px' }}>
               <span className={`badge badge-${portfolioAnalysis.action?.toLowerCase() || 'hold'}`} style={{ padding: '0.5rem 1rem', fontSize: '1rem', boxShadow: '0 0 10px rgba(245, 158, 11, 0.3)' }}>
                 {portfolioAnalysis.action || 'HOLD'}
@@ -743,10 +759,13 @@ const Dashboard = () => {
       )}
       <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1.5rem', borderTop: '4px solid #F59E0B' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-            <Activity size={20} color="var(--accent-blue)" />
-            Portfolio Performance
-          </h2>
+          <div>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, marginBottom: '0.5rem' }}>
+              <Activity size={20} color="var(--accent-blue)" />
+              Portfolio Performance
+            </h2>
+            <LastRunLabel date={dataFetchedAt} />
+          </div>
           <input
             type="text"
             placeholder="Filter all columns..."

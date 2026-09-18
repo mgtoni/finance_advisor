@@ -7,9 +7,12 @@ const Discover = () => {
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [dataFetchedAt, setDataFetchedAt] = useState(null);
+
   const fetchDiscoveryPicks = async () => {
     setLoading(true);
     try {
+      setDataFetchedAt(new Date().toISOString());
       const { data, error } = await supabase.from('discovery_picks').select('*').order('created_at', { ascending: false }).limit(5);
       if (!error && data) {
         setDiscoveryPicks(data);
@@ -23,6 +26,16 @@ const Discover = () => {
   useEffect(() => {
     fetchDiscoveryPicks();
   }, []);
+
+  const LastRunLabel = ({ date, align = 'left' }) => {
+    if (!date) return null;
+    const d = new Date(date);
+    return (
+      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem', marginTop: '-0.25rem', fontStyle: 'italic', textAlign: align }}>
+        Last run on: {d.toLocaleString()}
+      </div>
+    );
+  };
 
   const handleRunDiscovery = async () => {
     setIsDiscovering(true);
@@ -53,10 +66,13 @@ const Discover = () => {
     <div className="dashboard-container">
       <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderTop: '4px solid var(--accent-blue)' }}>
          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: 'var(--text-primary)' }}>
-                <Target size={24} color="var(--accent-blue)" /> 
-                AI Discovery Engine
-             </h3>
+             <div>
+               <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                  <Target size={24} color="var(--accent-blue)" /> 
+                  AI Discovery Engine
+               </h3>
+               <LastRunLabel date={discoveryPicks[0]?.created_at || dataFetchedAt} />
+             </div>
              <div style={{ display: 'flex', gap: '1rem' }}>
                <button onClick={fetchDiscoveryPicks} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--panel-border)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>
                  <RefreshCw size={16} /> Refresh
