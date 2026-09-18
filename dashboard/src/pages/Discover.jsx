@@ -10,7 +10,7 @@ const Discover = () => {
   const fetchDiscoveryPicks = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.table('discovery_picks').select('*').order('created_at', { ascending: false }).limit(5);
+      const { data, error } = await supabase.from('discovery_picks').select('*').order('created_at', { ascending: false }).limit(5);
       if (!error && data) {
         setDiscoveryPicks(data);
       }
