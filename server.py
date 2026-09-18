@@ -107,16 +107,18 @@ def add_position():
         if not supabase:
             return jsonify({"status": "error", "message": "Supabase client not initialized"}), 500
 
-        # Upsert ticker with sector and country
+        # Upsert ticker with sector, country, and company name
         try:
             info = yf.Ticker(symbol).info
             sector = info.get('sector', 'Unknown')
             country = info.get('country', 'Unknown')
+            company_name = info.get('longName', info.get('shortName', 'Unknown'))
         except Exception:
             sector = 'Unknown'
             country = 'Unknown'
+            company_name = 'Unknown'
             
-        supabase.table('tickers').upsert({'symbol': symbol, 'sector': sector, 'country': country}).execute()
+        supabase.table('tickers').upsert({'symbol': symbol, 'sector': sector, 'country': country, 'company_name': company_name}).execute()
         
         # Insert position
         position_data = {

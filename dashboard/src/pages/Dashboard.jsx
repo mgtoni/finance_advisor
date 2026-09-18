@@ -529,6 +529,71 @@ const Dashboard = () => {
                 </>
               }
             />
+
+            <MacroMetricCard
+              title="Copper-to-Gold (HG/GC)"
+              value={`${macroData.copper_gold_ratio?.toFixed(4)}`}
+              educationalText={
+                <>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>Dr. Copper vs The Safe-Haven</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>Copper is heavily used in global manufacturing and infrastructure. Gold is a safe-haven asset.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> A rising ratio means global economic expansion and risk-on sentiment. A falling ratio signals global economic contraction or fear.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI tracks this ratio as the ultimate leading indicator for global economic momentum.</p>
+                </>
+              }
+            />
+
+            <MacroMetricCard
+              title="MSCI World Index (URTH)"
+              value={`$${macroData.msci_world?.toFixed(2)}`}
+              educationalText={
+                <>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>Global Market Health</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>This ETF tracks mid- and large-cap representation across 23 Developed Markets globally.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> Provides a view of international market health, moving beyond just the US S&P 500 benchmark.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI uses this to contextualize your international exposure.</p>
+                </>
+              }
+            />
+
+            <MacroMetricCard
+              title="EUR/USD"
+              value={`${macroData.eur_usd?.toFixed(4)}`}
+              educationalText={
+                <>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>Global Fiat Liquidity Barometer</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>The most heavily traded currency pair in the world, reflecting the economic dynamic between Europe and the US.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> A weakening Euro often signals stress in the Eurozone or a flight-to-safety into the US Dollar.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-blue)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI analyzes EUR/USD to detect massive macro shifts in currency hegemony and export competitiveness.</p>
+                </>
+              }
+            />
+
+            <MacroMetricCard
+              title="Brent Crude (BZ)"
+              value={`$${macroData.brent_oil?.toFixed(2)}`}
+              educationalText={
+                <>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Global Supply Chain Tax</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>While WTI reflects US oil, Brent Crude is the international benchmark and dictates fuel costs for the majority of the world.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> Critical for tracking global supply chain costs and international inflation pressures.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-red)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI uses Brent to measure true global energy inflation.</p>
+                </>
+              }
+            />
+
+            <MacroMetricCard
+              title="Bitcoin (BTC)"
+              value={`$${macroData.btc_usd?.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`}
+              educationalText={
+                <>
+                  <h4 style={{ color: 'var(--accent-blue)', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>The Apex Liquidity Sponge</h4>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>Regardless of opinion on crypto, institutional Bitcoin trades as a high-beta proxy for global fiat liquidity.</p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}><strong>Portfolio Impact:</strong> When global central banks print money or ease conditions, BTC typically rallies first as a hypersensitive leading indicator.</p>
+                  <p style={{ margin: 0, color: 'var(--accent-green)', fontSize: '0.8rem', fontStyle: 'italic' }}>The AI watches BTC movements to sniff out stealth liquidity injections before they hit legacy markets.</p>
+                </>
+              }
+            />
           </div>
 
           {macroData.economic_calendar && macroData.economic_calendar.length > 0 && (

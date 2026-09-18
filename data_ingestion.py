@@ -111,9 +111,19 @@ class DataIngestionService:
             # Commodities
             macro['gold'] = float(yf.Ticker('GLD').history(period="1d")['Close'].iloc[-1])
             macro['oil'] = float(yf.Ticker('USO').history(period="1d")['Close'].iloc[-1])
+            macro['brent_oil'] = float(yf.Ticker('BZ=F').history(period="1d")['Close'].iloc[-1])
             
-            # FX (Dollar Index Proxy)
+            copper = float(yf.Ticker('HG=F').history(period="1d")['Close'].iloc[-1])
+            gold_futures = float(yf.Ticker('GC=F').history(period="1d")['Close'].iloc[-1])
+            macro['copper_gold_ratio'] = copper / gold_futures if gold_futures > 0 else None
+            
+            # Global Equities & Risk
+            macro['msci_world'] = float(yf.Ticker('URTH').history(period="1d")['Close'].iloc[-1])
+            macro['btc_usd'] = float(yf.Ticker('BTC-USD').history(period="1d")['Close'].iloc[-1])
+            
+            # FX
             macro['usd_index'] = float(yf.Ticker('UUP').history(period="1d")['Close'].iloc[-1])
+            macro['eur_usd'] = float(yf.Ticker('EURUSD=X').history(period="1d")['Close'].iloc[-1])
             
             # Credit Spread (High Yield vs Investment Grade)
             hyg = float(yf.Ticker('HYG').history(period="1d")['Close'].iloc[-1])
