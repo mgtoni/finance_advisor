@@ -103,6 +103,7 @@ CREATE POLICY "Allow public delete for positions" ON positions FOR DELETE USING 
 
 CREATE POLICY "Allow public insert for news_events" ON news_events FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for news_events" ON news_events FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete for news_events" ON news_events FOR DELETE USING (true);
 
 CREATE POLICY "Allow public insert for prediction_logs" ON prediction_logs FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for prediction_logs" ON prediction_logs FOR UPDATE USING (true);

@@ -57,6 +57,11 @@ class NewsAggregatorService:
         - "impact_summary": a 1-sentence summary of how this news might impact the stock price today.
         '''
         
+        # Initialize defaults for ALL articles so we never insert NULLs
+        for article in articles:
+            article['sentiment_score'] = 0.0
+            article['impact_summary'] = 'Pending AI analysis.'
+
         # Process in chunks of 15 to prevent the LLM from losing count or truncating output
         chunk_size = 15
         for i in range(0, len(articles), chunk_size):
@@ -78,8 +83,8 @@ class NewsAggregatorService:
                 
                 for j, article in enumerate(chunk):
                     if j < len(analysis):
-                        article['sentiment_score'] = analysis[j].get('sentiment_score', 0)
-                        article['impact_summary'] = analysis[j].get('impact_summary', '')
+                        article['sentiment_score'] = analysis[j].get('sentiment_score', 0.0)
+                        article['impact_summary'] = analysis[j].get('impact_summary', 'Pending AI analysis.')
                         
             except Exception as e:
                 print(f"Error generating sentiment for {symbol} (chunk {i}): {e}")

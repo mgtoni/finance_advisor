@@ -271,29 +271,38 @@ def get_historical_news():
         if res.status_code == 200:
             news_items = res.json().get('news', [])
             articles = []
+            
+            from news_aggregator import NewsAggregatorService
+            svc = NewsAggregatorService()
+            
             for item in news_items:
+                source = item.get('source', 'Benzinga')
                 articles.append({
                     'headline': item.get('headline', ''),
                     'url': item.get('url', ''),
-                    'source': item.get('source', 'Benzinga/Alpaca'),
+                    'source': source,
+                    'source_tier': svc.assign_tier(source),
                     'published_at': item.get('created_at', datetime.now().isoformat()),
                     'summary': item.get('summary', '')
                 })
                 
             # Fallback for non-US or zero-result symbols
             if len(articles) == 0:
-                from news_aggregator import NewsAggregatorService
-                svc = NewsAggregatorService()
                 ddg_news = svc.fetch_duckduckgo_news(symbol)
                 # Note: DDG ignores the strict date parameters, but better than no news.
                 for item in ddg_news:
+                    source = item.get('source', 'DuckDuckGo')
                     articles.append({
                         'headline': item.get('headline', ''),
                         'url': item.get('url', ''),
-                        'source': item.get('source', 'DuckDuckGo'),
+                        'source': source,
+                        'source_tier': svc.assign_tier(source),
                         'published_at': item.get('published_at', datetime.now().isoformat()),
                         'summary': ''
                     })
+            
+            # Add AI Sentiment and Impact Summary
+            articles = svc.analyze_sentiment(symbol, articles)
                     
             return jsonify({"status": "success", "data": articles}), 200
         else:
