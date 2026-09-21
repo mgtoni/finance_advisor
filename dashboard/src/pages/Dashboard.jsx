@@ -1401,42 +1401,114 @@ const Dashboard = () => {
                   </p>
                 </div>
                 {socialSentiment ? (
-                  socialSentiment.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {socialSentiment.map((n, idx) => {
-                        const sentimentColor = n.sentiment_score > 0.2 ? 'var(--accent-green)' : n.sentiment_score < -0.2 ? 'var(--accent-red)' : 'var(--text-secondary)';
-                        return (
-                          <a
-                            key={idx}
-                            href={n.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="news-item"
-                            style={{ textDecoration: 'none', color: 'inherit', borderLeft: '4px solid #F59E0B' }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                              <div className="news-source">
-                                {n.source} <span style={{ color: '#F59E0B', fontSize: '0.8rem', marginLeft: '0.5rem' }}>Retail Tracker</span>
+                  socialSentiment.mentions !== undefined ? (
+                    <>
+                      <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', justifyContent: 'center' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <h5 style={{ margin: '0 0 10px 0', color: 'var(--text-secondary)' }}>Sentiment</h5>
+                          {socialSentiment.stocktwits_sentiment !== null ? (
+                            <div style={{ position: 'relative', width: '150px', height: '75px' }}>
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={[
+                                      { name: 'Score', value: socialSentiment.stocktwits_sentiment, fill: socialSentiment.stocktwits_sentiment > 50 ? '#19B682' : socialSentiment.stocktwits_sentiment < 50 ? '#F34F42' : '#F59E0B' },
+                                      { name: 'Empty', value: 100 - socialSentiment.stocktwits_sentiment, fill: 'rgba(255,255,255,0.1)' }
+                                    ]}
+                                    cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius={50} outerRadius={70} dataKey="value" stroke="none" isAnimationActive={false}
+                                  >
+                                    <Cell fill={socialSentiment.stocktwits_sentiment > 50 ? '#19B682' : socialSentiment.stocktwits_sentiment < 50 ? '#F34F42' : '#F59E0B'} />
+                                    <Cell fill="rgba(255,255,255,0.1)" />
+                                  </Pie>
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <div style={{ position: 'absolute', bottom: '0', width: '100%', textAlign: 'center', fontWeight: 'bold', color: 'white', fontSize: '1.4rem' }}>
+                                {socialSentiment.stocktwits_sentiment}
                               </div>
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                {new Date(n.published_at).toLocaleDateString()}
-                              </span>
                             </div>
-                            <h4 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '0.95rem' }}>{n.headline}</h4>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0' }}>{n.impact_summary}</p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                              <span style={{ color: sentimentColor, fontWeight: 'bold', fontSize: '0.85rem' }}>
-                                {n.sentiment_score > 0 ? '+' : ''}{n.sentiment_score?.toFixed(2)}
-                              </span>
+                          ) : (
+                            <div style={{ color: 'var(--text-secondary)' }}>N/A</div>
+                          )}
+                        </div>
+                        
+                        <div style={{ textAlign: 'center' }}>
+                          <h5 style={{ margin: '0 0 10px 0', color: 'var(--text-secondary)' }}>Message Volume</h5>
+                          {socialSentiment.stocktwits_volume !== null ? (
+                            <div style={{ position: 'relative', width: '150px', height: '75px' }}>
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={[
+                                      { name: 'Score', value: socialSentiment.stocktwits_volume, fill: '#0088FE' },
+                                      { name: 'Empty', value: 100 - socialSentiment.stocktwits_volume, fill: 'rgba(255,255,255,0.1)' }
+                                    ]}
+                                    cx="50%" cy="100%" startAngle={180} endAngle={0} innerRadius={50} outerRadius={70} dataKey="value" stroke="none" isAnimationActive={false}
+                                  >
+                                    <Cell fill="#0088FE" />
+                                    <Cell fill="rgba(255,255,255,0.1)" />
+                                  </Pie>
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <div style={{ position: 'absolute', bottom: '0', width: '100%', textAlign: 'center', fontWeight: 'bold', color: 'white', fontSize: '1.4rem' }}>
+                                {socialSentiment.stocktwits_volume}
+                              </div>
                             </div>
-                          </a>
-                        );
-                      })}
-                    </div>
+                          ) : (
+                            <div style={{ color: 'var(--text-secondary)' }}>N/A</div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                        <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Activity size={18} />
+                          AI Retail Summary (30 Days)
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+                          {socialSentiment.ai_summary}
+                        </p>
+                      </div>
+
+                      {socialSentiment.mentions && socialSentiment.mentions.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          {socialSentiment.mentions.map((n, idx) => {
+                            const sentimentColor = n.sentiment_score > 0.2 ? 'var(--accent-green)' : n.sentiment_score < -0.2 ? 'var(--accent-red)' : 'var(--text-secondary)';
+                            return (
+                              <a
+                                key={idx}
+                                href={n.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="news-item"
+                                style={{ textDecoration: 'none', color: 'inherit', borderLeft: '4px solid #F59E0B' }}
+                              >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                  <div className="news-source">
+                                    {n.source} <span style={{ color: '#F59E0B', fontSize: '0.8rem', marginLeft: '0.5rem' }}>Retail Tracker</span>
+                                  </div>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                    {new Date(n.published_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <h4 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '0.95rem' }}>{n.headline}</h4>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0' }}>{n.impact_summary}</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                                  <span style={{ color: sentimentColor, fontWeight: 'bold', fontSize: '0.85rem' }}>
+                                    {n.sentiment_score > 0 ? '+' : ''}{n.sentiment_score?.toFixed(2)}
+                                  </span>
+                                </div>
+                              </a>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                          No retail or social sentiment data found for {selectedTicker.symbol}.
+                        </p>
+                      )}
+                    </>
                   ) : (
-                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                      No retail or social sentiment data found for {selectedTicker.symbol}.
-                    </p>
+                    <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>Data structure incompatible. Please refresh.</p>
                   )
                 ) : (
                   <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>Loading social sentiment...</p>

@@ -646,19 +646,71 @@ def get_discovery_picks():
         print(f"Error fetching discovery picks: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+SOCIAL_SENTIMENT_CACHE_FILE = os.path.join(os.path.dirname(__file__), 'social_sentiment_cache.json')
+
+def load_social_sentiment_cache():
+    if os.path.exists(SOCIAL_SENTIMENT_CACHE_FILE):
+        try:
+            with open(SOCIAL_SENTIMENT_CACHE_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error reading social sentiment cache file: {e}")
+    return {}
+
+def save_social_sentiment_cache(cache):
+    try:
+        with open(SOCIAL_SENTIMENT_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, indent=4)
+    except Exception as e:
+        print(f"Error writing social sentiment cache file: {e}")
+
 @app.route('/api/social-sentiment/<symbol>', methods=['GET'])
 def get_social_sentiment(symbol):
     try:
+        # Check cache
+        cache = load_social_sentiment_cache()
+        cached_data = cache.get(symbol)
+        
+        # Check if cache is valid (less than 24 hours old)
+        if cached_data and 'timestamp' in cached_data:
+            from datetime import datetime, timedelta
+            cache_time = datetime.fromisoformat(cached_data['timestamp'])
+            if datetime.now() - cache_time < timedelta(hours=24):
+                return jsonify({
+                    "status": "success",
+                    "data": cached_data['data']
+                })
+
         from news_aggregator import NewsAggregatorService
         service = NewsAggregatorService(supabase_client=supabase)
-        articles = service.fetch_alternative_sentiment(symbol)
         
-        # Analyze sentiment
-        analyzed_articles = service.analyze_sentiment(symbol, articles)
+        # Scrape metrics and mentions
+        stocktwits_metrics = service.scrape_stocktwits_metrics(symbol)
+        mentions = service.fetch_retail_sentiment_data(symbol)
+        
+        # Analyze sentiment for individual mentions
+        mentions = service.analyze_sentiment(symbol, mentions)
+        
+        # Generate overall AI Summary
+        ai_summary = service.generate_social_ai_summary(symbol, mentions)
+        
+        result_data = {
+            "stocktwits_sentiment": stocktwits_metrics['sentiment'],
+            "stocktwits_volume": stocktwits_metrics['volume'],
+            "ai_summary": ai_summary,
+            "mentions": mentions
+        }
+        
+        # Save to cache
+        cache[symbol] = {
+            "timestamp": datetime.now().isoformat(),
+            "data": result_data
+        }
+        save_social_sentiment_cache(cache)
         
         return jsonify({
             "status": "success",
-            "data": analyzed_articles
+            "data": result_data
         })
     except Exception as e:
         print(f"Error fetching social sentiment for {symbol}: {e}")

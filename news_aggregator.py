@@ -182,6 +182,90 @@ class NewsAggregatorService:
             print(f"Error fetching alt sentiment for {symbol}: {e}")
         return articles
 
+    def scrape_stocktwits_metrics(self, symbol):
+        """Scrapes Stocktwits for Sentiment and Message Volume gauges."""
+        import requests
+        from bs4 import BeautifulSoup
+        import re
+        
+        metrics = {'sentiment': None, 'volume': None}
+        url = f'https://stocktwits.com/symbol/{symbol}/sentiment'
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        try:
+            res = requests.get(url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.text, 'html.parser')
+                
+                # Check NEXT_DATA script first
+                next_data = soup.find('script', id='__NEXT_DATA__')
+                if next_data:
+                    match_sent = re.search(r'"sentimentScore":(\d+)', next_data.text)
+                    match_vol = re.search(r'"messageVolumeScore":(\d+)', next_data.text)
+                    if match_sent: metrics['sentiment'] = int(match_sent.group(1))
+                    if match_vol: metrics['volume'] = int(match_vol.group(1))
+                
+                # Fallback to HTML scraping
+                if metrics['sentiment'] is None:
+                    # Look for the gauge number
+                    score_match = re.search(r'gauge_gagueNumber[^>]*>(\d+)<', res.text)
+                    if score_match:
+                        metrics['sentiment'] = int(score_match.group(1))
+        except Exception as e:
+            print(f"Error scraping StockTwits metrics for {symbol}: {e}")
+            
+        return metrics
+
+    def fetch_retail_sentiment_data(self, symbol):
+        """Fetches Reddit/StockTwits mentions over the last 30 days using DuckDuckGo."""
+        articles = []
+        try:
+            with DDGS() as ddgs:
+                # timelimit='m' translates to last month (approx 30 days)
+                results = ddgs.text(keywords=f"(site:reddit.com/r/wallstreetbets OR site:reddit.com/r/stocks OR site:stocktwits.com) {symbol} stock", max_results=15, timelimit='m')
+                for item in results:
+                    articles.append({
+                        'symbol': symbol,
+                        'headline': f"[Retail Sentiment] {item.get('title', '')}",
+                        'url': item.get('href', ''),
+                        'source': 'Reddit/Retail',
+                        'body': item.get('body', ''),
+                        'published_at': datetime.now().isoformat() # DDG text doesn't reliably return dates, but we know it's within 30 days
+                    })
+        except Exception as e:
+            print(f"Error fetching retail sentiment data for {symbol}: {e}")
+        return articles
+
+    def generate_social_ai_summary(self, symbol, mentions):
+        """Uses Gemini to synthesize an AI summary of retail sentiment."""
+        if not mentions:
+            return "No significant retail mentions found for the last 30 days."
+            
+        system_instruction = '''
+        You are an expert quantitative sentiment analyst specializing in retail trading forums.
+        Given a list of recent mentions of a stock on platforms like r/WallStreetBets, r/stocks, and Stocktwits,
+        provide a 2-3 sentence summary of the retail sentiment. 
+        Focus on:
+        1. The overall sentiment (highly bullish, bearish, mixed).
+        2. How retail commenters interpret the asset's performance.
+        3. Mentions of broader market trends if any.
+        '''
+        
+        prompt = f"Symbol: {symbol}\nRecent Mentions (Last 30 Days):\n"
+        for i, m in enumerate(mentions[:10]): # limit to top 10 for summary
+            prompt += f"- {m['headline']}: {m.get('body', '')}\n"
+            
+        try:
+            response = self.model.generate_content(
+                contents=[system_instruction, prompt],
+                generation_config=genai.GenerationConfig(
+                    temperature=0.3
+                )
+            )
+            return response.text.strip()
+        except Exception as e:
+            print(f"Error generating social AI summary for {symbol}: {e}")
+            return "Sentiment analysis unavailable at this time."
+
     def fetch_earnings_transcript_summaries(self, symbol):
         """Fetches recent earnings call transcript summaries via DuckDuckGo."""
         articles = []
