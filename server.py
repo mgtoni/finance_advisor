@@ -671,9 +671,9 @@ def get_social_sentiment(symbol):
         cache = load_social_sentiment_cache()
         cached_data = cache.get(symbol)
         
+        from datetime import datetime, timedelta
         # Check if cache is valid (less than 24 hours old)
         if cached_data and 'timestamp' in cached_data:
-            from datetime import datetime, timedelta
             cache_time = datetime.fromisoformat(cached_data['timestamp'])
             if datetime.now() - cache_time < timedelta(hours=24):
                 return jsonify({
