@@ -7,3 +7,5 @@ env/
 dashboard/node_modules/
 dashboard/.env
 .DS_Store
+stocktwits.html
+

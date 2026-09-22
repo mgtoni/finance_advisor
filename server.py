@@ -615,36 +615,252 @@ def generate_calendar_insights():
         print(f"Error generating insights: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+DISCOVERY_STATUS_FILE = os.path.join(os.path.dirname(__file__), 'discovery_status.json')
+
+def load_discovery_status():
+    if os.path.exists(DISCOVERY_STATUS_FILE):
+        try:
+            with open(DISCOVERY_STATUS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        'is_running': False,
+        'strategy': None,
+        'started_at': None,
+        'finished_at': None,
+        'stage': 'Idle'
+    }
+
+def save_discovery_status(status_dict):
+    try:
+        with open(DISCOVERY_STATUS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(status_dict, f, indent=2)
+    except Exception as e:
+        print(f"Error saving discovery status: {e}")
+
+WATCHLIST_CACHE_FILE = os.path.join(os.path.dirname(__file__), 'watchlist_cache.json')
+
+def load_watchlist_cache():
+    if os.path.exists(WATCHLIST_CACHE_FILE):
+        try:
+            with open(WATCHLIST_CACHE_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error reading watchlist cache: {e}")
+    return []
+
+def save_watchlist_cache(data):
+    try:
+        with open(WATCHLIST_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        print(f"Error saving watchlist cache: {e}")
+
 @app.route('/api/run-discovery', methods=['POST'])
 def run_discovery():
     try:
-        # Run discovery engine in the background or blocking
+        data = request.json if request.is_json else {}
+        strategy = data.get('strategy', 'non_us')
+        market_cap_tier = data.get('market_cap_tier', 'all')
+        region_preference = data.get('region_preference', 'all')
+        listing_type = data.get('listing_type', 'hybrid')
+        strict_health = data.get('strict_health_filter', True)
+
+        current_status = load_discovery_status()
+        if current_status.get('is_running'):
+            return jsonify({"status": "busy", "message": "Discovery Engine is currently analyzing markets."}), 409
+
+        new_status = {
+            'is_running': True,
+            'strategy': strategy,
+            'started_at': datetime.datetime.now().isoformat(),
+            'finished_at': None,
+            'stage': f"Scanning {strategy} candidates across global markets..."
+        }
+        save_discovery_status(new_status)
+
         from discovery_engine import DiscoveryEngineService
         engine = DiscoveryEngineService(supabase_client=supabase)
-        
-        # We can run it in a thread if it takes too long
+
         def run_in_bg():
             try:
-                engine.run_discovery()
+                engine.run_discovery(
+                    strategy=strategy,
+                    market_cap_tier=market_cap_tier,
+                    region_preference=region_preference,
+                    listing_type=listing_type,
+                    strict_health=strict_health
+                )
+                save_discovery_status({
+                    'is_running': False,
+                    'strategy': strategy,
+                    'started_at': new_status['started_at'],
+                    'finished_at': datetime.datetime.now().isoformat(),
+                    'stage': 'Complete'
+                })
             except Exception as ex:
                 print("Discovery Engine Error:", ex)
-                
+                save_discovery_status({
+                    'is_running': False,
+                    'strategy': strategy,
+                    'started_at': new_status['started_at'],
+                    'finished_at': datetime.datetime.now().isoformat(),
+                    'stage': f"Error: {str(ex)}"
+                })
+
         import threading
         threading.Thread(target=run_in_bg).start()
-        return jsonify({"status": "success", "message": "Discovery Engine triggered in the background. It will take ~30-60 seconds."})
+        return jsonify({
+            "status": "success",
+            "message": f"Discovery Engine triggered for '{strategy}'. Running deep analysis in background.",
+            "discovery_status": new_status
+        })
     except Exception as e:
         print(f"Error running discovery engine: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/discovery-status', methods=['GET'])
+def get_discovery_status():
+    status = load_discovery_status()
+    return jsonify({"status": "success", "data": status})
+
+
 @app.route('/api/discovery-picks', methods=['GET'])
 def get_discovery_picks():
     try:
-        res = supabase.table('discovery_picks').select('*').order('created_at', desc=True).limit(3).execute()
-        picks = res.data if res.data else []
+        strategy = request.args.get('strategy')
+        limit = int(request.args.get('limit', 12))
+
+        picks = []
+        if supabase:
+            try:
+                query = supabase.table('discovery_picks').select('*').order('created_at', desc=True).limit(limit)
+                res = query.execute()
+                picks = res.data if res.data else []
+            except Exception as dbe:
+                print(f"Notice querying discovery_picks in Supabase: {dbe}")
+
+        # Fallback to local discovery cache if DB returned empty
+        if not picks:
+            cache_file = os.path.join(os.path.dirname(__file__), 'discovery_cache.json')
+            if os.path.exists(cache_file):
+                try:
+                    with open(cache_file, 'r', encoding='utf-8') as f:
+                        cache_data = json.load(f)
+                        raw_picks = cache_data.get('picks', [])
+                        for p in raw_picks:
+                            picks.append({
+                                'symbol': p.get('symbol'),
+                                'company_name': p.get('company_name'),
+                                'sector': p.get('sector'),
+                                'quant_score': round((p.get('composite_score', 50) - 50) / 50, 2),
+                                'thesis': p.get('full_thesis_payload') or p.get('thesis_points', []),
+                                'created_at': cache_data.get('last_updated')
+                            })
+                except Exception as ce:
+                    print(f"Notice reading discovery cache: {ce}")
+
+        # Strategy filter if requested
+        if strategy and strategy != 'all' and picks:
+            filtered = []
+            for p in picks:
+                thesis = p.get('thesis')
+                pick_strat = None
+                if isinstance(thesis, dict):
+                    pick_strat = thesis.get('strategy')
+                if not pick_strat:
+                    pick_strat = p.get('strategy')
+                if pick_strat == strategy or not pick_strat:
+                    filtered.append(p)
+            if filtered:
+                picks = filtered
+
         return jsonify({"status": "success", "data": picks})
     except Exception as e:
         print(f"Error fetching discovery picks: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+# -----------------------------------------------------------------------------
+# WATCHLIST API ROUTES
+# -----------------------------------------------------------------------------
+@app.route('/api/watchlist', methods=['GET'])
+def get_watchlist():
+    try:
+        items = []
+        if supabase:
+            try:
+                res = supabase.table('watchlist').select('*').order('created_at', desc=True).execute()
+                if res.data:
+                    items = res.data
+            except Exception:
+                pass
+
+        if not items:
+            items = load_watchlist_cache()
+
+        return jsonify({"status": "success", "data": items})
+    except Exception as e:
+        print(f"Error fetching watchlist: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/watchlist', methods=['POST'])
+def add_to_watchlist():
+    try:
+        data = request.json if request.is_json else {}
+        symbol = data.get('symbol')
+        if not symbol:
+            return jsonify({"status": "error", "message": "Symbol is required"}), 400
+
+        symbol = symbol.strip().upper()
+        item = {
+            'symbol': symbol,
+            'company_name': data.get('company_name', symbol),
+            'sector': data.get('sector', 'Unknown'),
+            'country': data.get('country', 'Unknown'),
+            'price': float(data.get('price', 0.0) or 0.0),
+            'added_from': data.get('added_from', 'discovery'),
+            'notes': data.get('notes', ''),
+            'created_at': datetime.datetime.now().isoformat()
+        }
+
+        # Try saving to Supabase
+        if supabase:
+            try:
+                supabase.table('watchlist').upsert(item, on_conflict='symbol').execute()
+            except Exception as e:
+                print(f"Notice saving to Supabase watchlist: {e}")
+
+        # Always update local cache
+        cache = load_watchlist_cache()
+        existing = [x for x in cache if x.get('symbol') != symbol]
+        existing.insert(0, item)
+        save_watchlist_cache(existing)
+
+        return jsonify({"status": "success", "message": f"{symbol} added to watchlist", "data": item})
+    except Exception as e:
+        print(f"Error adding to watchlist: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/watchlist/<symbol>', methods=['DELETE'])
+def remove_from_watchlist(symbol):
+    try:
+        symbol = symbol.strip().upper()
+        if supabase:
+            try:
+                supabase.table('watchlist').delete().eq('symbol', symbol).execute()
+            except Exception as e:
+                print(f"Notice deleting from Supabase watchlist: {e}")
+
+        cache = load_watchlist_cache()
+        cache = [x for x in cache if x.get('symbol') != symbol]
+        save_watchlist_cache(cache)
+
+        return jsonify({"status": "success", "message": f"{symbol} removed from watchlist"})
+    except Exception as e:
+        print(f"Error removing from watchlist: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 SOCIAL_SENTIMENT_CACHE_FILE = os.path.join(os.path.dirname(__file__), 'social_sentiment_cache.json')
 

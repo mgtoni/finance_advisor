@@ -129,22 +129,35 @@ class NewsAggregatorService:
         return articles_by_symbol
 
     def fetch_yahoo_news(self, symbol):
-        """Fetches news from Yahoo Finance backdoor."""
+        """Fetches news from Yahoo Finance backdoor, supporting both legacy and modern yfinance schemas."""
         articles = []
         try:
             ticker = yf.Ticker(symbol)
             news = ticker.news
+            if not news:
+                return []
             for item in news:
+                if not isinstance(item, dict):
+                    continue
+                content = item.get('content', {}) if isinstance(item.get('content'), dict) else {}
+                title = content.get('title') or item.get('title') or ''
+                if not title:
+                    continue
+                url = (content.get('canonicalUrl') or {}).get('url') if isinstance(content.get('canonicalUrl'), dict) else item.get('link', '')
+                source = (content.get('provider') or {}).get('displayName') if isinstance(content.get('provider'), dict) else item.get('publisher', 'Yahoo Finance')
+                
                 articles.append({
                     'symbol': symbol,
-                    'headline': item.get('title', ''),
-                    'url': item.get('link', ''),
-                    'source': item.get('publisher', 'Yahoo Finance'),
-                    'published_at': datetime.fromtimestamp(item.get('providerPublishTime', 0)).isoformat() if item.get('providerPublishTime') else datetime.now().isoformat()
+                    'headline': title,
+                    'url': url or f"https://finance.yahoo.com/quote/{symbol}",
+                    'source': source or 'Yahoo Finance',
+                    'source_tier': self.assign_tier(source or 'Yahoo Finance'),
+                    'published_at': content.get('pubDate') or datetime.now().isoformat()
                 })
         except Exception as e:
             print(f"Error fetching Yahoo news for {symbol}: {e}")
         return articles
+
 
 
 

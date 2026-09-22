@@ -134,6 +134,17 @@ CREATE TABLE IF NOT EXISTS discovery_picks (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- Extensions for Discovery Picks Multi-Pillar Research
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS strategy VARCHAR(50);
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS country VARCHAR(50);
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS exchange VARCHAR(50);
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS market_cap NUMERIC(20, 2);
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS fundamental_metrics JSONB;
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS technical_scores JSONB;
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS sentiment_data JSONB;
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS risk_factors JSONB;
+ALTER TABLE discovery_picks ADD COLUMN IF NOT EXISTS composite_score NUMERIC(5, 2);
+
 ALTER TABLE discovery_picks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access for discovery_picks" ON discovery_picks FOR SELECT USING (true);
 CREATE POLICY "Allow public insert for discovery_picks" ON discovery_picks FOR INSERT WITH CHECK (true);
@@ -166,4 +177,24 @@ ALTER TABLE news_summary_cache ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access for news_summary_cache" ON news_summary_cache FOR SELECT USING (true);
 CREATE POLICY "Allow public insert for news_summary_cache" ON news_summary_cache FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for news_summary_cache" ON news_summary_cache FOR UPDATE USING (true);
+
+-- 11. Watchlist Table
+CREATE TABLE IF NOT EXISTS watchlist (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    symbol VARCHAR(15) NOT NULL UNIQUE,
+    company_name VARCHAR(100),
+    sector VARCHAR(50),
+    country VARCHAR(50),
+    price NUMERIC(10, 2),
+    added_from VARCHAR(50) DEFAULT 'discovery',
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE watchlist ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access for watchlist" ON watchlist FOR SELECT USING (true);
+CREATE POLICY "Allow public insert for watchlist" ON watchlist FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update for watchlist" ON watchlist FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete for watchlist" ON watchlist FOR DELETE USING (true);
+
 

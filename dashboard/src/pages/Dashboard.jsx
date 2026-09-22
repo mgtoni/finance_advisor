@@ -1008,7 +1008,7 @@ const Dashboard = () => {
                 <div style={{ marginTop: '1rem' }}>
                   <strong style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Thesis</strong>
                   <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.2rem', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                    {(pick.thesis || []).map((point, idx) => (
+                    {(Array.isArray(pick.thesis) ? pick.thesis : (pick.thesis?.points || pick.thesis?.investment_thesis || [])).map((point, idx) => (
                       <li key={idx} style={{ marginBottom: '0.5rem' }}>{point}</li>
                     ))}
                   </ul>
