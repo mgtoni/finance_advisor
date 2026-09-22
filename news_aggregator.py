@@ -236,23 +236,6 @@ class NewsAggregatorService:
                     })
         except Exception as e:
             print(f"Error fetching retail sentiment data for {symbol}: {e}")
-            
-        # Fallback to Yahoo if DuckDuckGo fails or returns 0 results due to ratelimiting
-        if not articles:
-            try:
-                print(f"Falling back to Yahoo Finance for {symbol} retail sentiment data...")
-                yahoo_news = self.fetch_yahoo_news(symbol)
-                for a in yahoo_news[:10]:
-                    articles.append({
-                        'symbol': symbol,
-                        'headline': f"[General Sentiment Fallback] {a['headline']}",
-                        'url': a['url'],
-                        'source': a.get('source', 'Yahoo Finance'),
-                        'body': '',
-                        'published_at': a['published_at']
-                    })
-            except Exception as e:
-                print(f"Error in fallback fetching for {symbol}: {e}")
                 
         return articles
 
@@ -310,7 +293,6 @@ class NewsAggregatorService:
         all_articles = list(base_articles)
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            future_alt = executor.submit(self.fetch_alternative_sentiment, symbol)
             future_earnings = executor.submit(self.fetch_earnings_transcript_summaries, symbol)
             
             if len(base_articles) == 0:
@@ -319,7 +301,6 @@ class NewsAggregatorService:
                 all_articles.extend(future_yahoo.result())
                 all_articles.extend(future_ddg.result())
                 
-            all_articles.extend(future_alt.result())
             all_articles.extend(future_earnings.result())
             
         # Deduplication Logic
