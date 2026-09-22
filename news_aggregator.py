@@ -146,23 +146,7 @@ class NewsAggregatorService:
             print(f"Error fetching Yahoo news for {symbol}: {e}")
         return articles
 
-    def fetch_duckduckgo_news(self, symbol):
-        """Fetches news via DuckDuckGo."""
-        articles = []
-        try:
-            with DDGS() as ddgs:
-                results = ddgs.news(keywords=symbol, max_results=25)
-                for item in results:
-                    articles.append({
-                        'symbol': symbol,
-                        'headline': item.get('title', ''),
-                        'url': item.get('url', ''),
-                        'source': item.get('source', 'DuckDuckGo'),
-                        'published_at': item.get('date', datetime.now().isoformat())
-                    })
-        except Exception as e:
-            print(f"Error fetching DDG news for {symbol}: {e}")
-        return articles
+
 
     def fetch_alternative_sentiment(self, symbol):
         """Fetches alternative retail sentiment from Reddit and StockTwits using DuckDuckGo."""
@@ -297,9 +281,7 @@ class NewsAggregatorService:
             
             if len(base_articles) == 0:
                 future_yahoo = executor.submit(self.fetch_yahoo_news, symbol)
-                future_ddg = executor.submit(self.fetch_duckduckgo_news, symbol)
                 all_articles.extend(future_yahoo.result())
-                all_articles.extend(future_ddg.result())
                 
             all_articles.extend(future_earnings.result())
             
