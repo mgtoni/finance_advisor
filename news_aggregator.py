@@ -186,30 +186,33 @@ class NewsAggregatorService:
         """Scrapes Stocktwits for Sentiment and Message Volume gauges."""
         import requests
         from bs4 import BeautifulSoup
-        import re
+        import re, json
         
         metrics = {'sentiment': None, 'volume': None}
         url = f'https://stocktwits.com/symbol/{symbol}/sentiment'
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         try:
             res = requests.get(url, headers=headers, timeout=10)
             if res.status_code == 200:
-                soup = BeautifulSoup(res.text, 'html.parser')
-                
-                # Check NEXT_DATA script first
-                next_data = soup.find('script', id='__NEXT_DATA__')
-                if next_data:
-                    match_sent = re.search(r'"sentimentScore":(\d+)', next_data.text)
-                    match_vol = re.search(r'"messageVolumeScore":(\d+)', next_data.text)
-                    if match_sent: metrics['sentiment'] = int(match_sent.group(1))
-                    if match_vol: metrics['volume'] = int(match_vol.group(1))
-                
-                # Fallback to HTML scraping
-                if metrics['sentiment'] is None:
-                    # Look for the gauge number
-                    score_match = re.search(r'gauge_gagueNumber[^>]*>(\d+)<', res.text)
-                    if score_match:
-                        metrics['sentiment'] = int(score_match.group(1))
+                # Look for Next.js data blobs
+                blobs = re.findall(r'<script[^>]*>(.*?)</script>', res.text)
+                for blob in blobs:
+                    if len(blob) > 100000 and '"initialSentimentCardData"' in blob:
+                        try:
+                            data = json.loads(blob)
+                            initial = data['props']['pageProps'].get('initialData', {})
+                            sentiment_card = initial.get('initialSentimentCardData', {})
+                            
+                            # Extract sentiment
+                            if 'sentiment' in sentiment_card and len(sentiment_card['sentiment']) > 0:
+                                metrics['sentiment'] = int(sentiment_card['sentiment'][0]['value'])
+                                
+                            # Extract message volume
+                            if 'messageVol' in sentiment_card and len(sentiment_card['messageVol']) > 0:
+                                metrics['volume'] = int(sentiment_card['messageVol'][0]['value'])
+                            break
+                        except Exception as e:
+                            print(f"Error parsing Stocktwits JSON blob for {symbol}: {e}")
         except Exception as e:
             print(f"Error scraping StockTwits metrics for {symbol}: {e}")
             
@@ -221,18 +224,36 @@ class NewsAggregatorService:
         try:
             with DDGS() as ddgs:
                 # timelimit='m' translates to last month (approx 30 days)
-                results = ddgs.text(keywords=f"(site:reddit.com/r/wallstreetbets OR site:reddit.com/r/stocks OR site:stocktwits.com) {symbol} stock", max_results=15, timelimit='m')
+                results = ddgs.news(keywords=f"{symbol} stock retail sentiment", max_results=15, timelimit='m')
                 for item in results:
                     articles.append({
                         'symbol': symbol,
                         'headline': f"[Retail Sentiment] {item.get('title', '')}",
-                        'url': item.get('href', ''),
-                        'source': 'Reddit/Retail',
+                        'url': item.get('url', ''),
+                        'source': item.get('source', 'Web/Retail'),
                         'body': item.get('body', ''),
-                        'published_at': datetime.now().isoformat() # DDG text doesn't reliably return dates, but we know it's within 30 days
+                        'published_at': item.get('date', datetime.now().isoformat())
                     })
         except Exception as e:
             print(f"Error fetching retail sentiment data for {symbol}: {e}")
+            
+        # Fallback to Yahoo if DuckDuckGo fails or returns 0 results due to ratelimiting
+        if not articles:
+            try:
+                print(f"Falling back to Yahoo Finance for {symbol} retail sentiment data...")
+                yahoo_news = self.fetch_yahoo_news(symbol)
+                for a in yahoo_news[:10]:
+                    articles.append({
+                        'symbol': symbol,
+                        'headline': f"[General Sentiment Fallback] {a['headline']}",
+                        'url': a['url'],
+                        'source': a.get('source', 'Yahoo Finance'),
+                        'body': '',
+                        'published_at': a['published_at']
+                    })
+            except Exception as e:
+                print(f"Error in fallback fetching for {symbol}: {e}")
+                
         return articles
 
     def generate_social_ai_summary(self, symbol, mentions):
