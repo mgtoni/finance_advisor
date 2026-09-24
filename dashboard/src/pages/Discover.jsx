@@ -84,8 +84,10 @@ const Discover = () => {
 
   const handleSelectStrategy = (stratId) => {
     setSelectedStrategy(stratId);
-    if (stratId === 'non_us' && regionPref === 'all') {
+    if (stratId === 'non_us') {
       setRegionPref('global_ex_us');
+    } else if (regionPref === 'global_ex_us') {
+      setRegionPref('all');
     }
   };
 
@@ -96,8 +98,9 @@ const Discover = () => {
     setLoading(true);
     try {
       setDataFetchedAt(new Date().toISOString());
-      const targetStrat = strat !== undefined ? strat : selectedStrategy;
-      const queryParam = targetStrat && targetStrat !== 'all' ? `&strategy=${targetStrat}` : '';
+      // Safely ensure targetStrat is a valid string, not an event object or undefined
+      const targetStrat = (typeof strat === 'string' && strat.trim()) ? strat.trim() : selectedStrategy;
+      const queryParam = targetStrat && targetStrat !== 'all' ? `&strategy=${encodeURIComponent(targetStrat)}` : '';
       const res = await fetch(`${apiUrl}/api/discovery-picks?limit=25${queryParam}`);
       if (res.ok) {
         const json = await res.json();
@@ -367,9 +370,8 @@ const Discover = () => {
         continue;
       }
 
-      // Strict regionality filter: non-US strategy or region must exclude US assets
-      const isNonUs = selectedStrategy === 'non_us' || regionPref === 'global_ex_us' || regionPref === 'europe_uk' || regionPref === 'asia_pacific';
-      if (isNonUs && (details.country === 'United States' || details.country === 'USA' || details.country === 'US')) {
+      // Strict regionality filter: non-US strategy must strictly exclude US domestic assets
+      if (selectedStrategy === 'non_us' && (details.country === 'United States' || details.country === 'USA' || details.country === 'US')) {
         continue;
       }
 
@@ -585,16 +587,17 @@ const Discover = () => {
               {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <button
-                  onClick={fetchDiscoveryPicks}
+                  onClick={() => fetchDiscoveryPicks(selectedStrategy)}
+                  disabled={loading || isDiscovering}
                   className="btn btn-secondary"
                   title="Refresh saved picks"
                   style={{
                     display: 'flex', alignItems: 'center', gap: '0.4rem',
                     background: 'rgba(255,255,255,0.06)', border: '1px solid var(--panel-border)',
-                    color: 'white', padding: '0.6rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem'
+                    color: 'white', padding: '0.6rem 1rem', borderRadius: '8px', cursor: (loading || isDiscovering) ? 'not-allowed' : 'pointer', fontSize: '0.85rem'
                   }}
                 >
-                  <RefreshCw size={15} /> Refresh
+                  <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> {loading ? "Refreshing..." : "Refresh"}
                 </button>
                 <button
                   onClick={handleRunDiscovery}
@@ -844,15 +847,16 @@ const Discover = () => {
               </p>
             </div>
             <button
-              onClick={fetchWatchlist}
+              onClick={() => fetchWatchlist()}
+              disabled={watchlistLoading}
               className="btn btn-secondary"
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.4rem',
                 background: 'rgba(255,255,255,0.08)', border: '1px solid var(--panel-border)',
-                color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer'
+                color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: watchlistLoading ? 'not-allowed' : 'pointer'
               }}
             >
-              <RefreshCw size={15} /> Refresh Watchlist
+              <RefreshCw size={15} className={watchlistLoading ? "animate-spin" : ""} /> {watchlistLoading ? "Refreshing..." : "Refresh Watchlist"}
             </button>
           </div>
 
