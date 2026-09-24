@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Target, RefreshCw, Bookmark, BookmarkCheck, Shield, Globe, 
   TrendingUp, DollarSign, Zap, Sparkles, Layers, ChevronRight, 
@@ -63,7 +63,7 @@ const Discover = () => {
   const [activeTab, setActiveTab] = useState('discover'); // 'discover' | 'watchlist'
   const [selectedStrategy, setSelectedStrategy] = useState('non_us');
   const [marketCapTier, setMarketCapTier] = useState('all'); // 'hidden_gems' | 'large_cap' | 'all'
-  const [regionPref, setRegionPref] = useState('all'); // 'global_ex_us' | 'europe_uk' | 'asia_pacific' | 'all'
+  const [regionPref, setRegionPref] = useState('global_ex_us'); // 'global_ex_us' | 'europe_uk' | 'asia_pacific' | 'all'
   const [listingType, setListingType] = useState('hybrid'); // 'hybrid' | 'adrs_only' | 'direct_only'
   const [strictHealth, setStrictHealth] = useState(true);
 
@@ -82,17 +82,26 @@ const Discover = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
+  const handleSelectStrategy = (stratId) => {
+    setSelectedStrategy(stratId);
+    if (stratId === 'non_us' && regionPref === 'all') {
+      setRegionPref('global_ex_us');
+    }
+  };
+
   // ---------------------------------------------------------------------------
   // FETCH PICKS & WATCHLIST
   // ---------------------------------------------------------------------------
-  const fetchDiscoveryPicks = async () => {
+  const fetchDiscoveryPicks = async (strat) => {
     setLoading(true);
     try {
       setDataFetchedAt(new Date().toISOString());
-      const res = await fetch(`${apiUrl}/api/discovery-picks?limit=15`);
+      const targetStrat = strat !== undefined ? strat : selectedStrategy;
+      const queryParam = targetStrat && targetStrat !== 'all' ? `&strategy=${targetStrat}` : '';
+      const res = await fetch(`${apiUrl}/api/discovery-picks?limit=25${queryParam}`);
       if (res.ok) {
         const json = await res.json();
-        if (json.data && json.data.length > 0) {
+        if (json.data) {
           setDiscoveryPicks(json.data);
           setLoading(false);
           return;
@@ -100,7 +109,11 @@ const Discover = () => {
       }
 
       // Fallback directly to Supabase client
-      const { data, error } = await supabase.from('discovery_picks').select('*').order('created_at', { ascending: false }).limit(15);
+      let query = supabase.from('discovery_picks').select('*').neq('strategy', 'legacy_archived').order('created_at', { ascending: false }).limit(25);
+      if (targetStrat && targetStrat !== 'all') {
+        query = query.eq('strategy', targetStrat);
+      }
+      const { data, error } = await query;
       if (!error && data) {
         setDiscoveryPicks(data);
       }
@@ -134,7 +147,10 @@ const Discover = () => {
   };
 
   useEffect(() => {
-    fetchDiscoveryPicks();
+    fetchDiscoveryPicks(selectedStrategy);
+  }, [selectedStrategy]);
+
+  useEffect(() => {
     fetchWatchlist();
   }, []);
 
@@ -185,7 +201,7 @@ const Discover = () => {
             clearInterval(pollInterval);
             clearInterval(timerInterval);
             setIsDiscovering(false);
-            fetchDiscoveryPicks();
+            fetchDiscoveryPicks(selectedStrategy);
           }
         }
       } catch (err) {
@@ -198,7 +214,7 @@ const Discover = () => {
       clearInterval(pollInterval);
       clearInterval(timerInterval);
       setIsDiscovering(false);
-      fetchDiscoveryPicks();
+      fetchDiscoveryPicks(selectedStrategy);
     }, 90000);
   };
 
@@ -329,6 +345,55 @@ const Discover = () => {
     };
   };
 
+  const displayedPicks = useMemo(() => {
+    const seenIdentities = new Set();
+    const seenNames = new Set();
+    const result = [];
+
+    const CROSS_LIST_MAP = {
+      'BATS': 'BTI', 'BTI': 'BTI',
+      'NOVO-B': 'NVO', 'NVO': 'NVO',
+      'ATCO-A': 'ATCO', 'ATCO-B': 'ATCO',
+      'VOLV-A': 'VOLV', 'VOLV-B': 'VOLV',
+      'SAN': 'SNY', 'SNY': 'SNY',
+      'NESN': 'NSRGY', 'NOVN': 'NVS', 'ROG': 'RHHBY', 'ULVR': 'UL'
+    };
+
+    for (const pick of discoveryPicks) {
+      const details = extractPickDetails(pick);
+
+      // Strict strategy filter: pick must match the active strategy
+      if (selectedStrategy && selectedStrategy !== 'all' && details.strategy !== selectedStrategy) {
+        continue;
+      }
+
+      // Strict regionality filter: non-US strategy or region must exclude US assets
+      const isNonUs = selectedStrategy === 'non_us' || regionPref === 'global_ex_us' || regionPref === 'europe_uk' || regionPref === 'asia_pacific';
+      if (isNonUs && (details.country === 'United States' || details.country === 'USA' || details.country === 'US')) {
+        continue;
+      }
+
+      // Deduplication by canonical base symbol and clean company name
+      const sym = pick.symbol || '';
+      const baseSym = sym.split('.')[0].toUpperCase();
+      const canonBase = CROSS_LIST_MAP[baseSym] || baseSym;
+      const cleanName = (pick.company_name || '')
+        .toLowerCase()
+        .replace(/[\s\.\,\-]+(plc|inc|corp|corporation|ltd|ag|se|sa|nv|holdings|group|a\/s|ab|ord|company|the|limited|- new york|adr).*$/, '')
+        .replace(/[^a-z0-9]/g, '')
+        .slice(0, 10);
+
+      if (seenIdentities.has(canonBase) || (cleanName && seenNames.has(cleanName))) {
+        continue;
+      }
+      seenIdentities.add(canonBase);
+      if (cleanName) seenNames.add(cleanName);
+      result.push(pick);
+    }
+
+    return result;
+  }, [discoveryPicks, selectedStrategy, regionPref]);
+
   return (
     <div className="dashboard-container" style={{ paddingBottom: '3rem' }}>
       
@@ -396,7 +461,7 @@ const Discover = () => {
                 return (
                   <div
                     key={strat.id}
-                    onClick={() => setSelectedStrategy(strat.id)}
+                    onClick={() => handleSelectStrategy(strat.id)}
                     style={{
                       background: isSelected ? 'rgba(59, 130, 246, 0.12)' : 'rgba(255,255,255,0.03)',
                       border: isSelected ? `2px solid ${strat.color}` : '1px solid var(--panel-border)',
@@ -595,9 +660,9 @@ const Discover = () => {
             <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
               Loading discovery picks...
             </div>
-          ) : discoveryPicks && discoveryPicks.length > 0 ? (
+          ) : displayedPicks && displayedPicks.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
-              {discoveryPicks.map(pick => {
+              {displayedPicks.map(pick => {
                 const details = extractPickDetails(pick);
                 const isWatchlisted = isSymbolInWatchlist(pick.symbol);
 
@@ -758,7 +823,7 @@ const Discover = () => {
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '3rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', color: 'var(--text-secondary)' }}>
-              No discovery picks yet. Click "Run Global Discovery" above to screen global markets!
+              No current recommendations found for {STRATEGIES.find(s => s.id === selectedStrategy)?.title || 'this strategy'}. Click "Run Global Discovery" above to screen and analyze top candidates!
             </div>
           )}
         </>

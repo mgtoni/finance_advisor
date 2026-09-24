@@ -149,6 +149,7 @@ ALTER TABLE discovery_picks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access for discovery_picks" ON discovery_picks FOR SELECT USING (true);
 CREATE POLICY "Allow public insert for discovery_picks" ON discovery_picks FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update for discovery_picks" ON discovery_picks FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete for discovery_picks" ON discovery_picks FOR DELETE USING (true);
 
 -- 9. Calendar Insights Cache Table
 CREATE TABLE IF NOT EXISTS calendar_insights_cache (

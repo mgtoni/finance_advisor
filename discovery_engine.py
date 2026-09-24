@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import concurrent.futures
 import time
 import numpy as np
@@ -15,6 +16,89 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DISCOVERY_CACHE_FILE = os.path.join(os.path.dirname(__file__), 'discovery_cache.json')
+
+
+def get_company_identity(sym, info=None):
+    """
+    Returns (canonical_base, normalized_name) to reliably identify cross-listed stocks,
+    ADRs, and multi-class shares of the exact same underlying company across global markets.
+    """
+    if not sym:
+        return '', ''
+    sym_str = str(sym).strip().upper()
+    base_sym = sym_str.split('.')[0]
+    CROSS_LIST_MAP = {
+        'BATS': 'BTI', 'BTI': 'BTI',
+        'NOVO-B': 'NVO', 'NVO': 'NVO',
+        'ATCO-A': 'ATCO', 'ATCO-B': 'ATCO', 'ATCO': 'ATCO',
+        'VOLV-A': 'VOLV', 'VOLV-B': 'VOLV', 'VOLV': 'VOLV',
+        'SAN': 'SNY', 'SNY': 'SNY',
+        'NESN': 'NSRGY', 'NSRGY': 'NSRGY',
+        'NOVN': 'NVS', 'NVS': 'NVS',
+        'ROG': 'RHHBY', 'RHHBY': 'RHHBY',
+        'ULVR': 'UL', 'UL': 'UL',
+        'BP': 'BP',
+        'SHEL': 'SHEL',
+        'RIO': 'RIO',
+        'BHP': 'BHP',
+        'SAP': 'SAP',
+        'ASML': 'ASML',
+        'AZN': 'AZN',
+        'GSK': 'GSK',
+        'ALV': 'ALV',
+        'BAS': 'BAS',
+        'MC': 'LVMH', 'LVMUY': 'LVMH',
+        'OR': 'OR', 'LRLCY': 'OR',
+        'CDI': 'CDI', 'CHDRY': 'CDI',
+        'RMS': 'RMS', 'HESAY': 'RMS',
+        'AIR': 'AIR', 'EADSY': 'AIR',
+        'DTE': 'DTE', 'DTEGY': 'DTE',
+        'BMW': 'BMW', 'BMWYY': 'BMW',
+        'MBG': 'MBG', 'MBGAF': 'MBG',
+        'ENGI': 'ENGI', 'ENGIY': 'ENGI',
+        'VIE': 'VIE', 'VEOEY': 'VIE',
+        'DG': 'DG', 'VNCIY': 'DG',
+        'CAP': 'CAP', 'CGEMY': 'CAP',
+        'HEIA': 'HEIA', 'HEINY': 'HEIA',
+        'WKL': 'WKL', 'WTKWY': 'WKL',
+        'DSV': 'DSV', 'DSDVY': 'DSV',
+        'KNEBV': 'KNEBV', 'KNYJY': 'KNEBV',
+        'SAND': 'SAND', 'SDVKY': 'SAND',
+        'ASSA-B': 'ASSA', 'ASAZY': 'ASSA',
+        'DNB': 'DNB', 'DNBBY': 'DNB',
+        'EQNR': 'EQNR',
+        'RY': 'RY',
+        'TD': 'TD',
+        'BNS': 'BNS',
+        'TRP': 'TRP',
+        'CSU': 'CSU',
+        'OTEX': 'OTEX',
+        'WCN': 'WCN',
+        'NTR': 'NTR',
+        'CSL': 'CSL', 'CSLYY': 'CSL',
+        'WES': 'WES', 'WFAFY': 'WES',
+        'WOW': 'WOW', 'BMRNY': 'WOW',
+        'FMG': 'FMG', 'FSUGY': 'FMG',
+        'TSM': 'TSM',
+        'INFY': 'INFY',
+        'VALE': 'VALE',
+        'MELI': 'MELI',
+        'CRH': 'CRH',
+        'FMX': 'FMX',
+        'GRMN': 'GRMN'
+    }
+    canonical_base = CROSS_LIST_MAP.get(base_sym, base_sym)
+    
+    clean_name = ''
+    if info and isinstance(info, dict):
+        raw_name = info.get('shortName') or info.get('longName') or ''
+        clean = re.sub(
+            r'[\s\.\,\-]+(plc|inc|incorporated|corp|corporation|ltd|limited|ag|se|sa|nv|holdings|group|a\/s|ab|ord|ordinary|shares|company|co|the|- new york|adr).*$',
+            '', raw_name.lower()
+        )
+        clean_name = re.sub(r'[^a-z0-9]', '', clean)[:10]
+        
+    return canonical_base, clean_name
 
 
 def sanitize_value(val):
@@ -46,7 +130,7 @@ class DiscoveryEngineService:
         self.news_svc = NewsAggregatorService(supabase_client=self.supabase)
 
     # -------------------------------------------------------------------------
-    # GLOBAL UNIVERSE POOLS
+    # GLOBAL UNIVERSE POOLS (Deduplicated across Direct & ADR Listings)
     # -------------------------------------------------------------------------
     UNIVERSE_POOLS = {
         # High quality non-US operators, hidden champions, and mid/large-caps
@@ -54,7 +138,7 @@ class DiscoveryEngineService:
             # Germany
             'SIE.DE', 'SAP.DE', 'ALV.DE', 'SY1.DE', 'BEI.DE', 'HEI.DE', 'EVK.DE', 'FRE.DE', 'QIA.DE', 'BNR.DE',
             # UK
-            'AZN.L', 'RELX.L', 'HLMA.L', 'SGE.L', 'AUTO.L', 'WTB.L', 'BME.L', 'CPG.L', 'EXPN.L', 'RIO.L', 'SHEL.L', 'GSK.L',
+            'AZN.L', 'RELX.L', 'HLMA.L', 'SGE.L', 'AUTO.L', 'WTB.L', 'BME.L', 'CPG.L', 'EXPN.L', 'RIO.L', 'SHEL.L', 'GSK.L', 'BATS.L',
             # France & Benelux
             'SAN.PA', 'MC.PA', 'AIR.PA', 'DG.PA', 'CAP.PA', 'ENGI.PA', 'VIE.PA', 'ASML.AS', 'WKL.AS', 'HEIA.AS',
             # Switzerland & Scandinavia
@@ -63,18 +147,18 @@ class DiscoveryEngineService:
             '6902.T', '6501.T', '4063.T', '8001.T', '8058.T', '9432.T', '4502.T', '7751.T', '6301.T', '7267.T',
             # Canada & Australia
             'RY.TO', 'CSU.TO', 'OTEX.TO', 'WCN.TO', 'NTR.TO', 'BNS.TO', 'TRP.TO', 'BHP.AX', 'CSL.AX', 'WES.AX', 'WOW.AX', 'FMG.AX',
-            # Liquid International ADRs for US Broker Access
-            'TSM', 'ASML', 'SAP', 'NVO', 'BTI', 'DEO', 'RY', 'TD', 'BHP', 'RIO', 'SHEL', 'SNY', 'RELX', 'ABB', 'MELI', 'CRH', 'INFY', 'VALE', 'GRMN', 'FMX'
+            # Unique International ADRs (where local ticker is not already present)
+            'TSM', 'NVO', 'DEO', 'TD', 'MELI', 'CRH', 'INFY', 'VALE', 'GRMN', 'FMX'
         ],
         'value': [
             'CVS', 'PFE', 'KMB', 'GIS', 'ADM', 'BG', 'CAG', 'TSN', 'MHK', 'BWA', 'WHR', 'APA', 'DVN', 'FANG', 'MOS', 'CF', 'FMC',
-            'BTI', 'RIO', 'VALE', 'DEO', 'STLA', 'BBVA', 'DTE.DE', 'BNP.PA', 'ENGI.PA', 'OTEX.TO', 'BME.L', 'ALV.DE', 'BNS.TO',
+            'VALE', 'DEO', 'STLA', 'BBVA', 'DTE.DE', 'BNP.PA', 'ENGI.PA', 'OTEX.TO', 'BME.L', 'ALV.DE', 'BNS.TO',
             'DNB.OL', 'KCO.DE', 'HEI.DE', 'EVK.DE', 'WTB.L', 'BDEV.L', '7267.T', '6301.T'
         ],
         'income': [
-            'O', 'MAIN', 'ABBV', 'VICI', 'STAG', 'EPD', 'ET', 'MO', 'BTI', 'ENB', 'PFE', 'VZ', 'T', 'KMI', 'WMB', 'OKE',
+            'O', 'MAIN', 'ABBV', 'VICI', 'STAG', 'EPD', 'ET', 'MO', 'ENB', 'PFE', 'VZ', 'T', 'KMI', 'WMB', 'OKE',
             'RY.TO', 'BNS.TO', 'TRP.TO', 'BATS.L', 'SHEL.L', 'AZN.L', 'ALV.DE', 'BAS.DE', 'RIO.L', 'EQNR.OL', 'DNB.OL',
-            'HEIA.AS', 'SNY', 'DEO', 'SAN.PA', '9432.T', 'WES.AX', 'WOW.AX'
+            'HEIA.AS', 'DEO', 'SAN.PA', '9432.T', 'WES.AX', 'WOW.AX'
         ],
         'reduce_risk': [
             'WM', 'RSG', 'CL', 'PG', 'JNJ', 'PEP', 'KO', 'MCD', 'WMT', 'SO', 'DUK', 'AEP', 'NEE', 'XEL', 'ED', 'EIX',
@@ -85,10 +169,11 @@ class DiscoveryEngineService:
             'ADYEN.AS', 'SE', 'MELI', 'AIXA.DE', 'SHOP', 'FMG.AX'
         ],
         'diversification': [
-            'BHP', 'RIO', 'VALE', 'NTR.TO', 'EIX', 'SO', 'WM', 'OTEX.TO', 'DEO', 'BTI', 'AZN.L', 'SAP.DE', '6902.T',
+            'RIO.L', 'BHP.AX', 'VALE', 'NTR.TO', 'EIX', 'SO', 'WM', 'OTEX.TO', 'DEO', 'BATS.L', 'AZN.L', 'SAP.DE', '6902.T',
             'SAN.PA', 'CSL.AX', 'TRP.TO', 'DSV.CO', 'ASSA-B.ST', 'HEI.DE', 'SY1.DE', 'NOVN.SW'
         ]
     }
+
 
     # -------------------------------------------------------------------------
     # 1. PORTFOLIO GAPS & EXPOSURE ANALYSIS
@@ -155,24 +240,26 @@ class DiscoveryEngineService:
         elif strategy == 'reduce_risk':
             candidates.update(self.UNIVERSE_POOLS['reduce_risk'][:20])
 
-        # B. Live yfinance Screeners
-        try:
-            if strategy in ['value', 'income']:
-                undervalued = yf.screen('undervalued_growth_stocks')
-                if isinstance(undervalued, dict) and 'quotes' in undervalued:
-                    for q in undervalued['quotes'][:15]:
-                        candidates.add(q['symbol'])
-            elif strategy == 'high_beta':
-                small_caps = yf.screen('aggressive_small_caps')
-                if isinstance(small_caps, dict) and 'quotes' in small_caps:
-                    for q in small_caps['quotes'][:15]:
-                        candidates.add(q['symbol'])
-                tech_growth = yf.screen('growth_technology_stocks')
-                if isinstance(tech_growth, dict) and 'quotes' in tech_growth:
-                    for q in tech_growth['quotes'][:15]:
-                        candidates.add(q['symbol'])
-        except Exception as e:
-            print(f"yfinance screener query notice: {e}")
+        # B. Live yfinance Screeners (Only run for US-compatible strategies)
+        is_non_us = (strategy == 'non_us') or (region_preference in ['global_ex_us', 'europe_uk', 'asia_pacific'])
+        if not is_non_us:
+            try:
+                if strategy in ['value', 'income']:
+                    undervalued = yf.screen('undervalued_growth_stocks')
+                    if isinstance(undervalued, dict) and 'quotes' in undervalued:
+                        for q in undervalued['quotes'][:15]:
+                            candidates.add(q['symbol'])
+                elif strategy == 'high_beta':
+                    small_caps = yf.screen('aggressive_small_caps')
+                    if isinstance(small_caps, dict) and 'quotes' in small_caps:
+                        for q in small_caps['quotes'][:15]:
+                            candidates.add(q['symbol'])
+                    tech_growth = yf.screen('growth_technology_stocks')
+                    if isinstance(tech_growth, dict) and 'quotes' in tech_growth:
+                        for q in tech_growth['quotes'][:15]:
+                            candidates.add(q['symbol'])
+            except Exception as e:
+                print(f"yfinance screener query notice: {e}")
 
         # C. Gemini 3.8 Flash Gap & Hidden Gem Identification
         try:
@@ -180,17 +267,26 @@ class DiscoveryEngineService:
             if portfolio_profile and portfolio_profile.get("country_weights"):
                 gap_context = f"Current portfolio exposures: Countries: {portfolio_profile.get('country_weights')}, Sectors: {portfolio_profile.get('sector_weights')}."
 
+            non_us_constraint = ""
+            if is_non_us:
+                non_us_constraint = """
+                CRITICAL CONSTRAINT: You MUST STRICTLY EXCLUDE ALL UNITED STATES (US) COMPANIES.
+                Do NOT suggest any companies headquartered in the USA.
+                Suggest ONLY companies headquartered in Europe, UK, Japan, Asia-Pacific, Canada, Latin America, or Australia.
+                """
+
             ai_instruction = f"""
             You are an elite institutional global equity research director.
             Identify 15 to 20 exceptional international or non-traditional stocks matching:
             - Strategy: {strategy}
             - Region Focus: {region_preference}
             - Market Cap Focus: {market_cap_tier} (Note: Mid-caps ($1B-$15B) and undervalued large caps are welcome, but DO NOT return the obvious mega-cap US tech monopolies like AAPL, MSFT, NVDA, GOOGL, AMZN, META, TSLA).
+            {non_us_constraint}
             {gap_context}
             
-            Focus on companies with strong free cash flow, solid balance sheets, and compelling competitive moats (e.g. Nordic champions, UK specialists, German Mittelstand leaders, Canadian/Australian compounders, Japanese cash-rich firms, or undervalued US cash cows).
+            Focus on companies with strong free cash flow, solid balance sheets, and compelling competitive moats (e.g. Nordic champions, UK specialists, German Mittelstand leaders, Canadian/Australian compounders, Japanese cash-rich firms, or undervalued international cash cows).
             Return ONLY a JSON array of valid Yahoo Finance ticker strings.
-            Examples: ["OTEX.TO", "HLMA.L", "SY1.DE", "CSU.TO", "KNEBV.HE", "RIO.L", "BTI", "6902.T"]
+            Examples: ["OTEX.TO", "HLMA.L", "SY1.DE", "CSU.TO", "KNEBV.HE", "RIO.L", "6902.T"]
             """
             res = self.model.generate_content(
                 contents=[ai_instruction, f"Strategy: {strategy}, Region: {region_preference}"],
@@ -212,11 +308,23 @@ class DiscoveryEngineService:
         existing = set(portfolio_profile.get('existing_symbols', [])) if portfolio_profile else set()
         clean_candidates = [c for c in candidates if c not in existing]
 
-        # Filter listing type (ADR vs Direct) if specified
+        # Filter listing type (ADR vs Direct) & pre-deduplicate
         if listing_type == 'direct_only':
             clean_candidates = [c for c in clean_candidates if '.' in c]
         elif listing_type == 'adrs_only':
             clean_candidates = [c for c in clean_candidates if '.' not in c]
+        else:
+            # Hybrid: deduplicate tickers that share the same canonical company base
+            seen_bases = {}
+            for c in clean_candidates:
+                base = get_company_identity(c)[0]
+                if base not in seen_bases:
+                    seen_bases[base] = c
+                else:
+                    # Prefer local direct listing with exchange dot if available
+                    if '.' not in seen_bases[base] and '.' in c:
+                        seen_bases[base] = c
+            clean_candidates = list(seen_bases.values())
 
         print(f"Total raw candidate pool assembled: {len(clean_candidates)} tickers.")
         return clean_candidates
@@ -240,6 +348,8 @@ class DiscoveryEngineService:
         """Audits candidate pool in parallel against financial health gates and computes preliminary health scores."""
         print(f"Auditing {len(candidates)} candidates in parallel...")
         audited = []
+        seen_identities = set()
+        seen_names = set()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             future_to_symbol = {executor.submit(self._fetch_single_info, sym): sym for sym in candidates}
@@ -249,6 +359,13 @@ class DiscoveryEngineService:
                     continue
                 sym, info = res
                 
+                # Deduplication Gate across cross-listed shares / ADRs
+                canon_base, clean_name = get_company_identity(sym, info)
+                if canon_base in seen_identities:
+                    continue
+                if clean_name and clean_name in seen_names:
+                    continue
+
                 mcap = info.get('marketCap') or 0
                 country = info.get('country') or 'Unknown'
                 fcf = info.get('freeCashflow')
@@ -271,16 +388,23 @@ class DiscoveryEngineService:
                     if trailing_pe and trailing_pe > 30:
                         continue
 
-                # Region Preference Filtering
-                if region_preference == 'global_ex_us' and country == 'United States' and '.' not in sym:
-                    continue
-                elif region_preference == 'europe_uk':
-                    eur_countries = ['United Kingdom', 'Germany', 'France', 'Netherlands', 'Switzerland', 'Sweden', 'Denmark', 'Norway', 'Finland', 'Spain', 'Italy', 'Belgium']
-                    if country not in eur_countries and not any(ext in sym for ext in ['.L', '.DE', '.PA', '.AS', '.SW', '.ST', '.CO', '.OL', '.HE']):
+                # Strict Regionality Filtering
+                is_non_us_requested = (strategy == 'non_us') or (region_preference in ['global_ex_us', 'europe_uk', 'asia_pacific'])
+                if is_non_us_requested:
+                    if country in ['United States', 'USA', 'US']:
+                        continue
+                    if country in ['Unknown', '', None] and '.' not in sym:
+                        continue
+
+                if region_preference == 'europe_uk':
+                    eur_countries = ['United Kingdom', 'Germany', 'France', 'Netherlands', 'Switzerland', 'Sweden', 'Denmark', 'Norway', 'Finland', 'Spain', 'Italy', 'Belgium', 'Ireland', 'Austria']
+                    eur_suffixes = ['.L', '.DE', '.PA', '.AS', '.SW', '.ST', '.CO', '.OL', '.HE', '.MC', '.MI']
+                    if country not in eur_countries and not any(sym.endswith(ext) for ext in eur_suffixes):
                         continue
                 elif region_preference == 'asia_pacific':
-                    asia_countries = ['Japan', 'Australia', 'Hong Kong', 'Singapore', 'Taiwan', 'South Korea', 'India']
-                    if country not in asia_countries and not any(ext in sym for ext in ['.T', '.AX', '.HK', '.SI']):
+                    asia_countries = ['Japan', 'Australia', 'Hong Kong', 'Singapore', 'Taiwan', 'South Korea', 'India', 'New Zealand']
+                    asia_suffixes = ['.T', '.AX', '.HK', '.SI', '.KS']
+                    if country not in asia_countries and not any(sym.endswith(ext) for ext in asia_suffixes):
                         continue
 
                 # Financial Health Quality Gate
@@ -288,6 +412,7 @@ class DiscoveryEngineService:
                     # 1. Cash flow positive check (Operating or Free Cash Flow must be > 0)
                     if fcf is not None and fcf < 0 and op_cf is not None and op_cf < 0:
                         continue
+
                     
                     # 2. Valuation sanity check (avoid negative earnings or astronomical multiples)
                     if trailing_pe is not None:
@@ -315,6 +440,11 @@ class DiscoveryEngineService:
                 elif strategy == 'high_beta':
                     if beta is not None and beta < 1.15: # high beta / high volatility
                         continue
+
+                # Passed all gates: record to deduplication tracking
+                seen_identities.add(canon_base)
+                if clean_name:
+                    seen_names.add(clean_name)
 
                 # Calculate Preliminary Fundamental Health Score (0-100)
                 f_score = self.compute_fundamental_score(info, strategy)
@@ -659,9 +789,21 @@ class DiscoveryEngineService:
             }
             deep_picks.append(clean_pick)
 
-        # Rank by composite score and pick top 3
+        # Rank by composite score and pick top 3 distinct companies
         deep_picks.sort(key=lambda x: x['composite_score'], reverse=True)
-        top_picks = deep_picks[:3]
+        top_picks = []
+        final_identities = set()
+        final_names = set()
+        for dp in deep_picks:
+            cb, cn = get_company_identity(dp['symbol'], {'shortName': dp['company_name'], 'longName': dp['company_name']})
+            if cb in final_identities or (cn and cn in final_names):
+                continue
+            final_identities.add(cb)
+            if cn:
+                final_names.add(cn)
+            top_picks.append(dp)
+            if len(top_picks) >= 3:
+                break
 
         # Step 5: Institutional Dossier Synthesis via Gemini 3.8 Flash
         print(f"Generating institutional dossiers for top {len(top_picks)} draft picks...")
@@ -713,7 +855,7 @@ class DiscoveryEngineService:
         except Exception as ce:
             print(f"Warning writing local discovery cache: {ce}")
 
-        # 2. Supabase Insert
+        # 2. Supabase Upsert / Deduplication
         if not self.supabase or not picks:
             return
 
@@ -740,15 +882,43 @@ class DiscoveryEngineService:
                     'sentiment_data': p['sentiment_data'],
                     'composite_score': p['composite_score']
                 }
+                full_record = {**db_record, **extended_fields}
 
-                try:
-                    self.supabase.table('discovery_picks').insert({**db_record, **extended_fields}).execute()
-                except Exception:
-                    # Fallback to standard schema if extended columns not yet migrated
-                    self.supabase.table('discovery_picks').insert(db_record).execute()
+                # Check if exact symbol already exists in Supabase
+                existing = self.supabase.table('discovery_picks').select('id, symbol').eq('symbol', p['symbol']).execute()
+                if existing.data and len(existing.data) > 0:
+                    rec_id = existing.data[0]['id']
+                    try:
+                        self.supabase.table('discovery_picks').update(full_record).eq('id', rec_id).execute()
+                    except Exception:
+                        self.supabase.table('discovery_picks').update(db_record).eq('id', rec_id).execute()
+                    continue
+
+                # Check if cross-listed symbol of the same company exists under this strategy
+                cb, cn = get_company_identity(p['symbol'], {'shortName': p['company_name'], 'longName': p['company_name']})
+                strat_picks = self.supabase.table('discovery_picks').select('id, symbol, company_name').eq('strategy', p['strategy']).execute()
+                replaced = False
+                if strat_picks.data:
+                    for sp in strat_picks.data:
+                        sp_cb, sp_cn = get_company_identity(sp['symbol'], {'shortName': sp.get('company_name'), 'longName': sp.get('company_name')})
+                        if sp_cb == cb or (cn and sp_cn and sp_cn == cn):
+                            try:
+                                self.supabase.table('discovery_picks').update(full_record).eq('id', sp['id']).execute()
+                            except Exception:
+                                self.supabase.table('discovery_picks').update(db_record).eq('id', sp['id']).execute()
+                            replaced = True
+                            break
+
+                if not replaced:
+                    try:
+                        self.supabase.table('discovery_picks').insert(full_record).execute()
+                    except Exception:
+                        # Fallback to standard schema if extended columns not yet migrated
+                        self.supabase.table('discovery_picks').insert(db_record).execute()
 
             except Exception as e:
                 print(f"Error persisting pick {p['symbol']} to Supabase: {e}")
+
 
 if __name__ == "__main__":
     from main import get_supabase_client

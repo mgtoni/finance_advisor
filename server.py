@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from utils import get_yf_ticker
 from portfolio_manager import PortfolioManagerService
+from discovery_engine import get_company_identity
 import threading
 import time
 import datetime
@@ -735,7 +736,7 @@ def get_discovery_picks():
         picks = []
         if supabase:
             try:
-                query = supabase.table('discovery_picks').select('*').order('created_at', desc=True).limit(limit)
+                query = supabase.table('discovery_picks').select('*').neq('strategy', 'legacy_archived').order('created_at', desc=True).limit(50)
                 res = query.execute()
                 picks = res.data if res.data else []
             except Exception as dbe:
@@ -754,6 +755,8 @@ def get_discovery_picks():
                                 'symbol': p.get('symbol'),
                                 'company_name': p.get('company_name'),
                                 'sector': p.get('sector'),
+                                'country': p.get('country'),
+                                'strategy': p.get('strategy'),
                                 'quant_score': round((p.get('composite_score', 50) - 50) / 50, 2),
                                 'thesis': p.get('full_thesis_payload') or p.get('thesis_points', []),
                                 'created_at': cache_data.get('last_updated')
@@ -761,7 +764,7 @@ def get_discovery_picks():
                 except Exception as ce:
                     print(f"Notice reading discovery cache: {ce}")
 
-        # Strategy filter if requested
+        # Strategy filter if requested (STRICT - do not fallback to unclassified/legacy rows)
         if strategy and strategy != 'all' and picks:
             filtered = []
             for p in picks:
@@ -771,15 +774,42 @@ def get_discovery_picks():
                     pick_strat = thesis.get('strategy')
                 if not pick_strat:
                     pick_strat = p.get('strategy')
-                if pick_strat == strategy or not pick_strat:
+                if pick_strat == strategy:
                     filtered.append(p)
-            if filtered:
-                picks = filtered
+            picks = filtered
 
-        return jsonify({"status": "success", "data": picks})
+        # Strict Regionality filter for non-US
+        if strategy == 'non_us':
+            filtered_non_us = []
+            for p in picks:
+                cntry = p.get('country')
+                if not cntry and isinstance(p.get('thesis'), dict):
+                    cntry = p.get('thesis', {}).get('country')
+                if cntry in ['United States', 'USA', 'US']:
+                    continue
+                filtered_non_us.append(p)
+            picks = filtered_non_us
+
+        # Deduplicate across cross-listed shares and historical runs
+        deduped = []
+        seen_identities = set()
+        seen_names = set()
+        for p in picks:
+            sym = p.get('symbol', '')
+            cname = p.get('company_name', '')
+            cb, cn = get_company_identity(sym, {'shortName': cname, 'longName': cname})
+            if cb in seen_identities or (cn and cn in seen_names):
+                continue
+            seen_identities.add(cb)
+            if cn:
+                seen_names.add(cn)
+            deduped.append(p)
+
+        return jsonify({"status": "success", "data": deduped[:limit]})
     except Exception as e:
         print(f"Error fetching discovery picks: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # -----------------------------------------------------------------------------
 # WATCHLIST API ROUTES
