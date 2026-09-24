@@ -234,7 +234,12 @@ class DataIngestionService:
                     # Filter for transactions within the days_back window
                     if 'Start Date' in insider_tx.columns:
                         recent_tx = insider_tx[pd.to_datetime(insider_tx['Start Date'], errors='coerce') >= pd.to_datetime(start_date)]
-                        buy_count = len(recent_tx)
+                        # Strictly identify open-market purchases (exclude sales, option exercises, and grants)
+                        buy_mask = pd.Series(False, index=recent_tx.index)
+                        for col in ['Text', 'Transaction', 'Type']:
+                            if col in recent_tx.columns:
+                                buy_mask = buy_mask | recent_tx[col].astype(str).str.contains('Purchase|Buy', case=False, na=False)
+                        buy_count = int(buy_mask.sum())
                 
                 return {
                     'insider_filings_count': buy_count,

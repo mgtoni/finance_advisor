@@ -10,9 +10,8 @@ from main import main as run_pipeline
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
-from utils import get_yf_ticker
+from utils import get_yf_ticker, get_company_identity
 from portfolio_manager import PortfolioManagerService
-from discovery_engine import get_company_identity
 import threading
 import time
 import datetime
@@ -24,6 +23,9 @@ load_dotenv()
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(supabase_url, supabase_key) if supabase_url else None
+
+from task_queue import BackgroundTaskQueue
+task_queue = BackgroundTaskQueue(supabase_client=supabase)
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -662,60 +664,34 @@ def save_watchlist_cache(data):
 def run_discovery():
     try:
         data = request.json if request.is_json else {}
-        strategy = data.get('strategy', 'non_us')
-        market_cap_tier = data.get('market_cap_tier', 'all')
-        region_preference = data.get('region_preference', 'all')
-        listing_type = data.get('listing_type', 'hybrid')
-        strict_health = data.get('strict_health_filter', True)
+        strategy = data.get('strategy', 'value')
+        market = data.get('market')
+        if not market:
+            reg = data.get('region_preference', 'all')
+            if reg == 'europe_uk': market = 'uk' if strategy == 'uk' else 'europe'
+            elif reg == 'asia_pacific': market = 'japan'
+            elif reg == 'global_ex_us': market = 'global'
+            elif strategy == 'non_us': market = 'global'
+            else: market = 'usa'
 
-        current_status = load_discovery_status()
-        if current_status.get('is_running'):
-            return jsonify({"status": "busy", "message": "Discovery Engine is currently analyzing markets."}), 409
+        target_contenders = int(data.get('target_contenders', 20))
 
-        new_status = {
-            'is_running': True,
-            'strategy': strategy,
-            'started_at': datetime.datetime.now().isoformat(),
-            'finished_at': None,
-            'stage': f"Scanning {strategy} candidates across global markets..."
-        }
-        save_discovery_status(new_status)
+        success, task_id, msg = task_queue.enqueue_discovery_task(
+            market=market,
+            strategy=strategy,
+            target_contenders=target_contenders,
+            params=data
+        )
 
-        from discovery_engine import DiscoveryEngineService
-        engine = DiscoveryEngineService(supabase_client=supabase)
+        if not success:
+            return jsonify({"status": "busy", "message": msg}), 409
 
-        def run_in_bg():
-            try:
-                engine.run_discovery(
-                    strategy=strategy,
-                    market_cap_tier=market_cap_tier,
-                    region_preference=region_preference,
-                    listing_type=listing_type,
-                    strict_health=strict_health
-                )
-                save_discovery_status({
-                    'is_running': False,
-                    'strategy': strategy,
-                    'started_at': new_status['started_at'],
-                    'finished_at': datetime.datetime.now().isoformat(),
-                    'stage': 'Complete'
-                })
-            except Exception as ex:
-                print("Discovery Engine Error:", ex)
-                save_discovery_status({
-                    'is_running': False,
-                    'strategy': strategy,
-                    'started_at': new_status['started_at'],
-                    'finished_at': datetime.datetime.now().isoformat(),
-                    'stage': f"Error: {str(ex)}"
-                })
-
-        import threading
-        threading.Thread(target=run_in_bg).start()
+        status_info = task_queue.get_latest_task_status('discovery')
         return jsonify({
             "status": "success",
-            "message": f"Discovery Engine triggered for '{strategy}'. Running deep analysis in background.",
-            "discovery_status": new_status
+            "task_id": task_id,
+            "message": msg,
+            "discovery_status": status_info
         })
     except Exception as e:
         print(f"Error running discovery engine: {e}")
@@ -723,8 +699,40 @@ def run_discovery():
 
 @app.route('/api/discovery-status', methods=['GET'])
 def get_discovery_status():
-    status = load_discovery_status()
+    status = task_queue.get_latest_task_status('discovery')
     return jsonify({"status": "success", "data": status})
+
+@app.route('/api/discovery-contenders', methods=['GET'])
+def get_discovery_contenders():
+    """Returns the audited Top 20 Contenders and Contender Comparison Matrix from the latest run."""
+    try:
+        contenders_file = os.path.join(os.path.dirname(__file__), 'discovery_contenders.json')
+        if os.path.exists(contenders_file):
+            with open(contenders_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return jsonify({"status": "success", "data": data})
+        return jsonify({"status": "success", "data": {"contenders": [], "contender_matrix": []}})
+    except Exception as e:
+        print(f"Error fetching discovery contenders: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/cron/discovery', methods=['GET', 'POST'])
+def trigger_discovery_cron():
+    """Automated cron endpoint to run scheduled multi-stage discovery safely through the task queue."""
+    try:
+        market = request.args.get('market', 'usa')
+        strategy = request.args.get('strategy', 'value')
+        success, task_id, msg = task_queue.enqueue_discovery_task(
+            market=market,
+            strategy=strategy,
+            target_contenders=20
+        )
+        if not success:
+            return jsonify({"status": "busy", "message": msg}), 409
+        return jsonify({"status": "success", "task_id": task_id, "message": msg})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 
 @app.route('/api/discovery-picks', methods=['GET'])

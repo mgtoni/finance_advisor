@@ -11,3 +11,15 @@ services:
       - .env
     environment:
       - FLASK_ENV=production
+
+  scheduler:
+    build: .
+    container_name: financial_advisor_scheduler
+    command: python vps_scheduler.py
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - BACKEND_URL=http://backend:5000
+    depends_on:
+      - backend

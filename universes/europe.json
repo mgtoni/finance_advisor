@@ -1,0 +1,3706 @@
+[
+  {
+    "symbol": "ZURN.SW",
+    "name": "Zurich Insurance Group",
+    "sector": "Insurance",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GSK.L",
+    "name": "GSK plc",
+    "sector": "Health Care",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RIO.L",
+    "name": "Rio Tinto Group",
+    "sector": "Basic Resources",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "INGA.AS",
+    "name": "ING Group",
+    "sector": "Banks",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UBSG.SW",
+    "name": "UBS Group",
+    "sector": "Banks",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SAF.PA",
+    "name": "Safran",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DG.PA",
+    "name": "Vinci",
+    "sector": "Construction and Materials",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PRU.L",
+    "name": "Prudential plc",
+    "sector": "Insurance",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BATS.L",
+    "name": "British American Tobacco",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MBG.DE",
+    "name": "Mercedes-Benz Group",
+    "sector": "Automobiles and Parts",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HLI.L",
+    "name": "Haleon",
+    "sector": "Consumer Products and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FERR.MI",
+    "name": "Ferrari",
+    "sector": "Automobiles and Parts",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RMS.PA",
+    "name": "Herm\u00e8s",
+    "sector": "Consumer Products and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ISP.MI",
+    "name": "Intesa Sanpaolo",
+    "sector": "Banks",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HMB.ST",
+    "name": "H&M",
+    "sector": "Retail",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PERP.PA",
+    "name": "Pernod Ricard",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MICP.PA",
+    "name": "Michelin",
+    "sector": "Automobiles and Parts",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BKT.MC",
+    "name": "Bankinter",
+    "sector": "Banks",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CABK.MC",
+    "name": "CaixaBank",
+    "sector": "Banks",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ENG.MC",
+    "name": "Enag\u00e1s",
+    "sector": "Utilities",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NTGY.MC",
+    "name": "Naturgy",
+    "sector": "Utilities",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FER.AS",
+    "name": "Ferrovial",
+    "sector": "Construction and Materials",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RED.MC",
+    "name": "Redeia",
+    "sector": "Utilities",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ITX.MC",
+    "name": "Inditex",
+    "sector": "Retail",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "REP.MC",
+    "name": "Repsol",
+    "sector": "Energy",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SAB.MC",
+    "name": "Banco Sabadell",
+    "sector": "Banks",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ATCOA.ST",
+    "name": "Atlas Copco",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ERICB.ST",
+    "name": "Ericsson",
+    "sector": "Telecommunications",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ALFA.ST",
+    "name": "Alfa Laval",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SAND.ST",
+    "name": "Sandvik AB",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FORTUM.HE",
+    "name": "Fortum",
+    "sector": "Utilities",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GLEN.L",
+    "name": "Glencore",
+    "sector": "Basic Resources",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NG.L",
+    "name": "National Grid",
+    "sector": "Utilities",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LLOY.L",
+    "name": "Lloyds Banking Group",
+    "sector": "Banks",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CPG.L",
+    "name": "Compass Group",
+    "sector": "Travel and Leisure",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RKT.L",
+    "name": "Reckitt",
+    "sector": "Personal Care, Drug and Grocery Stores",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EXPN.L",
+    "name": "Experian",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IMB.L",
+    "name": "Imperial Brands",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RR.L",
+    "name": "Rolls-Royce Holdings",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LSEG.L",
+    "name": "London Stock Exchange Group",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IAG.L",
+    "name": "International Airlines Group",
+    "sector": "Travel and Leisure",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "III.L",
+    "name": "3i",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HLMA.L",
+    "name": "Halma plc",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SMT.L",
+    "name": "Scottish Mortgage Investment Trust",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MNG.L",
+    "name": "M&G",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SMIN.L",
+    "name": "Smiths Group",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CRDA.L",
+    "name": "Croda International",
+    "sector": "Chemicals",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SDLF.L",
+    "name": "Standard Life plc",
+    "sector": "Insurance",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UTG.L",
+    "name": "Unite Group",
+    "sector": "Real Estate",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SGRO.L",
+    "name": "Segro",
+    "sector": "Real Estate",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BTRW.L",
+    "name": "Barratt Redrow",
+    "sector": "Consumer Products and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PSN.L",
+    "name": "Persimmon plc",
+    "sector": "Consumer Products and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NXT.L",
+    "name": "Next plc",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "KGF.L",
+    "name": "Kingfisher plc",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HOLN.SW",
+    "name": "Holcim",
+    "sector": "Construction and Materials",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SRENH.SW",
+    "name": "Swiss Re",
+    "sector": "Insurance",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LONN.SW",
+    "name": "Lonza Group",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GIVN.SW",
+    "name": "Givaudan",
+    "sector": "Chemicals",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SIKA.SW",
+    "name": "Sika",
+    "sector": "Construction and Materials",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "STMN.SW",
+    "name": "Straumann",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PGHN.SW",
+    "name": "Partners Group",
+    "sector": "Financial Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SOON.SW",
+    "name": "Sonova",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LISN.SW",
+    "name": "Lindt & Spr\u00fcngli",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SCHP.SW",
+    "name": "Schindler Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UHR.SW",
+    "name": "Swatch Group",
+    "sector": "Consumer Products and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LOGN.SW",
+    "name": "Logitech",
+    "sector": "Technology",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HELN.SW",
+    "name": "Helvetia Insurance",
+    "sector": "Insurance",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BALN.SW",
+    "name": "Baloise",
+    "sector": "Insurance",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GALE.SW",
+    "name": "Galenica",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EMSN.SW",
+    "name": "Ems-Chemie",
+    "sector": "Chemicals",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ABBN.SW",
+    "name": "ABB Ltd",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ABN.AS",
+    "name": "ABN AMRO",
+    "sector": "Banks",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AC.PA",
+    "name": "Accor",
+    "sector": "Travel and Leisure",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ACS.MC",
+    "name": "ACS Group",
+    "sector": "Construction and Materials",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ADEN.SW",
+    "name": "Adecco",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ADS.DE",
+    "name": "Adidas",
+    "sector": "Consumer Products and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ADM.L",
+    "name": "Admiral Group",
+    "sector": "Insurance",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ADYEN.AS",
+    "name": "Adyen",
+    "sector": "Industrial Goods and Services",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AENA.MC",
+    "name": "Aena",
+    "sector": "Travel and Leisure",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AGS.BR",
+    "name": "Ageas",
+    "sector": "Insurance",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AIRP.PA",
+    "name": "Air Liquide",
+    "sector": "Chemicals",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AIR.PA",
+    "name": "Airbus",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AKERBP.OL",
+    "name": "Aker BP",
+    "sector": "Energy",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ALV.DE",
+    "name": "Allianz",
+    "sector": "Insurance",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ALO.PA",
+    "name": "Alstom",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AIXA.DE",
+    "name": "AIXTRON",
+    "sector": "Technology",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ALC.SW",
+    "name": "Alcon",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AMBU B.CO",
+    "name": "Ambu",
+    "sector": "Health Care",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AAL.L",
+    "name": "Anglo American plc",
+    "sector": "Basic Resources",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ABI.BR",
+    "name": "Anheuser-Busch InBev",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ANTO.L",
+    "name": "Antofagasta plc",
+    "sector": "Basic Resources",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AKE.PA",
+    "name": "Arkema",
+    "sector": "Chemicals",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SUNB.L",
+    "name": "Sunbelt Rentals",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ASMI.AS",
+    "name": "ASM International",
+    "sector": "Technology",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ASML.AS",
+    "name": "ASML Holding",
+    "sector": "Technology",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ASSA B.ST",
+    "name": "Assa Abloy",
+    "sector": "Construction and Materials",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ABF.L",
+    "name": "Associated British Foods",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AZN.L",
+    "name": "AstraZeneca",
+    "sector": "Health Care",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AUTO.L",
+    "name": "Auto Trader Group",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AV.L",
+    "name": "Aviva",
+    "sector": "Insurance",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CS.PA",
+    "name": "AXA",
+    "sector": "Insurance",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AZE.BR",
+    "name": "Azelis Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BME.L",
+    "name": "B&M European Value Retail",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BA.L",
+    "name": "BAE Systems",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BALD B.ST",
+    "name": "Balder",
+    "sector": "Real Estate",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BBY.L",
+    "name": "Balfour Beatty",
+    "sector": "Construction and Materials",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BARC.L",
+    "name": "Barclays",
+    "sector": "Banks",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BOL.ST",
+    "name": "Boliden AB",
+    "sector": "Basic Resources",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BBVA.MC",
+    "name": "Banco Bilbao Vizcaya Argentaria",
+    "sector": "Banks",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SAN.MC",
+    "name": "Banco Santander",
+    "sector": "Banks",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BARN.SW",
+    "name": "Barry Callebaut",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BAS.DE",
+    "name": "BASF",
+    "sector": "Chemicals",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BAYN.DE",
+    "name": "Bayer",
+    "sector": "Health Care",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BEZ.L",
+    "name": "Beazley",
+    "sector": "Insurance",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BEI.DE",
+    "name": "Beiersdorf",
+    "sector": "Consumer Products and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BEB.SW",
+    "name": "Belimo",
+    "sector": "Construction and Materials",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BKG.L",
+    "name": "Berkeley Group Holdings",
+    "sector": "Consumer Products and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BMW.DE",
+    "name": "BMW",
+    "sector": "Automobiles and Parts",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BNPP.PA",
+    "name": "BNP Paribas",
+    "sector": "Banks",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BOL.PA",
+    "name": "Bollor\u00e9",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BP.L",
+    "name": "BP",
+    "sector": "Energy",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BNR.DE",
+    "name": "Brenntag",
+    "sector": "Chemicals",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BT-A.L",
+    "name": "BT Group",
+    "sector": "Telecommunications",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BNZL.L",
+    "name": "Bunzl",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BRBY.L",
+    "name": "Burberry",
+    "sector": "Consumer Products and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BVI.PA",
+    "name": "Bureau Veritas",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AFX.DE",
+    "name": "Carl Zeiss Meditec",
+    "sector": "Health Care",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CAPP.PA",
+    "name": "Capgemini",
+    "sector": "Technology",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CARR.PA",
+    "name": "Carrefour",
+    "sector": "Retail",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CAST.ST",
+    "name": "Castellum",
+    "sector": "Real Estate",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CNA.L",
+    "name": "Centrica",
+    "sector": "Utilities",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CCH.SW",
+    "name": "Coca-Cola HBC",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "COLR.BR",
+    "name": "Colruyt",
+    "sector": "Personal Care, Drug and Grocery Stores",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CBK.DE",
+    "name": "Commerzbank",
+    "sector": "Banks",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CON.DE",
+    "name": "Continental",
+    "sector": "Automobiles and Parts",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CTEC.L",
+    "name": "ConvaTec",
+    "sector": "Health Care",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "1COV.DE",
+    "name": "Covestro",
+    "sector": "Chemicals",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CAGR.PA",
+    "name": "Cr\u00e9dit Agricole",
+    "sector": "Banks",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CPR.MI",
+    "name": "Davide Campari-Milano",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DANO.PA",
+    "name": "Danone",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DHER.DE",
+    "name": "Delivery Hero",
+    "sector": "Retail",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DEMANT.CO",
+    "name": "Demant",
+    "sector": "Health Care",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DLN.L",
+    "name": "Derwent London",
+    "sector": "Real Estate",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DB1.DE",
+    "name": "Deutsche B\u00f6rse",
+    "sector": "Financial Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DTE.DE",
+    "name": "Deutsche Telekom",
+    "sector": "Telecommunications",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DHL.DE",
+    "name": "DHL Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DGE.L",
+    "name": "Diageo",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DPLM.L",
+    "name": "Diploma",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DLG.L",
+    "name": "Direct Line",
+    "sector": "Insurance",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DOCM.SW",
+    "name": "DocMorris",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SMDS.L",
+    "name": "DS Smith",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EZJ.L",
+    "name": "EasyJet",
+    "sector": "Travel and Leisure",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EDEN.PA",
+    "name": "Edenred",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EDP",
+    "name": "EDP - Energias de Portugal",
+    "sector": "Utilities",
+    "country": "Portugal",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EDPR",
+    "name": "EDP Renov\u00e1veis",
+    "sector": "Utilities",
+    "country": "Portugal",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EFGI.PA",
+    "name": "Eiffage",
+    "sector": "Construction and Materials",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ELUX-B.ST",
+    "name": "Electrolux",
+    "sector": "Consumer Products and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ELISA.HE",
+    "name": "Elisa",
+    "sector": "Telecommunications",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EDV.L",
+    "name": "Endeavour Mining",
+    "sector": "Basic Resources",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ENI.MI",
+    "name": "Eni",
+    "sector": "Energy",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ENEL.MI",
+    "name": "Enel",
+    "sector": "Utilities",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ENT.L",
+    "name": "Entain",
+    "sector": "Travel and Leisure",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EOAN.DE",
+    "name": "E.ON",
+    "sector": "Utilities",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EPI A.ST",
+    "name": "Epiroc",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EBS.VI",
+    "name": "Erste Group",
+    "sector": "Banks",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ESLX.PA",
+    "name": "EssilorLuxottica",
+    "sector": "Health Care",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ENX.AS",
+    "name": "Euronext",
+    "sector": "Financial Services",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EVK.DE",
+    "name": "Evonik Industries",
+    "sector": "Chemicals",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EVT.DE",
+    "name": "Evotec",
+    "sector": "Health Care",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EXO.AS",
+    "name": "Exor",
+    "sector": "Financial Services",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FRVIA.PA",
+    "name": "Forvia",
+    "sector": "Automobiles and Parts",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FNTN.DE",
+    "name": "Freenet",
+    "sector": "Telecommunications",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FME.DE",
+    "name": "Fresenius Medical Care",
+    "sector": "Health Care",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GALP",
+    "name": "Galp Energia",
+    "sector": "Energy",
+    "country": "Portugal",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GAW.L",
+    "name": "Games Workshop",
+    "sector": "Consumer Products and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "G1A.DE",
+    "name": "GEA Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GEBN.SW",
+    "name": "Geberit",
+    "sector": "Construction and Materials",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GFC.PA",
+    "name": "Gecina",
+    "sector": "Real Estate",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GF.SW",
+    "name": "Georg Fischer",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GET.PA",
+    "name": "Getlink",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GLB.IR",
+    "name": "Glanbia",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Ireland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GN.CO",
+    "name": "GN Store Nord",
+    "sector": "Health Care",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GFT.IR",
+    "name": "Grafton Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Ireland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GRF.MC",
+    "name": "Grifols",
+    "sector": "Health Care",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HNR.DE",
+    "name": "Hannover Re",
+    "sector": "Insurance",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HAS.L",
+    "name": "Hays",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HEI.DE",
+    "name": "Heidelberg Materials",
+    "sector": "Construction and Materials",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HEN3.DE",
+    "name": "Henkel",
+    "sector": "Consumer Products and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HIK.L",
+    "name": "Hikma Pharmaceuticals",
+    "sector": "Health Care",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HSX",
+    "name": "Hiscox",
+    "sector": "Insurance",
+    "country": "Bermuda",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HWDN.L",
+    "name": "Howden Joinery",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HSBA.L",
+    "name": "HSBC",
+    "sector": "Banks",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BOSS.DE",
+    "name": "Hugo Boss",
+    "sector": "Consumer Products and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "HUSQ B.ST",
+    "name": "Husqvarna",
+    "sector": "Consumer Products and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IBE.MC",
+    "name": "Iberdrola",
+    "sector": "Utilities",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "INCH.L",
+    "name": "Inchcape",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "INDT.ST",
+    "name": "Indutrade",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IFX.DE",
+    "name": "Infineon Technologies",
+    "sector": "Technology",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "INPST",
+    "name": "InPost",
+    "sector": "Industrial Goods and Services",
+    "country": "Luxembourg",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IHG.L",
+    "name": "InterContinental Hotels Group",
+    "sector": "Travel and Leisure",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ICP.L",
+    "name": "Intermediate Capital Group",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ITRK.L",
+    "name": "Intertek",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IPN.PA",
+    "name": "Ipsen",
+    "sector": "Health Care",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ITV.L",
+    "name": "ITV",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SBRY.L",
+    "name": "Sainsbury's",
+    "sector": "Personal Care, Drug and Grocery Stores",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "JD.L",
+    "name": "JD Sports",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "JMT",
+    "name": "Jer\u00f3nimo Martins",
+    "sector": "Retail",
+    "country": "Portugal",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BAER.SW",
+    "name": "Julius Baer",
+    "sector": "Banks",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "KBC.BR",
+    "name": "KBC Group",
+    "sector": "Banks",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "KER.PA",
+    "name": "Kering",
+    "sector": "Consumer Products and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "KNEBV.HE",
+    "name": "Kone",
+    "sector": "Industrial Goods and Services",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "KPN.AS",
+    "name": "KPN",
+    "sector": "Telecommunications",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LAND.L",
+    "name": "Land Securities",
+    "sector": "Real Estate",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LXS.DE",
+    "name": "Lanxess",
+    "sector": "Chemicals",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LEG.DE",
+    "name": "LEG Immobilien",
+    "sector": "Real Estate",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LDO.MI",
+    "name": "Leonardo",
+    "sector": "Industrial Goods and Services",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LSG.OL",
+    "name": "Ler\u00f8y Seafood",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LII.L",
+    "name": "Liberty Global",
+    "sector": "Telecommunications",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LIF.IR",
+    "name": "LifeCo",
+    "sector": "Insurance",
+    "country": "Ireland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LIN.L",
+    "name": "Linde plc",
+    "sector": "Chemicals",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "OR.PA",
+    "name": "L'Or\u00e9al",
+    "sector": "Personal Care, Drug and Grocery Stores",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LPP",
+    "name": "LPP",
+    "sector": "Consumer Products and Services",
+    "country": "Poland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LHA.DE",
+    "name": "Lufthansa",
+    "sector": "Travel and Leisure",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LUMI.PA",
+    "name": "Lumibird",
+    "sector": "Technology",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MC.PA",
+    "name": "LVMH",
+    "sector": "Consumer Products and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MAERSK B.CO",
+    "name": "Maersk",
+    "sector": "Industrial Goods and Services",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MAN.DE",
+    "name": "MAN SE",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MB.MI",
+    "name": "Mediobanca",
+    "sector": "Financial Services",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MELE.BR",
+    "name": "Melexis",
+    "sector": "Technology",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MEL.MC",
+    "name": "Meli\u00e1 Hotels",
+    "sector": "Travel and Leisure",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MRL.MC",
+    "name": "Merlin Properties",
+    "sector": "Real Estate",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "METSO.HE",
+    "name": "Metso",
+    "sector": "Industrial Goods and Services",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TIGO.ST",
+    "name": "Millicom",
+    "sector": "Telecommunications",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MCG.L",
+    "name": "Mobico Group",
+    "sector": "Travel and Leisure",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MONC.MI",
+    "name": "Moncler",
+    "sector": "Consumer Products and Services",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MNDI.L",
+    "name": "Mondi",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MOR.DE",
+    "name": "MorphoSys",
+    "sector": "Health Care",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MUV2.DE",
+    "name": "Munich Re",
+    "sector": "Insurance",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MT",
+    "name": "ArcelorMittal",
+    "sector": "Basic Resources",
+    "country": "Luxembourg",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MTX.DE",
+    "name": "MTU Aero Engines",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NAB",
+    "name": "National Bank of Greece",
+    "sector": "Banks",
+    "country": "Greece",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NWG.L",
+    "name": "NatWest Group",
+    "sector": "Banks",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NEM.DE",
+    "name": "Nemetschek",
+    "sector": "Technology",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NEOEN.PA",
+    "name": "Neoen",
+    "sector": "Utilities",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NSN.HE",
+    "name": "Neste",
+    "sector": "Energy",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NESN.SW",
+    "name": "Nestl\u00e9",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NEX.PA",
+    "name": "Nexans",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NEXI.MI",
+    "name": "Nexi",
+    "sector": "Industrial Goods and Services",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NIBE B.ST",
+    "name": "Nibe Industrier",
+    "sector": "Construction and Materials",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NN.AS",
+    "name": "NN Group",
+    "sector": "Insurance",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NOKIA.HE",
+    "name": "Nokia",
+    "sector": "Technology",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NDA FI.HE",
+    "name": "Nordea",
+    "sector": "Banks",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NHY.OL",
+    "name": "Norsk Hydro",
+    "sector": "Basic Resources",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NOV N.SW",
+    "name": "Novartis",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NOVO B.CO",
+    "name": "Novo Nordisk",
+    "sector": "Health Care",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "OCDO.L",
+    "name": "Ocado",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "OCI.AS",
+    "name": "OCI",
+    "sector": "Chemicals",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "OERL.SW",
+    "name": "Oerlikon",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "OMV.VI",
+    "name": "OMV",
+    "sector": "Energy",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ONT.BR",
+    "name": "Ontex",
+    "sector": "Personal Care, Drug and Grocery Stores",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ORA.PA",
+    "name": "Orange S.A.",
+    "sector": "Telecommunications",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ORK.OL",
+    "name": "Orkla ASA",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ORSTED.CO",
+    "name": "\u00d8rsted",
+    "sector": "Utilities",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PANDORA.CO",
+    "name": "Pandora",
+    "sector": "Consumer Products and Services",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PBB.DE",
+    "name": "Deutsche Pfandbriefbank",
+    "sector": "Banks",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "P911.DE",
+    "name": "Porsche",
+    "sector": "Automobiles and Parts",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PNL.AS",
+    "name": "PostNL",
+    "sector": "Industrial Goods and Services",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PSN.PA",
+    "name": "Publicis",
+    "sector": "Media",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PUM.DE",
+    "name": "Puma",
+    "sector": "Consumer Products and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "QIA.AS",
+    "name": "Qiagen",
+    "sector": "Health Care",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RBI.VI",
+    "name": "Raiffeisen Bank International",
+    "sector": "Banks",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "REC.MI",
+    "name": "Recordati",
+    "sector": "Health Care",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RHM.DE",
+    "name": "Rheinmetall",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RIGN.SW",
+    "name": "Transocean",
+    "sector": "Energy",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CFR.SW",
+    "name": "Richemont",
+    "sector": "Consumer Products and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ROG.SW",
+    "name": "Roche Holding",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ROL.L",
+    "name": "Royal Mail",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RWE.DE",
+    "name": "RWE",
+    "sector": "Utilities",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SGE.L",
+    "name": "Sage Group",
+    "sector": "Technology",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SGO.PA",
+    "name": "Saint-Gobain",
+    "sector": "Construction and Materials",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SALM.OL",
+    "name": "SalMar",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SAMPO.HE",
+    "name": "Sampo Group",
+    "sector": "Insurance",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SAN.PA",
+    "name": "Sanofi",
+    "sector": "Health Care",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SANO.HE",
+    "name": "Sanoma",
+    "sector": "Media",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SAP.DE",
+    "name": "SAP",
+    "sector": "Technology",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SECU B.ST",
+    "name": "Securitas AB",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SU.PA",
+    "name": "Schneider Electric",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SCR.PA",
+    "name": "SCOR SE",
+    "sector": "Insurance",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SGSN.SW",
+    "name": "SGS S.A.",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SHEL.L",
+    "name": "Shell plc",
+    "sector": "Energy",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SIE.DE",
+    "name": "Siemens",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SIG.SW",
+    "name": "SIG Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SEB.ST",
+    "name": "Skandinaviska Enskilda Banken",
+    "sector": "Banks",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SKA B.ST",
+    "name": "Skanska",
+    "sector": "Construction and Materials",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SKF-B.ST",
+    "name": "SKF",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SKY.L",
+    "name": "Sky Group",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SN.L",
+    "name": "Smith & Nephew",
+    "sector": "Health Care",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SOLB.BR",
+    "name": "Solvay",
+    "sector": "Chemicals",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SSE.L",
+    "name": "SSE plc",
+    "sector": "Utilities",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SRB.OL",
+    "name": "Storebrand",
+    "sector": "Insurance",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "STER.HE",
+    "name": "Stora Enso",
+    "sector": "Basic Resources",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "STMPA.SW",
+    "name": "STMicroelectronics",
+    "sector": "Technology",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SWED A.ST",
+    "name": "Swedbank",
+    "sector": "Banks",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SWMA.ST",
+    "name": "Swedish Match",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SCMN.SW",
+    "name": "Swisscom",
+    "sector": "Telecommunications",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SHB B.ST",
+    "name": "Svenska Handelsbanken",
+    "sector": "Banks",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SY1.DE",
+    "name": "Symrise",
+    "sector": "Chemicals",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TATE.L",
+    "name": "Tate & Lyle",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TJW.L",
+    "name": "Taylor Wimpey",
+    "sector": "Consumer Products and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TELIA.ST",
+    "name": "Telia Company",
+    "sector": "Telecommunications",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TIT.MI",
+    "name": "Telecom Italia",
+    "sector": "Telecommunications",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TEL2-B.ST",
+    "name": "Tele2",
+    "sector": "Telecommunications",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TEL.OL",
+    "name": "Telenor",
+    "sector": "Telecommunications",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TEMN.SW",
+    "name": "Temenos Group",
+    "sector": "Technology",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TEN",
+    "name": "Tenaris",
+    "sector": "Energy",
+    "country": "Luxembourg",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TRN.MI",
+    "name": "Terna",
+    "sector": "Utilities",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TSCO.L",
+    "name": "Tesco",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TEV",
+    "name": "Teva Pharmaceutical Industries",
+    "sector": "Health Care",
+    "country": "Israel",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TKA.DE",
+    "name": "ThyssenKrupp",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TOM.AS",
+    "name": "TomTom",
+    "sector": "Technology",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TTE.PA",
+    "name": "TotalEnergies",
+    "sector": "Energy",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TRYG.CO",
+    "name": "Tryg",
+    "sector": "Insurance",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TUI.DE",
+    "name": "TUI Group",
+    "sector": "Travel and Leisure",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UMI.BR",
+    "name": "Umicore",
+    "sector": "Chemicals",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UC.MI",
+    "name": "UniCredit",
+    "sector": "Banks",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ULVR.L",
+    "name": "Unilever",
+    "sector": "Personal Care, Drug and Grocery Stores",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UPW.L",
+    "name": "United Utilities",
+    "sector": "Utilities",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UMG.AS",
+    "name": "Universal Music Group",
+    "sector": "Media",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VALMT.HE",
+    "name": "Valmet",
+    "sector": "Industrial Goods and Services",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VACN.SW",
+    "name": "VAT Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VESTAS.CO",
+    "name": "Vestas",
+    "sector": "Energy",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VIV.PA",
+    "name": "Vivendi",
+    "sector": "Media",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VOD.L",
+    "name": "Vodafone",
+    "sector": "Telecommunications",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VOLV B.ST",
+    "name": "Volvo Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VNA.DE",
+    "name": "Vonovia",
+    "sector": "Real Estate",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WTB.L",
+    "name": "Whitbread",
+    "sector": "Travel and Leisure",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WKL.AS",
+    "name": "Wolters Kluwer",
+    "sector": "Media",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WPP.L",
+    "name": "WPP",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PSON.L",
+    "name": "Pearson",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PNN.L",
+    "name": "Pennon Group",
+    "sector": "Utilities",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PIRC.MI",
+    "name": "Pirelli",
+    "sector": "Automobiles and Parts",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PLPH.SW",
+    "name": "PolyPeptide",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PAH3.DE",
+    "name": "Porsche SE",
+    "sector": "Automobiles and Parts",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PST.MI",
+    "name": "Poste Italiane",
+    "sector": "Insurance",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PROX.BR",
+    "name": "Proximus",
+    "sector": "Telecommunications",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "PRY.MI",
+    "name": "Prysmian",
+    "sector": "Industrial Goods and Services",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "QLT.L",
+    "name": "Quilter",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FRA.DE",
+    "name": "Rational",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "REL.L",
+    "name": "RELX",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RCO.PA",
+    "name": "R\u00e9my Cointreau",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RNO.PA",
+    "name": "Renault",
+    "sector": "Automobiles and Parts",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RTO.L",
+    "name": "Rentokil Initial",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RXL.PA",
+    "name": "Rexel",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "RMV.L",
+    "name": "Rightmove",
+    "sector": "Real Estate",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "S4.L",
+    "name": "S4 Capital",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SDZ.SW",
+    "name": "Sandoz",
+    "sector": "Health Care",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SRT3.DE",
+    "name": "Sartorius",
+    "sector": "Health Care",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SCHA.OL",
+    "name": "Schibsted",
+    "sector": "Media",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SDR.L",
+    "name": "Schroders",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "G24.DE",
+    "name": "Scout24",
+    "sector": "Technology",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SVT.L",
+    "name": "Severn Trent",
+    "sector": "Utilities",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LIGHT.AS",
+    "name": "Signify",
+    "sector": "Construction and Materials",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SIX2.DE",
+    "name": "Sixt",
+    "sector": "Consumer Products and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SKG.IR",
+    "name": "Smurfit Kappa",
+    "sector": "Industrial Goods and Services",
+    "country": "Ireland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SRG.MI",
+    "name": "Snam",
+    "sector": "Energy",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GLE.PA",
+    "name": "Soci\u00e9t\u00e9 G\u00e9n\u00e9rale",
+    "sector": "Banks",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SW.PA",
+    "name": "Sodexo",
+    "sector": "Travel and Leisure",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SCT.L",
+    "name": "Softcat",
+    "sector": "Technology",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SOW.DE",
+    "name": "Software",
+    "sector": "Technology",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SXS.L",
+    "name": "Spectris",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SPX.L",
+    "name": "Spirax-Sarco Engineering",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "STJ.L",
+    "name": "St. James's Place",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "STAN.L",
+    "name": "Standard Chartered",
+    "sector": "Banks",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "STLAM.AS",
+    "name": "Stellantis",
+    "sector": "Automobiles and Parts",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SWECO B.ST",
+    "name": "Sweco",
+    "sector": "Construction and Materials",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SLHN.SW",
+    "name": "Swiss Life",
+    "sector": "Insurance",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "SPSN.SW",
+    "name": "Swiss Prime Site",
+    "sector": "Real Estate",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TLX.DE",
+    "name": "Talanx",
+    "sector": "Insurance",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TMV.DE",
+    "name": "TeamViewer",
+    "sector": "Technology",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FTI.L",
+    "name": "TechnipFMC",
+    "sector": "Energy",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TEF.MC",
+    "name": "Telef\u00f3nica",
+    "sector": "Telecommunications",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TEP.PA",
+    "name": "Teleperformance",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TPG.L",
+    "name": "Telecom Plus",
+    "sector": "Telecommunications",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TGS.OL",
+    "name": "TGS",
+    "sector": "Energy",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "THL.PA",
+    "name": "Thales",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TOM.OL",
+    "name": "Tomra",
+    "sector": "Industrial Goods and Services",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TPK.L",
+    "name": "Travis Perkins",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "TREL B.ST",
+    "name": "Trelleborg",
+    "sector": "Industrial Goods and Services",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "8TRA.DE",
+    "name": "Traton",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UBI.PA",
+    "name": "Ubisoft",
+    "sector": "Consumer Products and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "URW.PA",
+    "name": "Unibail-Rodamco-Westfield",
+    "sector": "Real Estate",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UN01.DE",
+    "name": "Uniper",
+    "sector": "Utilities",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "UPM.HE",
+    "name": "UPM-Kymmene",
+    "sector": "Basic Resources",
+    "country": "Finland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FR.PA",
+    "name": "Valeo",
+    "sector": "Automobiles and Parts",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VK.PA",
+    "name": "Vallourec",
+    "sector": "Basic Resources",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VAR1.DE",
+    "name": "Varta",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VIE.PA",
+    "name": "Veolia",
+    "sector": "Utilities",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VER.VI",
+    "name": "Verbund",
+    "sector": "Utilities",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VPLAY B.ST",
+    "name": "Viaplay",
+    "sector": "Media",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VCT.PA",
+    "name": "Vicat",
+    "sector": "Construction and Materials",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VIG.VI",
+    "name": "Vienna Insurance Group",
+    "sector": "Insurance",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VITR.ST",
+    "name": "Vitrolife",
+    "sector": "Health Care",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VOE.VI",
+    "name": "Voestalpine",
+    "sector": "Basic Resources",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "VPK.AS",
+    "name": "Vopak",
+    "sector": "Industrial Goods and Services",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WDP.BR",
+    "name": "Warehouses De Pauw",
+    "sector": "Real Estate",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WEIR.L",
+    "name": "Weir Group",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WEND.PA",
+    "name": "Wendel",
+    "sector": "Financial Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WIE.VI",
+    "name": "Wienerberger",
+    "sector": "Construction and Materials",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WIHL.ST",
+    "name": "Wihlborgs Fastigheter",
+    "sector": "Real Estate",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WISE.L",
+    "name": "Wise",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "WLN.PA",
+    "name": "Worldline",
+    "sector": "Industrial Goods and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "YAR.OL",
+    "name": "Yara International",
+    "sector": "Chemicals",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ZAL.DE",
+    "name": "Zalando",
+    "sector": "Retail",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ANA.MC",
+    "name": "Acciona",
+    "sector": "Construction and Materials",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ANE.MC",
+    "name": "Acciona Energ\u00eda",
+    "sector": "Utilities",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ACX.MC",
+    "name": "Acerinox",
+    "sector": "Basic Resources",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ADH.OL",
+    "name": "Adevinta",
+    "sector": "Consumer Products and Services",
+    "country": "Norway",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AF.PA",
+    "name": "Air France-KLM",
+    "sector": "Travel and Leisure",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AKZA.AS",
+    "name": "AkzoNobel",
+    "sector": "Chemicals",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ALLFG.MC",
+    "name": "Allfunds Group",
+    "sector": "Financial Services",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AML.L",
+    "name": "Aston Martin",
+    "sector": "Automobiles and Parts",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "AMS.VI",
+    "name": "ams OSRAM",
+    "sector": "Technology",
+    "country": "Austria",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ARGX.AS",
+    "name": "Argenx",
+    "sector": "Health Care",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ARND.DE",
+    "name": "Aroundtown",
+    "sector": "Real Estate",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ATOS.PA",
+    "name": "Atos",
+    "sector": "Technology",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BPOST.BR",
+    "name": "Bpost",
+    "sector": "Industrial Goods and Services",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BRNW.MI",
+    "name": "Brunello Cucinelli",
+    "sector": "Consumer Products and Services",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "BYG.L",
+    "name": "Big Yellow Group",
+    "sector": "Real Estate",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CASP.ST",
+    "name": "Castellum",
+    "sector": "Real Estate",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CDR",
+    "name": "CD Projekt",
+    "sector": "Consumer Products and Services",
+    "country": "Poland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CLN.SW",
+    "name": "Clariant",
+    "sector": "Chemicals",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CTG.L",
+    "name": "Computer Center",
+    "sector": "Technology",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "CTS.DE",
+    "name": "CTS Eventim",
+    "sector": "Media",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DIA.MC",
+    "name": "Dia",
+    "sector": "Personal Care, Drug and Grocery Stores",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DIE.BR",
+    "name": "DIETEREN Group",
+    "sector": "Automobiles and Parts",
+    "country": "Belgium",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DSM.SW",
+    "name": "DSM-Firmenich",
+    "sector": "Chemicals",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "DTG.DE",
+    "name": "Daimler Truck",
+    "sector": "Industrial Goods and Services",
+    "country": "Germany",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EN.PA",
+    "name": "Bouygues",
+    "sector": "Construction and Materials",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "ENGI.PA",
+    "name": "Engie",
+    "sector": "Utilities",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "EVR.L",
+    "name": "Evraz",
+    "sector": "Basic Resources",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FALK.CO",
+    "name": "Falck",
+    "sector": "Health Care",
+    "country": "Denmark",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FLOW.AS",
+    "name": "Flow Traders",
+    "sector": "Financial Services",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FLTR.IR",
+    "name": "Flutter Entertainment",
+    "sector": "Travel and Leisure",
+    "country": "Ireland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "FOR.MC",
+    "name": "FCC",
+    "sector": "Construction and Materials",
+    "country": "Spain",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GREG.L",
+    "name": "Greggs",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "GWI.MI",
+    "name": "Gruppo Campari",
+    "sector": "Food, Beverage and Tobacco",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IDP.MI",
+    "name": "Interpump Group",
+    "sector": "Industrial Goods and Services",
+    "country": "Italy",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IGGI.L",
+    "name": "IG Group",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IMI.L",
+    "name": "IMI",
+    "sector": "Industrial Goods and Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "INDV.L",
+    "name": "Indivior",
+    "sector": "Health Care",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "INF.L",
+    "name": "Informa",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "INP.L",
+    "name": "Investec",
+    "sector": "Financial Services",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "IPX.PA",
+    "name": "Ipsos",
+    "sector": "Media",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "JMAT.L",
+    "name": "Johnson Matthey",
+    "sector": "Chemicals",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "JUST.AS",
+    "name": "Just Eat Takeaway",
+    "sector": "Retail",
+    "country": "Netherlands",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "KNIN.SW",
+    "name": "Kuehne + Nagel",
+    "sector": "Industrial Goods and Services",
+    "country": "Switzerland",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LANV.PA",
+    "name": "Lanvin Group",
+    "sector": "Consumer Products and Services",
+    "country": "France",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LGEN.L",
+    "name": "Legal & General",
+    "sector": "Insurance",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "LUN.ST",
+    "name": "Lundin Energy",
+    "sector": "Energy",
+    "country": "Sweden",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MKS.L",
+    "name": "Marks & Spencer",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MONY.L",
+    "name": "Moneysupermarket.com",
+    "sector": "Media",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "MRW.L",
+    "name": "Morrisons",
+    "sector": "Retail",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  },
+  {
+    "symbol": "NGG.L",
+    "name": "National Grid",
+    "sector": "Utilities",
+    "country": "United Kingdom",
+    "market": "europe",
+    "exchange": "Continental Europe"
+  }
+]

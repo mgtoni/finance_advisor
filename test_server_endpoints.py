@@ -88,7 +88,7 @@ class TestServerEndpoints(unittest.TestCase):
         self.assertNotIn('AZN.L', symbols_after)
         print("[PASS] Watchlist deletion verified")
 
-    @patch('discovery_engine.DiscoveryEngineService.run_discovery')
+    @patch('discovery_engine.DiscoveryEngineService.run_discovery_pipeline')
     def test_04_run_discovery_endpoint(self, mock_run_discovery):
         """Test POST /api/run-discovery validation, triggers, and 409 busy state"""
         import time

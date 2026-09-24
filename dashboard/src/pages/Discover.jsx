@@ -59,11 +59,20 @@ const STRATEGIES = [
   }
 ];
 
+const MARKETS = [
+  { id: 'usa', label: 'USA (S&P 1500 & Alpaca)', flag: '🇺🇸', desc: 'S&P 500 Large + S&P 400 MidCap + Alpaca Tradables (~5,500 stocks)' },
+  { id: 'uk', label: 'United Kingdom (FTSE 350)', flag: '🇬🇧', desc: 'FTSE 100 Blue Chips + FTSE 250 MidCaps (~350 stocks)' },
+  { id: 'europe', label: 'Continental Europe (STOXX 600)', flag: '🇪🇺', desc: 'Pan-European champions across Germany, France, Switzerland, Nordics (~460 stocks)' },
+  { id: 'japan', label: 'Japan (Nikkei 225 & TSE Prime)', flag: '🇯🇵', desc: 'Tokyo Stock Exchange cash-rich leaders & innovators (~100 stocks)' },
+  { id: 'global', label: 'Global International Leaders', flag: '🌐', desc: 'Diversified non-US compounders, Canada, Australia & liquid ADRs' },
+];
+
 const Discover = () => {
   const [activeTab, setActiveTab] = useState('discover'); // 'discover' | 'watchlist'
-  const [selectedStrategy, setSelectedStrategy] = useState('non_us');
+  const [selectedStrategy, setSelectedStrategy] = useState('value');
+  const [selectedMarket, setSelectedMarket] = useState('usa');
   const [marketCapTier, setMarketCapTier] = useState('all'); // 'hidden_gems' | 'large_cap' | 'all'
-  const [regionPref, setRegionPref] = useState('global_ex_us'); // 'global_ex_us' | 'europe_uk' | 'asia_pacific' | 'all'
+  const [regionPref, setRegionPref] = useState('all'); // 'global_ex_us' | 'europe_uk' | 'asia_pacific' | 'all'
   const [listingType, setListingType] = useState('hybrid'); // 'hybrid' | 'adrs_only' | 'direct_only'
   const [strictHealth, setStrictHealth] = useState(true);
 
@@ -76,9 +85,15 @@ const Discover = () => {
   const [watchlistLoading, setWatchlistLoading] = useState(false);
   const [dataFetchedAt, setDataFetchedAt] = useState(null);
 
+  // Top 20 Contenders Modal state
+  const [showContendersModal, setShowContendersModal] = useState(false);
+  const [contendersData, setContendersData] = useState({ contenders: [], contender_matrix: [] });
+  const [contendersLoading, setContendersLoading] = useState(false);
+
   // Deep Analysis Modal state
   const [selectedPick, setSelectedPick] = useState(null);
   const [modalTab, setModalTab] = useState('thesis'); // 'thesis' | 'fundamentals' | 'technicals' | 'sentiment' | 'risks'
+
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -149,20 +164,37 @@ const Discover = () => {
     setWatchlistLoading(false);
   };
 
+  const fetchContenders = async () => {
+    setContendersLoading(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/discovery-contenders`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) {
+          setContendersData(json.data);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching discovery contenders:", err);
+    }
+    setContendersLoading(false);
+  };
+
   useEffect(() => {
     fetchDiscoveryPicks(selectedStrategy);
   }, [selectedStrategy]);
 
   useEffect(() => {
     fetchWatchlist();
+    fetchContenders();
   }, []);
 
   // ---------------------------------------------------------------------------
-  // RUN DISCOVERY & PROGRESS POLLING
+  // RUN 4-STAGE DISCOVERY FUNNEL & PROGRESS POLLING
   // ---------------------------------------------------------------------------
   const handleRunDiscovery = async () => {
     setIsDiscovering(true);
-    setDiscoveryStage("Scanning 60+ candidates across global markets...");
+    setDiscoveryStage(`Stage 1: Ingesting ${selectedMarket.toUpperCase()} Universe & Pre-Flight Gate...`);
     setElapsedTime(0);
 
     try {
@@ -171,10 +203,12 @@ const Discover = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           strategy: selectedStrategy,
+          market: selectedMarket,
           market_cap_tier: marketCapTier,
           region_preference: regionPref,
           listing_type: listingType,
-          strict_health_filter: strictHealth
+          strict_health_filter: strictHealth,
+          target_contenders: 20
         })
       });
       if (!res.ok && res.status !== 409) {
@@ -205,20 +239,22 @@ const Discover = () => {
             clearInterval(timerInterval);
             setIsDiscovering(false);
             fetchDiscoveryPicks(selectedStrategy);
+            fetchContenders();
           }
         }
       } catch (err) {
         console.error("Poll status error:", err);
       }
-    }, 4000);
+    }, 3000);
 
-    // Timeout safety after 90 seconds
+    // Timeout safety after 180 seconds
     setTimeout(() => {
       clearInterval(pollInterval);
       clearInterval(timerInterval);
       setIsDiscovering(false);
       fetchDiscoveryPicks(selectedStrategy);
-    }, 90000);
+      fetchContenders();
+    }, 180000);
   };
 
   // ---------------------------------------------------------------------------
@@ -325,12 +361,15 @@ const Discover = () => {
     const tScore = isPayload ? rawThesis.technical_score : Math.round(compositeScore * 0.9);
     const sScore = isPayload ? rawThesis.sentiment_score : Math.round(compositeScore * 0.85);
 
-    const summaryPoints = Array.isArray(rawThesis) 
-      ? rawThesis 
+    const summaryPoints = Array.isArray(rawThesis)
+      ? rawThesis
       : (dossier.investment_thesis || rawThesis.points || [
           "Strong cash generation and robust operational moat.",
           "Hedges portfolio concentration away from domestic large-cap tech."
         ]);
+    const rank = pick.rank || (isPayload ? rawThesis.rank : null);
+    const tournamentEdge = dossier.tournament_edge || null;
+    const insiderScore = isPayload ? rawThesis.insider_score : (pick.insider_score || 50);
 
     return {
       dossier,
@@ -344,6 +383,9 @@ const Discover = () => {
       fScore,
       tScore,
       sScore,
+      insiderScore,
+      rank,
+      tournamentEdge,
       summaryPoints
     };
   };
@@ -503,89 +545,90 @@ const Discover = () => {
             </div>
           </div>
 
-          {/* Research Preferences & Control Strip */}
+          {/* 2. Select Target Market Universe */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                2. Select Target Market Universe
+              </h3>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Scanning entire institutional index constituents with pre-flight liquidity gating
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.75rem' }}>
+              {MARKETS.map(m => {
+                const isSelected = selectedMarket === m.id;
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => setSelectedMarket(m.id)}
+                    style={{
+                      background: isSelected ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.03)',
+                      border: isSelected ? '2px solid var(--accent-blue)' : '1px solid var(--panel-border)',
+                      borderRadius: '10px',
+                      padding: '0.9rem 1rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: isSelected ? '0 0 12px rgba(59, 130, 246, 0.25)' : 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                      <span style={{ fontSize: '1.3rem' }}>{m.flag}</span>
+                      <strong style={{ fontSize: '0.9rem', color: isSelected ? 'white' : 'var(--text-primary)' }}>
+                        {m.label}
+                      </strong>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
+                      {m.desc}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Research Preferences & Funnel Control Strip */}
           <div className="glass-panel" style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem', borderRadius: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
               
-              {/* Filter Controls */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-                
-                {/* Market Cap Filter */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    Market Cap Focus
-                  </label>
-                  <select
-                    value={marketCapTier}
-                    onChange={e => setMarketCapTier(e.target.value)}
-                    style={{
-                      background: 'rgba(0,0,0,0.4)', border: '1px solid var(--panel-border)',
-                      color: 'white', padding: '0.45rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem'
-                    }}
-                  >
-                    <option value="all">All Market Caps</option>
-                    <option value="hidden_gems">Hidden Gems / Mid-Caps ($500M - $25B)</option>
-                    <option value="large_cap">Large Caps ($12B+ reasonable value)</option>
-                  </select>
-                </div>
-
-                {/* Region Focus */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    Geographic Region
-                  </label>
-                  <select
-                    value={regionPref}
-                    onChange={e => setRegionPref(e.target.value)}
-                    style={{
-                      background: 'rgba(0,0,0,0.4)', border: '1px solid var(--panel-border)',
-                      color: 'white', padding: '0.45rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem'
-                    }}
-                  >
-                    <option value="all">Global (All Regions)</option>
-                    <option value="global_ex_us">Non-US Only (Ex-United States)</option>
-                    <option value="europe_uk">Europe & United Kingdom</option>
-                    <option value="asia_pacific">Asia-Pacific & Japan</option>
-                  </select>
-                </div>
-
-                {/* Listing Type / Broker Accessibility */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    Listing Accessibility
-                  </label>
-                  <select
-                    value={listingType}
-                    onChange={e => setListingType(e.target.value)}
-                    style={{
-                      background: 'rgba(0,0,0,0.4)', border: '1px solid var(--panel-border)',
-                      color: 'white', padding: '0.45rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem'
-                    }}
-                  >
-                    <option value="hybrid">Hybrid (ADRs + Direct Foreign Listings)</option>
-                    <option value="adrs_only">US-Listed ADRs (Zero FX Fees / Standard Broker)</option>
-                    <option value="direct_only">Direct Local Exchanges (.L, .DE, .TO, etc.)</option>
-                  </select>
-                </div>
-
-                {/* Strict Quality Gate Toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.1rem' }}>
-                  <input
-                    type="checkbox"
-                    id="healthFilter"
-                    checked={strictHealth}
-                    onChange={e => setStrictHealth(e.target.checked)}
-                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                  />
-                  <label htmlFor="healthFilter" style={{ fontSize: '0.82rem', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Shield size={14} color="var(--accent-green)" /> Strict Health Gate (Positive FCF & Sane P/E)
-                  </label>
-                </div>
-
+              {/* Quality & Pre-Flight Gating Badges */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                <span style={{
+                  fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-green)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)', padding: '4px 10px', borderRadius: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px'
+                }}>
+                  <Shield size={13} /> Liquidity Floor: &gt;$10M/day
+                </span>
+                <span style={{
+                  fontSize: '0.78rem', background: 'rgba(59, 130, 246, 0.12)', color: 'var(--accent-blue)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)', padding: '4px 10px', borderRadius: '16px', fontWeight: 600
+                }}>
+                  Price Floor: &gt;$5.00 (No Pennies)
+                </span>
+                <span style={{
+                  fontSize: '0.78rem', background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b',
+                  border: '1px solid rgba(245, 158, 11, 0.3)', padding: '4px 10px', borderRadius: '16px', fontWeight: 600
+                }}>
+                  Exclusions: SPACs / Zombie Debt / Micro-caps
+                </span>
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => { fetchContenders(); setShowContendersModal(true); }}
+                  className="btn btn-secondary"
+                  title="View full list of audited contenders and elimination reasons"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.45rem',
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid var(--panel-border)',
+                    color: 'white', padding: '0.6rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem'
+                  }}
+                >
+                  <Layers size={15} color="var(--accent-blue)" /> Top 20 Contenders Matrix
+                </button>
+
                 <button
                   onClick={() => fetchDiscoveryPicks(selectedStrategy)}
                   disabled={loading || isDiscovering}
@@ -599,6 +642,7 @@ const Discover = () => {
                 >
                   <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> {loading ? "Refreshing..." : "Refresh"}
                 </button>
+
                 <button
                   onClick={handleRunDiscovery}
                   disabled={isDiscovering}
@@ -612,11 +656,11 @@ const Discover = () => {
                 >
                   {isDiscovering ? (
                     <>
-                      <RefreshCw size={16} className="animate-spin" /> Analyzing ({elapsedTime}s)...
+                      <RefreshCw size={16} className="animate-spin" /> Funnel Running ({elapsedTime}s)...
                     </>
                   ) : (
                     <>
-                      <Sparkles size={16} /> Run Global Discovery
+                      <Sparkles size={16} /> Run 4-Stage Discovery
                     </>
                   )}
                 </button>
@@ -624,24 +668,58 @@ const Discover = () => {
 
             </div>
 
-            {/* Live Active Progress Indicator */}
+            {/* Live 4-Stage Funnel Visualizer */}
             {isDiscovering && (
               <div style={{
-                marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem'
+                marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.08)'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{
-                    width: '10px', height: '10px', borderRadius: '50%',
-                    background: 'var(--accent-blue)',
-                    boxShadow: '0 0 8px var(--accent-blue)'
-                  }} />
-                  <span style={{ fontSize: '0.9rem', color: 'white', fontWeight: 500 }}>
-                    {discoveryStage}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <div style={{
+                      width: '10px', height: '10px', borderRadius: '50%',
+                      background: 'var(--accent-blue)',
+                      boxShadow: '0 0 10px var(--accent-blue)'
+                    }} />
+                    <span style={{ fontSize: '0.92rem', color: 'white', fontWeight: 600 }}>
+                      {discoveryStage}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    Funnel Elapsed: <strong style={{ color: 'white' }}>{elapsedTime}s</strong>
                   </span>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                  Running multi-pillar audit across 60+ candidates. This typically takes 30-50s.
+
+                {/* 4-Step Pipeline Stepper */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.6rem' }}>
+                  {[
+                    { step: 1, title: '1. Pre-Flight Gate', desc: 'Scan market & exclude penny/illiquid/SPACs' },
+                    { step: 2, title: '2. Strategy Pre-Score', desc: 'Multi-factor rank down to Top 20' },
+                    { step: 3, title: '3. Deep Research Audit', desc: 'Quant, Form 4 Insiders, Tier 1 News, Macro' },
+                    { step: 4, title: '4. Gemini 3.8 Tournament', desc: 'Comparative AI synthesis & Crown Top 5' }
+                  ].map(s => {
+                    const isCurrent = discoveryStage.includes(`Stage ${s.step}`);
+                    const isPast = (s.step === 1 && (discoveryStage.includes('Stage 2') || discoveryStage.includes('Stage 3') || discoveryStage.includes('Stage 4') || discoveryStage.includes('Complete'))) ||
+                                   (s.step === 2 && (discoveryStage.includes('Stage 3') || discoveryStage.includes('Stage 4') || discoveryStage.includes('Complete'))) ||
+                                   (s.step === 3 && (discoveryStage.includes('Stage 4') || discoveryStage.includes('Complete')));
+
+                    return (
+                      <div key={s.step} style={{
+                        background: isCurrent ? 'rgba(59, 130, 246, 0.18)' : isPast ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.02)',
+                        border: isCurrent ? '1px solid var(--accent-blue)' : isPast ? '1px solid var(--accent-green)' : '1px solid rgba(255,255,255,0.06)',
+                        borderRadius: '8px', padding: '0.65rem 0.8rem'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+                          {isPast ? <CheckCircle2 size={14} color="var(--accent-green)" /> : <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: isCurrent ? 'var(--accent-blue)' : 'var(--text-secondary)' }} />}
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: isCurrent ? 'white' : isPast ? 'var(--accent-green)' : 'var(--text-secondary)' }}>
+                            {s.title}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+                          {s.desc}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -683,10 +761,18 @@ const Discover = () => {
                       {/* Card Header: Symbol, Name, Badges & Watchlist Action */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                             <h4 style={{ fontSize: '1.35rem', margin: 0, color: 'white', fontWeight: 700 }}>
                               {pick.symbol}
                             </h4>
+                            {details.rank && (
+                              <span style={{
+                                fontSize: '0.75rem', padding: '2px 8px', borderRadius: '12px',
+                                background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', fontWeight: 700, border: '1px solid rgba(245, 158, 11, 0.4)'
+                              }}>
+                                #{details.rank} Pick
+                              </span>
+                            )}
                             <span style={{
                               fontSize: '0.75rem', padding: '2px 8px', borderRadius: '12px',
                               background: 'rgba(255,255,255,0.08)', color: 'var(--text-secondary)', fontWeight: 600
@@ -703,6 +789,14 @@ const Discover = () => {
                           <div style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
                             {pick.company_name} • <span style={{ color: 'white' }}>{pick.sector}</span>
                           </div>
+                          {details.tournamentEdge && (
+                            <div style={{
+                              marginTop: '0.4rem', background: 'rgba(59, 130, 246, 0.12)', borderLeft: '3px solid var(--accent-blue)',
+                              padding: '0.3rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', color: '#93c5fd'
+                            }}>
+                              <strong style={{ color: 'white' }}>Tournament Edge:</strong> {details.tournamentEdge}
+                            </div>
+                          )}
                         </div>
 
                         {/* Top Right: Composite Score & Watchlist Button */}
@@ -1209,6 +1303,120 @@ const Discover = () => {
           </Modal>
         );
       })()}
+
+      {/* ===================================================================== */}
+      {/* MODAL: TOP CONTENDERS & ELIMINATION MATRIX */}
+      {/* ===================================================================== */}
+      <Modal isOpen={showContendersModal} onClose={() => setShowContendersModal(false)}>
+        <div style={{ padding: '1.5rem', maxWidth: '1050px', margin: '0 auto', color: 'var(--text-primary)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.5rem', margin: 0, color: 'white', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <Layers size={22} color="var(--accent-blue)" /> Top Contenders & Elimination Matrix
+              </h3>
+              <p style={{ margin: '0.35rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                Full cross-market contenders that cleared the pre-flight gate, ranked by the quantitative screener and audited by Gemini 3.8 Flash.
+              </p>
+            </div>
+            {contendersData.last_updated && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', alignSelf: 'center' }}>
+                Audited: {new Date(contendersData.last_updated).toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          {contendersLoading ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+              <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem', display: 'block' }} />
+              Loading contenders matrix...
+            </div>
+          ) : !contendersData.contenders || contendersData.contenders.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+              No contenders data found. Run the 4-stage discovery funnel to audit candidates and populate the matrix.
+            </div>
+          ) : (
+            <div>
+              {/* Matrix Table */}
+              <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid var(--panel-border)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.86rem' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                      <th style={{ padding: '0.75rem 1rem' }}>Rank / Status</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Asset</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Sector</th>
+                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Composite</th>
+                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Fund / Tech / Sent</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Tournament Outcome / Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contendersData.contenders.map((c, idx) => {
+                      const isWinner = idx < 5;
+                      const matrixItem = (contendersData.contender_matrix || []).find(m => m.symbol === c.symbol);
+                      const exclusionReason = matrixItem?.exclusion_reason || (isWinner ? 'Crowned Top 5 Winner with complete institutional research dossier.' : 'Ranked below Top 5 cutoff based on lower composite margin/FCF yield.');
+
+                      return (
+                        <tr
+                          key={c.symbol || idx}
+                          style={{
+                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                            background: isWinner ? 'rgba(59, 130, 246, 0.04)' : 'transparent',
+                            transition: 'background 0.2s'
+                          }}
+                        >
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>
+                            {isWinner ? (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-green)',
+                                padding: '3px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700
+                              }}>
+                                <CheckCircle2 size={12} /> Top 5 Winner (#{idx + 1})
+                              </span>
+                            ) : (
+                              <span style={{
+                                color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)',
+                                padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem'
+                              }}>
+                                Contender #{idx + 1}
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <div style={{ fontWeight: 700, color: 'white' }}>{c.symbol}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{c.company_name}</div>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                            {c.sector} • <span style={{ color: 'white' }}>{c.country}</span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+                            <span style={{
+                              fontWeight: 800, fontSize: '0.95rem',
+                              color: getScoreColor(c.composite_score)
+                            }}>
+                              {c.composite_score ? c.composite_score.toFixed(1) : (c.pre_score ? c.pre_score.toFixed(1) : 'N/A')}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.8rem' }}>
+                            <span style={{ color: getScoreColor(c.fundamental_score) }}>{c.fundamental_score ? Math.round(c.fundamental_score) : '-'}</span>
+                            <span style={{ color: 'var(--text-secondary)', margin: '0 4px' }}>/</span>
+                            <span style={{ color: getScoreColor(c.technical_score) }}>{c.technical_score ? Math.round(c.technical_score) : '-'}</span>
+                            <span style={{ color: 'var(--text-secondary)', margin: '0 4px' }}>/</span>
+                            <span style={{ color: getScoreColor(c.sentiment_score) }}>{c.sentiment_score ? Math.round(c.sentiment_score) : '-'}</span>
+                          </td>
+                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.82rem', color: isWinner ? 'var(--accent-green)' : 'var(--text-secondary)', lineHeight: 1.4 }}>
+                            {exclusionReason}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
 
     </div>
   );

@@ -1,0 +1,68 @@
+name: Scheduled Discovery Funnel
+# Free Cloud-Native Runner (2,000 free minutes/month)
+# Runs institutional 4-stage stock discovery pipeline automatically on GitHub's infrastructure
+# Writing results directly to Supabase with 0 VPS supervision required.
+
+on:
+  schedule:
+    # 21:30 UTC Monday-Friday (5:30 PM EST, right after US Market Close)
+    - cron: '30 21 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      market:
+        description: 'Market Universe'
+        required: true
+        default: 'usa'
+        type: choice
+        options:
+          - usa
+          - uk
+          - europe
+          - japan
+          - global
+      strategy:
+        description: 'Investment Strategy'
+        required: true
+        default: 'value'
+        type: choice
+        options:
+          - value
+          - income
+          - reduce_risk
+          - growth
+          - non_us
+
+jobs:
+  run-discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Multi-Stage Discovery Pipeline
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          EDGAR_IDENTITY: ${{ secrets.EDGAR_IDENTITY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          MARKET="${{ inputs.market || 'usa' }}"
+          STRATEGY="${{ inputs.strategy || 'value' }}"
+          echo "Executing Scheduled Discovery for Market: $MARKET | Strategy: $STRATEGY"
+          python run_task.py --task discovery --market "$MARKET" --strategy "$STRATEGY" --target-contenders 20

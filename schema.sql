@@ -198,4 +198,30 @@ CREATE POLICY "Allow public insert for watchlist" ON watchlist FOR INSERT WITH C
 CREATE POLICY "Allow public update for watchlist" ON watchlist FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete for watchlist" ON watchlist FOR DELETE USING (true);
 
+-- 12. Background Tasks & Pipeline Queue Table
+CREATE TABLE IF NOT EXISTS background_tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_type VARCHAR(50) NOT NULL, -- 'discovery', 'portfolio_analysis', 'news_aggregation'
+    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed'
+    market VARCHAR(20),
+    strategy VARCHAR(50),
+    stage VARCHAR(150),
+    progress INT DEFAULT 0,
+    stage_index INT DEFAULT 1,
+    total_stages INT DEFAULT 4,
+    params JSONB,
+    result_summary JSONB,
+    error_message TEXT,
+    started_at TIMESTAMP WITH TIME ZONE,
+    finished_at TIMESTAMP WITH TIME ZONE,
+    heartbeat_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Matching operational access with tickers, positions, and discovery_picks:
+ALTER TABLE background_tasks DISABLE ROW LEVEL SECURITY;
+GRANT ALL ON TABLE background_tasks TO anon, authenticated, service_role;
+
+
+
 
